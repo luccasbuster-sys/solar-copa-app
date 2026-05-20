@@ -1,0 +1,21 @@
+const sqlite3 = require("sqlite3").verbose();
+
+const db = new sqlite3.Database("./app.db", (error) => {
+  if (error) {
+    console.error("Erro ao conectar no banco:", error.message);
+    return;
+  }
+
+  console.log("Banco de dados conectado.");
+});
+
+db.run(`
+  CREATE TABLE IF NOT EXISTS users (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    username TEXT NOT NULL UNIQUE,
+    password_hash TEXT NOT NULL,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+  )
+`);
+
+module.exports = db;
