@@ -13,11 +13,18 @@ db.serialize(() => {
   db.run(`
     CREATE TABLE IF NOT EXISTS users (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
-      username TEXT NOT NULL UNIQUE,
+      username TEXT UNIQUE,
+      first_name TEXT,
+      last_name TEXT,
+      phone TEXT UNIQUE,
       password_hash TEXT NOT NULL,
       created_at DATETIME DEFAULT CURRENT_TIMESTAMP
     )
   `);
+
+  db.run(`ALTER TABLE users ADD COLUMN first_name TEXT`, () => {});
+  db.run(`ALTER TABLE users ADD COLUMN last_name TEXT`, () => {});
+  db.run(`ALTER TABLE users ADD COLUMN phone TEXT UNIQUE`, () => {});
 
   db.run(`
     CREATE TABLE IF NOT EXISTS matches (

@@ -5,7 +5,7 @@ const path = require("path");
 const db = require("./database");
 
 const app = express();
-const PORT = process.env.PORT || 3000;
+const PORT = 3000;
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
@@ -27,7 +27,7 @@ function requireLogin(req, res, next) {
   if (!req.session.user) {
     return res.status(401).json({
       success: false,
-      message: "VocÃª precisa estar logado."
+      message: "Você precisa estar logado."
     });
   }
 
@@ -42,22 +42,52 @@ function isValidDate(date) {
   return /^\d{4}-\d{2}-\d{2}$/.test(String(date || ""));
 }
 
+function normalizePhone(phone) {
+  return String(phone || "").replace(/\D/g, "");
+}
+
+function publicUser(user) {
+  return {
+    id: user.id,
+    username: user.username,
+    firstName: user.first_name,
+    lastName: user.last_name,
+    phone: user.phone
+  };
+}
+
 app.post("/register", async (req, res) => {
   try {
-    const username = req.body.username ? req.body.username.trim() : "";
+    const firstName = req.body.firstName ? req.body.firstName.trim() : "";
+    const lastName = req.body.lastName ? req.body.lastName.trim() : "";
+    const phone = normalizePhone(req.body.phone);
     const password = req.body.password ? req.body.password : "";
 
-    if (!username || !password) {
+    if (!firstName || !lastName || !phone || !password) {
       return res.status(400).json({
         success: false,
-        message: "Informe usuÃ¡rio e senha."
+        message: "Informe nome, sobrenome, telefone e senha."
       });
     }
 
-    if (username.length < 3) {
+    if (firstName.length < 2) {
       return res.status(400).json({
         success: false,
-        message: "O usuÃ¡rio precisa ter pelo menos 3 caracteres."
+        message: "O nome precisa ter pelo menos 2 caracteres."
+      });
+    }
+
+    if (lastName.length < 2) {
+      return res.status(400).json({
+        success: false,
+        message: "O sobrenome precisa ter pelo menos 2 caracteres."
+      });
+    }
+
+    if (phone.length < 10 || phone.length > 11) {
+      return res.status(400).json({
+        success: false,
+        message: "Informe um telefone válido com DDD."
       });
     }
 
@@ -69,10 +99,20 @@ app.post("/register", async (req, res) => {
     }
 
     const passwordHash = await bcrypt.hash(password, 10);
+    const username = `${firstName} ${lastName}`;
 
     db.run(
-      "INSERT INTO users (username, password_hash) VALUES (?, ?)",
-      [username, passwordHash],
+      `
+        INSERT INTO users (
+          username,
+          first_name,
+          last_name,
+          phone,
+          password_hash
+        )
+        VALUES (?, ?, ?, ?, ?)
+      `,
+      [username, firstName, lastName, phone, passwordHash],
       function (error) {
         if (error) {
           console.error("Erro SQLite:", error.message);
@@ -80,19 +120,23 @@ app.post("/register", async (req, res) => {
           if (error.message.includes("UNIQUE")) {
             return res.status(409).json({
               success: false,
-              message: "Esse nome de usuÃ¡rio jÃ¡ existe."
+              message: "Esse telefone já está cadastrado."
             });
           }
 
           return res.status(500).json({
             success: false,
-            message: "Erro ao criar cadastro."
+            message: "Erro ao criar cadastro.",
+            error: error.message
           });
         }
 
         req.session.user = {
           id: this.lastID,
-          username
+          username,
+          firstName,
+          lastName,
+          phone
         };
 
         return res.json({
@@ -107,40 +151,41 @@ app.post("/register", async (req, res) => {
 
     return res.status(500).json({
       success: false,
-      message: "Erro interno no servidor."
+      message: "Erro interno no servidor.",
+      error: error.message
     });
   }
 });
 
 app.post("/login", (req, res) => {
   try {
-    const username = req.body.username ? req.body.username.trim() : "";
+    const phone = normalizePhone(req.body.phone);
     const password = req.body.password ? req.body.password : "";
 
-    if (!username || !password) {
+    if (!phone || !password) {
       return res.status(400).json({
         success: false,
-        message: "Informe usuÃ¡rio e senha."
+        message: "Informe telefone e senha."
       });
     }
 
     db.get(
-      "SELECT * FROM users WHERE username = ?",
-      [username],
+      "SELECT * FROM users WHERE phone = ?",
+      [phone],
       async (error, user) => {
         if (error) {
           console.error("Erro SQLite no login:", error.message);
 
           return res.status(500).json({
             success: false,
-            message: "Erro ao buscar usuÃ¡rio."
+            message: "Erro ao buscar usuário."
           });
         }
 
         if (!user) {
           return res.status(401).json({
             success: false,
-            message: "UsuÃ¡rio ou senha invÃ¡lidos."
+            message: "Telefone ou senha inválidos."
           });
         }
 
@@ -152,14 +197,11 @@ app.post("/login", (req, res) => {
         if (!passwordIsCorrect) {
           return res.status(401).json({
             success: false,
-            message: "UsuÃ¡rio ou senha invÃ¡lidos."
+            message: "Telefone ou senha inválidos."
           });
         }
 
-        req.session.user = {
-          id: user.id,
-          username: user.username
-        };
+        req.session.user = publicUser(user);
 
         return res.json({
           success: true,
@@ -173,7 +215,8 @@ app.post("/login", (req, res) => {
 
     return res.status(500).json({
       success: false,
-      message: "Erro interno no servidor."
+      message: "Erro interno no servidor.",
+      error: error.message
     });
   }
 });
@@ -182,7 +225,7 @@ app.get("/me", (req, res) => {
   if (!req.session.user) {
     return res.status(401).json({
       success: false,
-      message: "UsuÃ¡rio nÃ£o estÃ¡ logado."
+      message: "Usuário não está logado."
     });
   }
 
@@ -251,7 +294,7 @@ app.get("/matches/day/:date", requireLogin, (req, res) => {
   if (!isValidDate(date)) {
     return res.status(400).json({
       success: false,
-      message: "Data invÃ¡lida. Use o formato YYYY-MM-DD."
+      message: "Data inválida. Use o formato YYYY-MM-DD."
     });
   }
 
@@ -376,14 +419,14 @@ app.post("/predictions", requireLogin, (req, res) => {
   if (!matchId) {
     return res.status(400).json({
       success: false,
-      message: "ID do jogo nÃ£o informado."
+      message: "ID do jogo não informado."
     });
   }
 
   if (!Number.isInteger(homeScore) || !Number.isInteger(awayScore)) {
     return res.status(400).json({
       success: false,
-      message: "Informe placares vÃ¡lidos."
+      message: "Informe placares válidos."
     });
   }
 
@@ -410,7 +453,7 @@ app.post("/predictions", requireLogin, (req, res) => {
       if (!match) {
         return res.status(404).json({
           success: false,
-          message: "Jogo nÃ£o encontrado."
+          message: "Jogo não encontrado."
         });
       }
 
@@ -420,14 +463,14 @@ app.post("/predictions", requireLogin, (req, res) => {
       if (Number.isNaN(kickoff.getTime())) {
         return res.status(500).json({
           success: false,
-          message: "HorÃ¡rio do jogo invÃ¡lido no banco."
+          message: "Horário do jogo inválido no banco."
         });
       }
 
       if (now >= kickoff) {
         return res.status(403).json({
           success: false,
-          message: "O prazo para salvar esse palpite foi encerrado. O jogo jÃ¡ comeÃ§ou."
+          message: "O prazo para salvar esse palpite foi encerrado. O jogo já começou."
         });
       }
 
@@ -495,22 +538,25 @@ app.get("/leaderboard", requireLogin, (req, res) => {
       SELECT
         u.id,
         u.username,
+        u.first_name,
+        u.last_name,
+        u.phone,
         COUNT(p.id) AS predictions_count,
         COUNT(p.id) AS points
       FROM users u
       LEFT JOIN predictions p ON p.user_id = u.id
-      GROUP BY u.id, u.username
+      GROUP BY u.id, u.username, u.first_name, u.last_name, u.phone
       ORDER BY points DESC, predictions_count DESC, u.username ASC
       LIMIT 50
     `,
     [],
     (error, rows) => {
       if (error) {
-        console.error("Erro ao buscar classificaÃ§Ã£o:", error.message);
+        console.error("Erro ao buscar classificação:", error.message);
 
         return res.status(500).json({
           success: false,
-          message: "Erro ao buscar classificaÃ§Ã£o."
+          message: "Erro ao buscar classificação."
         });
       }
 
@@ -519,7 +565,11 @@ app.get("/leaderboard", requireLogin, (req, res) => {
         leaderboard: rows.map((row, index) => ({
           position: index + 1,
           id: row.id,
-          username: row.username,
+          username:
+            row.first_name && row.last_name
+              ? `${row.first_name} ${row.last_name}`
+              : row.username,
+          phone: row.phone,
           predictionsCount: row.predictions_count,
           points: row.points
         }))
