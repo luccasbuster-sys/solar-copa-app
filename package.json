@@ -16,9 +16,9 @@
     "exceljs": "^4.4.0",
     "express": "^5.2.1",
     "express-session": "^1.19.0",
-    "sqlite3": "^6.0.1"
+    "sqlite3": "^5.1.7"
   },
   "engines": {
-    "node": "22.x"
+    "node": "20.x"
   }
 }
