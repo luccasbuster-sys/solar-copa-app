@@ -1,0 +1,812 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Admin | Solar Copa</title>
+
+  <style>
+    :root {
+      --black: #050505;
+      --yellow: #d6ff00;
+      --cyan: #21d3ca;
+      --red: #ff251f;
+      --cream: #fffaf0;
+      --white: #ffffff;
+      --muted: #5f5f5f;
+      --shadow: 7px 7px 0 var(--black);
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      font-family: "Segoe UI", Arial, Helvetica, sans-serif;
+      background:
+        radial-gradient(circle at 10% 10%, rgba(214, 255, 0, .5), transparent 28%),
+        radial-gradient(circle at 90% 0%, rgba(33, 211, 202, .45), transparent 30%),
+        var(--cream);
+      color: var(--black);
+    }
+
+    .shell {
+      width: min(1180px, calc(100% - 28px));
+      margin: 0 auto;
+      padding: 22px 0 60px;
+    }
+
+    .topbar,
+    .card,
+    .table-wrap,
+    .match-card {
+      border: 4px solid var(--black);
+      border-radius: 26px;
+      box-shadow: var(--shadow);
+      background: var(--white);
+    }
+
+    .topbar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 16px;
+      padding: 16px;
+      margin-bottom: 28px;
+    }
+
+    .brand strong {
+      display: block;
+      font-size: 22px;
+      text-transform: uppercase;
+      letter-spacing: -.04em;
+    }
+
+    .brand span {
+      color: var(--muted);
+      font-weight: 800;
+      font-size: 13px;
+    }
+
+    h1 {
+      font-size: clamp(42px, 8vw, 86px);
+      line-height: .84;
+      letter-spacing: -.07em;
+      text-transform: uppercase;
+      margin: 0 0 14px;
+    }
+
+    h2 {
+      font-size: clamp(28px, 4vw, 48px);
+      line-height: .9;
+      letter-spacing: -.05em;
+      text-transform: uppercase;
+      margin: 0 0 12px;
+    }
+
+    p {
+      color: var(--muted);
+      font-weight: 700;
+      line-height: 1.45;
+    }
+
+    .hero {
+      margin-bottom: 26px;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: 380px 1fr;
+      gap: 22px;
+      align-items: start;
+    }
+
+    .card {
+      padding: 22px;
+    }
+
+    label {
+      display: grid;
+      gap: 7px;
+      font-weight: 1000;
+      text-transform: uppercase;
+      font-size: 12px;
+      margin-bottom: 14px;
+    }
+
+    input {
+      min-height: 50px;
+      border: 3px solid var(--black);
+      border-radius: 16px;
+      padding: 0 14px;
+      font: inherit;
+      font-weight: 800;
+      box-shadow: 4px 4px 0 var(--black);
+      background: var(--white);
+    }
+
+    .actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-top: 14px;
+    }
+
+    button {
+      border: 3px solid var(--black);
+      border-radius: 999px;
+      min-height: 46px;
+      padding: 0 16px;
+      font-weight: 1000;
+      text-transform: uppercase;
+      cursor: pointer;
+      box-shadow: 4px 4px 0 var(--black);
+      background: var(--white);
+    }
+
+    button.primary {
+      background: var(--yellow);
+    }
+
+    button.danger {
+      background: var(--red);
+      color: var(--white);
+    }
+
+    button:disabled {
+      opacity: .55;
+      cursor: not-allowed;
+    }
+
+    .message {
+      min-height: 22px;
+      font-weight: 900;
+      color: var(--red);
+      margin-top: 12px;
+    }
+
+    .panel {
+      display: none;
+    }
+
+    body.admin-logged .login-card {
+      display: none;
+    }
+
+    body.admin-logged .panel {
+      display: block;
+    }
+
+    .tabs {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-bottom: 18px;
+    }
+
+    .tab-btn.is-active {
+      background: var(--cyan);
+    }
+
+    .admin-section {
+      display: none;
+    }
+
+    .admin-section.is-active {
+      display: block;
+    }
+
+    .table-wrap {
+      overflow: auto;
+      padding: 0;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      min-width: 800px;
+    }
+
+    th,
+    td {
+      padding: 14px;
+      border-bottom: 2px solid #e8e8e8;
+      text-align: left;
+      font-weight: 800;
+      white-space: nowrap;
+    }
+
+    th {
+      background: var(--black);
+      color: var(--white);
+      text-transform: uppercase;
+      font-size: 12px;
+    }
+
+    .rank {
+      display: inline-grid;
+      place-items: center;
+      min-width: 38px;
+      height: 38px;
+      border: 3px solid var(--black);
+      border-radius: 999px;
+      background: var(--yellow);
+      box-shadow: 3px 3px 0 var(--black);
+      font-weight: 1000;
+    }
+
+    .date-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      align-items: end;
+      margin-bottom: 18px;
+    }
+
+    .date-row label {
+      margin: 0;
+      min-width: 220px;
+    }
+
+    .matches {
+      display: grid;
+      gap: 16px;
+    }
+
+    .match-card {
+      padding: 18px;
+      display: grid;
+      gap: 14px;
+    }
+
+    .match-head {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: space-between;
+      gap: 10px;
+      align-items: center;
+    }
+
+    .tag {
+      display: inline-flex;
+      align-items: center;
+      border: 3px solid var(--black);
+      border-radius: 999px;
+      padding: 7px 10px;
+      box-shadow: 3px 3px 0 var(--black);
+      background: var(--cyan);
+      font-weight: 1000;
+      text-transform: uppercase;
+      font-size: 11px;
+    }
+
+    .score-form {
+      display: grid;
+      grid-template-columns: 1fr 90px 32px 90px 1fr auto;
+      gap: 10px;
+      align-items: center;
+    }
+
+    .team {
+      font-weight: 1000;
+      text-transform: uppercase;
+      font-size: 18px;
+    }
+
+    .score-form input {
+      min-height: 46px;
+      text-align: center;
+      font-size: 20px;
+      padding: 0;
+    }
+
+    .score-form span {
+      text-align: center;
+      font-weight: 1000;
+      font-size: 24px;
+    }
+
+    .muted {
+      color: var(--muted);
+      font-size: 13px;
+      font-weight: 800;
+    }
+
+    @media (max-width: 820px) {
+      .grid {
+        grid-template-columns: 1fr;
+      }
+
+      .topbar {
+        align-items: flex-start;
+        flex-direction: column;
+      }
+
+      .topbar .actions {
+        width: 100%;
+      }
+
+      .topbar button {
+        width: 100%;
+      }
+
+      .score-form {
+        grid-template-columns: 1fr;
+      }
+
+      .score-form span {
+        display: none;
+      }
+
+      .score-form button {
+        width: 100%;
+      }
+
+      .team {
+        text-align: center;
+      }
+
+      h1 {
+        font-size: clamp(40px, 14vw, 64px);
+      }
+    }
+  
+    .summary-admin-grid {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 14px;
+      margin-bottom: 20px;
+    }
+
+    .summary-admin-card {
+      border: 4px solid var(--black);
+      border-radius: 22px;
+      box-shadow: 5px 5px 0 var(--black);
+      background: var(--white);
+      padding: 18px;
+    }
+
+    .summary-admin-card:nth-child(1) {
+      background: var(--yellow);
+    }
+
+    .summary-admin-card:nth-child(2) {
+      background: var(--cyan);
+    }
+
+    .summary-admin-card:nth-child(3) {
+      background: #ffffff;
+    }
+
+    .summary-admin-card:nth-child(4) {
+      background: #ffefef;
+    }
+
+    .summary-admin-card strong {
+      display: block;
+      font-size: 38px;
+      line-height: 1;
+      letter-spacing: -.05em;
+      font-weight: 1000;
+    }
+
+    .summary-admin-card span {
+      display: block;
+      margin-top: 8px;
+      font-size: 11px;
+      font-weight: 1000;
+      text-transform: uppercase;
+    }
+
+    @media (max-width: 820px) {
+      .summary-admin-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+    }
+
+    @media (max-width: 480px) {
+      .summary-admin-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+  </style>
+</head>
+
+<body>
+  <div class="shell">
+    <header class="topbar">
+      <div class="brand">
+        <strong>Admin Solar Copa</strong>
+        <span>Dashboard interno de pontuação e resultados</span>
+      </div>
+
+      <div class="actions">
+        <button type="button" id="refreshAllBtn">Atualizar dados</button>
+        <button type="button" class="danger" id="logoutBtn">Sair</button>
+      </div>
+    </header>
+
+    <main>
+      <section class="hero">
+        <h1>Dashboard Administrativo</h1>
+        <p>
+          Acesso exclusivo para atualizar resultados dos jogos e acompanhar a classificação completa dos usuários.
+        </p>
+      </section>
+
+      <section class="card login-card">
+        <h2>Entrar como admin</h2>
+
+        <label>
+          Usuário
+          <input id="adminUserInput" type="text" autocomplete="username" placeholder="admin" />
+        </label>
+
+        <label>
+          Senha
+          <input id="adminPasswordInput" type="password" autocomplete="current-password" placeholder="Senha do admin" />
+        </label>
+
+        <button class="primary" type="button" id="adminLoginBtn">Entrar no dashboard</button>
+        <div class="message" id="loginMessage"></div>
+      </section>
+
+      <section class="panel">
+        
+        <section class="summary-admin-grid" id="adminSummaryGrid">
+          <article class="summary-admin-card">
+            <strong id="summaryUsers">0</strong>
+            <span>usuários cadastrados</span>
+          </article>
+
+          <article class="summary-admin-card">
+            <strong id="summaryPredictions">0</strong>
+            <span>palpites salvos</span>
+          </article>
+
+          <article class="summary-admin-card">
+            <strong id="summaryResults">0</strong>
+            <span>resultados lançados</span>
+          </article>
+
+          <article class="summary-admin-card">
+            <strong id="summaryAverage">0</strong>
+            <span>média por usuário</span>
+          </article>
+        </section>
+
+
+        <div class="tabs">
+          <button class="tab-btn is-active" type="button" data-tab="ranking">Classificação completa</button>
+          <button class="tab-btn" type="button" data-tab="jogos">Atualizar jogos do dia</button>
+        </div>
+
+        <section class="admin-section is-active" id="tab-ranking">
+          <div class="card" style="margin-bottom: 18px;">
+            <h2>Classificação completa</h2>
+            <p>
+              A pontuação considera: placar exato 35 pontos, vencedor ou empate correto 15 pontos e gols corretos de cada time 5 pontos.
+            </p>
+          </div>
+
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>Posição</th>
+                  <th>Usuário</th>
+                  <th>Telefone</th>
+                  <th>Pontos</th>
+                  <th>Palpites</th>
+                  <th>Palpites pontuados</th>
+                  <th>Último palpite</th>
+                </tr>
+              </thead>
+              <tbody id="leaderboardBody">
+                <tr>
+                  <td colspan="7">Carregando classificação...</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </section>
+
+        <section class="admin-section" id="tab-jogos">
+          <div class="card" style="margin-bottom: 18px;">
+            <h2>Jogos do dia</h2>
+            <p>
+              Escolha uma data da primeira fase para atualizar os resultados. Ao salvar o resultado, a pontuação dos usuários será recalculada automaticamente no ranking.
+            </p>
+
+            <div class="date-row">
+              <label>
+                Data
+                <input id="adminDateInput" type="date" value="2026-06-11" />
+              </label>
+
+              <button class="primary" type="button" id="loadDayBtn">Buscar jogos</button>
+            </div>
+
+            <div class="message" id="matchesMessage"></div>
+          </div>
+
+          <div class="matches" id="adminMatchesGrid"></div>
+        </section>
+      </section>
+    </main>
+  </div>
+
+  <script>
+    const $ = (selector) => document.querySelector(selector);
+    const $$ = (selector) => Array.from(document.querySelectorAll(selector));
+
+    function normalizeMessage(error) {
+      return error && error.message ? error.message : "Não foi possível concluir a operação.";
+    }
+
+    async function api(url, options = {}) {
+      const response = await fetch(url, {
+        credentials: "include",
+        ...options,
+        headers: {
+          "Content-Type": "application/x-www-form-urlencoded",
+          ...(options.headers || {})
+        }
+      });
+
+      const data = await response.json();
+
+      if (!response.ok || !data.success) {
+        throw new Error(data.message || "Erro na requisição.");
+      }
+
+      return data;
+    }
+
+    function setLogged(logged) {
+      document.body.classList.toggle("admin-logged", logged);
+    }
+
+    async function checkAdmin() {
+      try {
+        await api("/admin/me");
+        setLogged(true);
+        await refreshAll();
+      } catch {
+        setLogged(false);
+      }
+    }
+
+    async function loginAdmin() {
+      const username = $("#adminUserInput").value.trim();
+      const password = $("#adminPasswordInput").value;
+      const message = $("#loginMessage");
+
+      message.textContent = "";
+
+      try {
+        await api("/admin/login", {
+          method: "POST",
+          body: new URLSearchParams({ username, password })
+        });
+
+        setLogged(true);
+        await refreshAll();
+      } catch (error) {
+        message.textContent = normalizeMessage(error);
+      }
+    }
+
+    async function logoutAdmin() {
+      try {
+        await api("/admin/logout", { method: "POST" });
+      } catch {}
+
+      setLogged(false);
+    }
+
+    function renderLeaderboard(users) {
+      const body = $("#leaderboardBody");
+
+      if (!users.length) {
+        body.innerHTML = `
+          <tr>
+            <td colspan="7">Nenhum usuário cadastrado.</td>
+          </tr>
+        `;
+        return;
+      }
+
+      body.innerHTML = users.map((user) => `
+        <tr>
+          <td><span class="rank">${user.position}</span></td>
+          <td>${user.username || "-"}</td>
+          <td>${user.phone || "-"}</td>
+          <td>${user.points}</td>
+          <td>${user.predictionsCount}</td>
+          <td>${user.scoredPredictions}</td>
+          <td>${user.lastPredictionAt || "-"}</td>
+        </tr>
+      `).join("");
+    }
+
+    
+    async function loadSummary() {
+      try {
+        const data = await api("/admin/summary");
+
+        $("#summaryUsers").textContent = data.summary.totalUsers;
+        $("#summaryPredictions").textContent = data.summary.totalPredictions;
+        $("#summaryResults").textContent = data.summary.totalResults;
+        $("#summaryAverage").textContent = data.summary.averagePredictions;
+      } catch (error) {
+        console.warn("Não foi possível carregar resumo administrativo.");
+      }
+    }
+
+    async function loadLeaderboard() {
+      const data = await api("/admin/leaderboard");
+      renderLeaderboard(data.leaderboard || []);
+    }
+
+    function formatDateTime(value) {
+      const date = new Date(value);
+
+      if (Number.isNaN(date.getTime())) {
+        return value || "-";
+      }
+
+      return date.toLocaleString("pt-BR", {
+        dateStyle: "short",
+        timeStyle: "short"
+      });
+    }
+
+    function renderMatches(matches) {
+      const grid = $("#adminMatchesGrid");
+
+      if (!matches.length) {
+        grid.innerHTML = `
+          <article class="match-card">
+            <p>Nenhum jogo encontrado para esta data.</p>
+          </article>
+        `;
+        return;
+      }
+
+      grid.innerHTML = matches.map((match) => `
+        <article class="match-card" data-match="${match.id}">
+          <div class="match-head">
+            <div>
+              <span class="tag">Grupo ${match.group_name}</span>
+              <span class="tag">${formatDateTime(match.kickoff_at)}</span>
+            </div>
+            <div class="muted">${match.venue || "Estádio não informado"}</div>
+          </div>
+
+          <div class="score-form">
+            <div class="team">${match.home_team}</div>
+
+            <input
+              type="number"
+              min="0"
+              max="99"
+              data-home-result
+              value="${match.result_home_score ?? ""}"
+              placeholder="0"
+            />
+
+            <span>x</span>
+
+            <input
+              type="number"
+              min="0"
+              max="99"
+              data-away-result
+              value="${match.result_away_score ?? ""}"
+              placeholder="0"
+            />
+
+            <div class="team">${match.away_team}</div>
+
+            <button class="primary" type="button" data-save-result="${match.id}">
+              Salvar resultado
+            </button>
+          </div>
+        </article>
+      `).join("");
+
+      grid.querySelectorAll("[data-save-result]").forEach((button) => {
+        button.addEventListener("click", async () => {
+          const card = grid.querySelector(`[data-match="${button.dataset.saveResult}"]`);
+          const homeScore = card.querySelector("[data-home-result]").value;
+          const awayScore = card.querySelector("[data-away-result]").value;
+          const message = $("#matchesMessage");
+
+          message.textContent = "";
+
+          if (homeScore === "" || awayScore === "") {
+            message.textContent = "Informe os dois placares antes de salvar.";
+            return;
+          }
+
+          try {
+            button.disabled = true;
+            button.textContent = "Salvando...";
+
+            await api("/admin/results", {
+              method: "POST",
+              body: new URLSearchParams({
+                matchId: button.dataset.saveResult,
+                homeScore,
+                awayScore
+              })
+            });
+
+            message.textContent = "Resultado atualizado com sucesso.";
+            await loadSummary();
+      await loadLeaderboard();
+          } catch (error) {
+            message.textContent = normalizeMessage(error);
+          } finally {
+            button.disabled = false;
+            button.textContent = "Salvar resultado";
+          }
+        });
+      });
+    }
+
+    async function loadDayMatches() {
+      const date = $("#adminDateInput").value;
+      const message = $("#matchesMessage");
+
+      message.textContent = "";
+
+      try {
+        const data = await api(`/admin/matches/day/${date}`);
+        renderMatches(data.matches || []);
+      } catch (error) {
+        message.textContent = normalizeMessage(error);
+      }
+    }
+
+    async function refreshAll() {
+      await loadLeaderboard();
+      await loadDayMatches();
+    }
+
+    function setupTabs() {
+      $$(".tab-btn").forEach((button) => {
+        button.addEventListener("click", () => {
+          $$(".tab-btn").forEach((item) => item.classList.remove("is-active"));
+          $$(".admin-section").forEach((item) => item.classList.remove("is-active"));
+
+          button.classList.add("is-active");
+          $(`#tab-${button.dataset.tab}`).classList.add("is-active");
+        });
+      });
+    }
+
+    function init() {
+      setupTabs();
+
+      $("#adminLoginBtn").addEventListener("click", loginAdmin);
+      $("#logoutBtn").addEventListener("click", logoutAdmin);
+      $("#refreshAllBtn").addEventListener("click", refreshAll);
+      $("#loadDayBtn").addEventListener("click", loadDayMatches);
+
+      $("#adminPasswordInput").addEventListener("keydown", (event) => {
+        if (event.key === "Enter") {
+          loginAdmin();
+        }
+      });
+
+      checkAdmin();
+    }
+
+    document.addEventListener("DOMContentLoaded", init);
+  </script>
+</body>
+</html>
