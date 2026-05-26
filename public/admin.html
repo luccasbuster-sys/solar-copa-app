@@ -411,6 +411,14 @@
       }
     }
 
+  
+    .delete-user-btn {
+      min-height: 38px;
+      padding: 0 12px;
+      font-size: 11px;
+      box-shadow: 3px 3px 0 var(--black);
+    }
+
   </style>
 </head>
 
@@ -424,6 +432,7 @@
 
       <div class="actions">
         <button type="button" id="refreshAllBtn">Atualizar dados</button>
+        <button type="button" class="primary" id="exportUsersBtn">Baixar planilha</button>
         <button type="button" class="danger" id="logoutBtn">Sair</button>
       </div>
     </header>
@@ -502,11 +511,12 @@
                   <th>Palpites</th>
                   <th>Palpites pontuados</th>
                   <th>Último palpite</th>
+                  <th>Ações</th>
                 </tr>
               </thead>
               <tbody id="leaderboardBody">
                 <tr>
-                  <td colspan="7">Carregando classificação...</td>
+                  <td colspan="8">Carregando classificação...</td>
                 </tr>
               </tbody>
             </table>
@@ -607,13 +617,44 @@
       setLogged(false);
     }
 
+    
+    async function deleteUserFromAdmin(userId, username) {
+      const confirmed = window.confirm(
+        `Tem certeza que deseja excluir o usuário "${username}"? Essa ação também apagará todos os palpites dele e não poderá ser desfeita.`
+      );
+
+      if (!confirmed) return;
+
+      try {
+        await api(`/admin/users/${userId}`, {
+          method: "DELETE"
+        });
+
+        await refreshAll();
+      } catch (error) {
+        alert(normalizeMessage(error));
+      }
+    }
+
+    function setupDeleteUserButtons() {
+      document.querySelectorAll("[data-delete-user]").forEach((button) => {
+        button.addEventListener("click", () => {
+          deleteUserFromAdmin(
+            button.dataset.deleteUser,
+            button.dataset.deleteName
+          );
+        });
+      });
+    }
+
+    
     function renderLeaderboard(users) {
       const body = $("#leaderboardBody");
 
       if (!users.length) {
         body.innerHTML = `
           <tr>
-            <td colspan="7">Nenhum usuário cadastrado.</td>
+            <td colspan="8">Nenhum usuário cadastrado.</td>
           </tr>
         `;
         return;
@@ -628,23 +669,22 @@
           <td>${user.predictionsCount}</td>
           <td>${user.scoredPredictions}</td>
           <td>${user.lastPredictionAt || "-"}</td>
+          <td>
+            <button
+              type="button"
+              class="danger delete-user-btn"
+              data-delete-user="${user.id}"
+              data-delete-name="${user.username || "-"}"
+            >
+              Excluir
+            </button>
+          </td>
         </tr>
       `).join("");
+
+      setupDeleteUserButtons();
     }
 
-    
-    async function loadSummary() {
-      try {
-        const data = await api("/admin/summary");
-
-        $("#summaryUsers").textContent = data.summary.totalUsers;
-        $("#summaryPredictions").textContent = data.summary.totalPredictions;
-        $("#summaryResults").textContent = data.summary.totalResults;
-        $("#summaryAverage").textContent = data.summary.averagePredictions;
-      } catch (error) {
-        console.warn("Não foi possível carregar resumo administrativo.");
-      }
-    }
 
     async function loadLeaderboard() {
       const data = await api("/admin/leaderboard");
@@ -772,6 +812,11 @@
       }
     }
 
+    
+    function exportUsersSheet() {
+      window.location.href = "/admin/export-users";
+    }
+
     async function refreshAll() {
       await loadLeaderboard();
       await loadDayMatches();
@@ -795,6 +840,7 @@
       $("#adminLoginBtn").addEventListener("click", loginAdmin);
       $("#logoutBtn").addEventListener("click", logoutAdmin);
       $("#refreshAllBtn").addEventListener("click", refreshAll);
+      $("#exportUsersBtn").addEventListener("click", exportUsersSheet);
       $("#loadDayBtn").addEventListener("click", loadDayMatches);
 
       $("#adminPasswordInput").addEventListener("keydown", (event) => {

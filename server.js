@@ -7,6 +7,7 @@ const path = require("path");
 const helmet = require("helmet");
 const rateLimit = require("express-rate-limit");
 const db = require("./database");
+const ExcelJS = require("exceljs");
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -84,6 +85,43 @@ function isValidDate(date) {
   return /^\d{4}-\d{2}-\d{2}$/.test(String(date || ""));
 }
 
+
+const ACTIVATION_CODES = {
+  CD2026: "Centro de Distribuição",
+  ADM2026: "Centro Administrativo",
+  TRANS2026: "Solar Transporte",
+  S12026: "Posto S1",
+  S22026: "Posto S2",
+  S32026: "Posto S3",
+  S42026: "Posto S4",
+  S52026: "Posto S5",
+  PREMIUM2026: "Posto Premium",
+  TRINDADE2026: "Solar Trindade",
+  ROMEIROS2026: "Solar Rodovia dos Romeiros",
+  FUTURA2026: "Futura Atacadista"
+};
+
+function normalizeActivationCode(code) {
+  return String(code || "").trim().toUpperCase();
+}
+
+function getActivationOrigin(code) {
+  return ACTIVATION_CODES[normalizeActivationCode(code)] || null;
+}
+
+function splitFullName(fullName) {
+  const parts = String(fullName || "")
+    .trim()
+    .replace(/\s+/g, " ")
+    .split(" ")
+    .filter(Boolean);
+
+  return {
+    firstName: parts[0] || "",
+    lastName: parts.slice(1).join(" ") || ""
+  };
+}
+
 function normalizePhone(phone) {
   return String(phone || "").replace(/\D/g, "");
 }
@@ -94,35 +132,36 @@ function publicUser(user) {
     username: user.username,
     firstName: user.first_name,
     lastName: user.last_name,
-    phone: user.phone
+    phone: user.phone,
+    activationCode: user.activation_code,
+    activationOrigin: user.activation_origin
   };
 }
 
+
 app.post("/register", authLimiter, async (req, res) => {
   try {
-    const firstName = req.body.firstName ? req.body.firstName.trim() : "";
-    const lastName = req.body.lastName ? req.body.lastName.trim() : "";
+    const fullName = req.body.fullName ? req.body.fullName.trim() : "";
     const phone = normalizePhone(req.body.phone);
     const password = req.body.password ? req.body.password : "";
+    const activationCode = normalizeActivationCode(req.body.activationCode);
+    const activationOrigin = getActivationOrigin(activationCode);
 
-    if (!firstName || !lastName || !phone || !password) {
+    const nameParts = splitFullName(fullName);
+    const firstName = nameParts.firstName;
+    const lastName = nameParts.lastName;
+
+    if (!fullName || !phone || !password || !activationCode) {
       return res.status(400).json({
         success: false,
-        message: "Informe nome, sobrenome, telefone e senha."
+        message: "Informe nome e sobrenome, telefone, senha e código de ativação."
       });
     }
 
-    if (firstName.length < 2) {
+    if (!firstName || !lastName) {
       return res.status(400).json({
         success: false,
-        message: "O nome precisa ter pelo menos 2 caracteres."
-      });
-    }
-
-    if (lastName.length < 2) {
-      return res.status(400).json({
-        success: false,
-        message: "O sobrenome precisa ter pelo menos 2 caracteres."
+        message: "Informe nome e sobrenome completos."
       });
     }
 
@@ -140,8 +179,15 @@ app.post("/register", authLimiter, async (req, res) => {
       });
     }
 
+    if (!activationOrigin) {
+      return res.status(400).json({
+        success: false,
+        message: "Código de ativação inválido."
+      });
+    }
+
     const passwordHash = await bcrypt.hash(password, 10);
-    const username = `${firstName} ${lastName}`;
+    const username = fullName;
 
     db.run(
       `
@@ -150,11 +196,21 @@ app.post("/register", authLimiter, async (req, res) => {
           first_name,
           last_name,
           phone,
+          activation_code,
+          activation_origin,
           password_hash
         )
-        VALUES (?, ?, ?, ?, ?)
+        VALUES (?, ?, ?, ?, ?, ?, ?)
       `,
-      [username, firstName, lastName, phone, passwordHash],
+      [
+        username,
+        firstName,
+        lastName,
+        phone,
+        activationCode,
+        activationOrigin,
+        passwordHash
+      ],
       function (error) {
         if (error) {
           console.error("Erro SQLite:", error.message);
@@ -178,7 +234,9 @@ app.post("/register", authLimiter, async (req, res) => {
           username,
           firstName,
           lastName,
-          phone
+          phone,
+          activationCode,
+          activationOrigin
         };
 
         return res.json({
@@ -198,6 +256,7 @@ app.post("/register", authLimiter, async (req, res) => {
     });
   }
 });
+
 
 app.post("/login", authLimiter, (req, res) => {
   try {
@@ -650,18 +709,22 @@ app.get("/leaderboard", requireLogin, (req, res) => {
   db.all(
     `
       SELECT
-        u.id,
+        u.id AS user_id,
         u.username,
         u.first_name,
         u.last_name,
         u.phone,
-        COUNT(p.id) AS predictions_count,
-        COUNT(p.id) AS points
+        p.id AS prediction_id,
+        p.match_id,
+        p.home_score AS pred_home_score,
+        p.away_score AS pred_away_score,
+        p.updated_at AS prediction_updated_at,
+        r.home_score AS result_home_score,
+        r.away_score AS result_away_score
       FROM users u
       LEFT JOIN predictions p ON p.user_id = u.id
-      GROUP BY u.id, u.username, u.first_name, u.last_name, u.phone
-      ORDER BY points DESC, predictions_count DESC, u.username ASC
-      LIMIT 50
+      LEFT JOIN match_results r ON r.match_id = p.match_id
+      ORDER BY u.id ASC, p.updated_at DESC
     `,
     [],
     (error, rows) => {
@@ -674,19 +737,54 @@ app.get("/leaderboard", requireLogin, (req, res) => {
         });
       }
 
+      const usersMap = new Map();
+
+      rows.forEach((row) => {
+        if (!usersMap.has(row.user_id)) {
+          usersMap.set(row.user_id, {
+            id: row.user_id,
+            username:
+              row.first_name && row.last_name
+                ? `${row.first_name} ${row.last_name}`
+                : row.username,
+            phone: row.phone,
+            predictionsCount: 0,
+            points: 0,
+            lastPredictionAt: null
+          });
+        }
+
+        const user = usersMap.get(row.user_id);
+
+        if (row.prediction_id) {
+          user.predictionsCount += 1;
+          user.points += calculatePredictionPoints(row);
+
+          if (
+            !user.lastPredictionAt ||
+            new Date(row.prediction_updated_at) > new Date(user.lastPredictionAt)
+          ) {
+            user.lastPredictionAt = row.prediction_updated_at;
+          }
+        }
+      });
+
+      const leaderboard = Array.from(usersMap.values())
+        .sort((a, b) => {
+          if (b.points !== a.points) return b.points - a.points;
+          if (b.predictionsCount !== a.predictionsCount) {
+            return b.predictionsCount - a.predictionsCount;
+          }
+          return String(a.username || "").localeCompare(String(b.username || ""));
+        })
+        .map((user, index) => ({
+          position: index + 1,
+          ...user
+        }));
+
       return res.json({
         success: true,
-        leaderboard: rows.map((row, index) => ({
-          position: index + 1,
-          id: row.id,
-          username:
-            row.first_name && row.last_name
-              ? `${row.first_name} ${row.last_name}`
-              : row.username,
-          phone: row.phone,
-          predictionsCount: row.predictions_count,
-          points: row.points
-        }))
+        leaderboard
       });
     }
   );
@@ -716,13 +814,23 @@ function getPredictionWinner(home, away) {
 }
 
 function calculatePredictionPoints(prediction) {
+  /*
+    Regra de pontuação:
+    - Todo palpite salvo vale 1 ponto de participação.
+    - Placar exato vale +35 pontos.
+    - Acertou vencedor ou empate vale +15 pontos.
+    - Acertou gols de cada time vale +5 pontos por time.
+  */
+
+  let points = 1;
+
   if (
     prediction.result_home_score === null ||
     prediction.result_away_score === null ||
     prediction.result_home_score === undefined ||
     prediction.result_away_score === undefined
   ) {
-    return 0;
+    return points;
   }
 
   const predictedHome = Number(prediction.pred_home_score);
@@ -731,10 +839,8 @@ function calculatePredictionPoints(prediction) {
   const realAway = Number(prediction.result_away_score);
 
   if (predictedHome === realHome && predictedAway === realAway) {
-    return 35;
+    return points + 35;
   }
-
-  let points = 0;
 
   const predictedWinner = getPredictionWinner(predictedHome, predictedAway);
   const realWinner = getPredictionWinner(realHome, realAway);
@@ -802,6 +908,490 @@ app.post("/admin/logout", (req, res) => {
     success: true,
     message: "Administrador saiu do dashboard."
   });
+});
+
+
+
+
+
+app.delete("/admin/users/:id", requireAdmin, (req, res) => {
+  const userId = Number(req.params.id);
+
+  if (!Number.isInteger(userId) || userId <= 0) {
+    return res.status(400).json({
+      success: false,
+      message: "ID de usuário inválido."
+    });
+  }
+
+  db.get(
+    "SELECT id, username, first_name, last_name, phone FROM users WHERE id = ?",
+    [userId],
+    (findError, user) => {
+      if (findError) {
+        console.error("Erro ao buscar usuário para exclusão:", findError.message);
+
+        return res.status(500).json({
+          success: false,
+          message: "Erro ao buscar usuário."
+        });
+      }
+
+      if (!user) {
+        return res.status(404).json({
+          success: false,
+          message: "Usuário não encontrado."
+        });
+      }
+
+      db.serialize(() => {
+        db.run(
+          "DELETE FROM predictions WHERE user_id = ?",
+          [userId],
+          function (predictionsError) {
+            if (predictionsError) {
+              console.error("Erro ao excluir palpites do usuário:", predictionsError.message);
+
+              return res.status(500).json({
+                success: false,
+                message: "Erro ao excluir palpites do usuário."
+              });
+            }
+
+            const deletedPredictions = this.changes || 0;
+
+            db.run(
+              "DELETE FROM users WHERE id = ?",
+              [userId],
+              function (userError) {
+                if (userError) {
+                  console.error("Erro ao excluir usuário:", userError.message);
+
+                  return res.status(500).json({
+                    success: false,
+                    message: "Erro ao excluir usuário."
+                  });
+                }
+
+                return res.json({
+                  success: true,
+                  message: "Usuário excluído com sucesso.",
+                  deletedUser: {
+                    id: user.id,
+                    username:
+                      user.first_name && user.last_name
+                        ? `${user.first_name} ${user.last_name}`
+                        : user.username,
+                    phone: user.phone
+                  },
+                  deletedPredictions
+                });
+              }
+            );
+          }
+        );
+      });
+    }
+  );
+});
+
+app.get("/admin/export-users", requireAdmin, (req, res) => {
+  db.all(
+    `
+      SELECT
+        u.id AS user_id,
+        u.username,
+        u.first_name,
+        u.last_name,
+        u.phone,
+        u.activation_code,
+        u.activation_origin,
+        u.created_at,
+
+        p.id AS prediction_id,
+        p.match_id,
+        p.home_team AS prediction_home_team,
+        p.away_team AS prediction_away_team,
+        p.home_score AS pred_home_score,
+        p.away_score AS pred_away_score,
+        p.updated_at AS prediction_updated_at,
+
+        m.group_name,
+        m.home_team AS match_home_team,
+        m.away_team AS match_away_team,
+        m.match_date,
+        m.kickoff_at,
+        m.venue,
+        m.stage,
+
+        r.home_score AS result_home_score,
+        r.away_score AS result_away_score,
+        r.updated_at AS result_updated_at
+      FROM users u
+      LEFT JOIN predictions p ON p.user_id = u.id
+      LEFT JOIN matches m ON m.id = p.match_id
+      LEFT JOIN match_results r ON r.match_id = p.match_id
+      ORDER BY u.id ASC, p.updated_at DESC
+    `,
+    [],
+    async (error, rows) => {
+      if (error) {
+        console.error("Erro ao exportar usuários:", error.message);
+
+        return res.status(500).json({
+          success: false,
+          message: "Erro ao exportar usuários."
+        });
+      }
+
+      db.all(
+        `
+          SELECT
+            m.id,
+            m.group_name,
+            m.home_team,
+            m.away_team,
+            m.match_date,
+            m.kickoff_at,
+            m.venue,
+            m.stage,
+            r.home_score AS result_home_score,
+            r.away_score AS result_away_score,
+            r.updated_at AS result_updated_at
+          FROM matches m
+          LEFT JOIN match_results r ON r.match_id = m.id
+          ORDER BY m.kickoff_at ASC
+        `,
+        [],
+        async (matchesError, matchesRows) => {
+          if (matchesError) {
+            console.error("Erro ao exportar jogos:", matchesError.message);
+
+            return res.status(500).json({
+              success: false,
+              message: "Erro ao exportar jogos."
+            });
+          }
+
+          const usersMap = new Map();
+          const predictionRows = [];
+
+          rows.forEach((row) => {
+            if (!usersMap.has(row.user_id)) {
+              usersMap.set(row.user_id, {
+                id: row.user_id,
+                username:
+                  row.first_name && row.last_name
+                    ? `${row.first_name} ${row.last_name}`
+                    : row.username,
+                phone: row.phone || "-",
+                activationCode: row.activation_code || "-",
+                activationOrigin: row.activation_origin || "-",
+                createdAt: row.created_at || "-",
+                predictionsCount: 0,
+                scoredPredictions: 0,
+                points: 0,
+                lastPredictionAt: null
+              });
+            }
+
+            const user = usersMap.get(row.user_id);
+
+            if (row.prediction_id) {
+              const points = calculatePredictionPoints(row);
+
+              user.predictionsCount += 1;
+              user.points += points;
+
+              if (
+                row.result_home_score !== null &&
+                row.result_away_score !== null
+              ) {
+                user.scoredPredictions += 1;
+              }
+
+              if (
+                !user.lastPredictionAt ||
+                new Date(row.prediction_updated_at) > new Date(user.lastPredictionAt)
+              ) {
+                user.lastPredictionAt = row.prediction_updated_at;
+              }
+
+              predictionRows.push({
+                userId: row.user_id,
+                username: user.username,
+                phone: user.phone,
+                activationCode: user.activationCode,
+                activationOrigin: user.activationOrigin,
+                matchId: row.match_id,
+                groupName: row.group_name || "-",
+                homeTeam: row.match_home_team || row.prediction_home_team || "-",
+                awayTeam: row.match_away_team || row.prediction_away_team || "-",
+                matchDate: row.match_date || "-",
+                kickoffAt: row.kickoff_at || "-",
+                prediction: `${row.pred_home_score} x ${row.pred_away_score}`,
+                result:
+                  row.result_home_score !== null && row.result_away_score !== null
+                    ? `${row.result_home_score} x ${row.result_away_score}`
+                    : "Resultado pendente",
+                points,
+                predictionUpdatedAt: row.prediction_updated_at || "-"
+              });
+            }
+          });
+
+          const users = Array.from(usersMap.values())
+            .sort((a, b) => {
+              if (b.points !== a.points) return b.points - a.points;
+              if (b.predictionsCount !== a.predictionsCount) {
+                return b.predictionsCount - a.predictionsCount;
+              }
+              return String(a.username || "").localeCompare(String(b.username || ""));
+            })
+            .map((user, index) => ({
+              position: index + 1,
+              ...user
+            }));
+
+          const originMap = new Map();
+
+          users.forEach((user) => {
+            const key = user.activationOrigin || "Sem origem";
+
+            if (!originMap.has(key)) {
+              originMap.set(key, {
+                activationOrigin: key,
+                usersCount: 0,
+                predictionsCount: 0,
+                scoredPredictions: 0,
+                points: 0
+              });
+            }
+
+            const item = originMap.get(key);
+            item.usersCount += 1;
+            item.predictionsCount += user.predictionsCount;
+            item.scoredPredictions += user.scoredPredictions;
+            item.points += user.points;
+          });
+
+          const originRows = Array.from(originMap.values()).sort((a, b) => {
+            if (b.usersCount !== a.usersCount) return b.usersCount - a.usersCount;
+            return String(a.activationOrigin).localeCompare(String(b.activationOrigin));
+          });
+
+          const totalUsers = users.length;
+          const totalPredictions = predictionRows.length;
+          const totalMatches = matchesRows.length;
+          const totalResults = matchesRows.filter(
+            (match) => match.result_home_score !== null && match.result_away_score !== null
+          ).length;
+
+          const workbook = new ExcelJS.Workbook();
+          workbook.creator = "Solar Copa App";
+          workbook.created = new Date();
+
+          function styleSheet(sheet) {
+            const header = sheet.getRow(1);
+
+            header.font = {
+              bold: true,
+              color: { argb: "FFFFFFFF" }
+            };
+
+            header.fill = {
+              type: "pattern",
+              pattern: "solid",
+              fgColor: { argb: "FF050505" }
+            };
+
+            header.alignment = {
+              vertical: "middle",
+              horizontal: "center"
+            };
+
+            sheet.eachRow((row, rowNumber) => {
+              row.eachCell((cell) => {
+                cell.border = {
+                  top: { style: "thin", color: { argb: "FFCCCCCC" } },
+                  left: { style: "thin", color: { argb: "FFCCCCCC" } },
+                  bottom: { style: "thin", color: { argb: "FFCCCCCC" } },
+                  right: { style: "thin", color: { argb: "FFCCCCCC" } }
+                };
+
+                cell.alignment = {
+                  vertical: "middle",
+                  wrapText: true
+                };
+
+                if (rowNumber > 1 && rowNumber % 2 === 0) {
+                  cell.fill = {
+                    type: "pattern",
+                    pattern: "solid",
+                    fgColor: { argb: "FFF7F7F7" }
+                  };
+                }
+              });
+            });
+
+            sheet.views = [{ state: "frozen", ySplit: 1 }];
+          }
+
+          const summarySheet = workbook.addWorksheet("Resumo Geral");
+
+          summarySheet.columns = [
+            { header: "Indicador", key: "label", width: 34 },
+            { header: "Valor", key: "value", width: 24 }
+          ];
+
+          summarySheet.addRows([
+            { label: "Data da exportação", value: new Date().toLocaleString("pt-BR") },
+            { label: "Total de usuários", value: totalUsers },
+            { label: "Total de palpites", value: totalPredictions },
+            { label: "Total de jogos cadastrados", value: totalMatches },
+            { label: "Jogos com resultado lançado", value: totalResults },
+            { label: "Média de palpites por usuário", value: totalUsers > 0 ? Number((totalPredictions / totalUsers).toFixed(2)) : 0 },
+            { label: "Regra: placar exato", value: "35 pontos" },
+            { label: "Regra: vencedor ou empate correto", value: "15 pontos" },
+            { label: "Regra: gols corretos por time", value: "5 pontos por time" }
+          ]);
+
+          styleSheet(summarySheet);
+
+          const rankingSheet = workbook.addWorksheet("Classificação");
+
+          rankingSheet.columns = [
+            { header: "Posição", key: "position", width: 10 },
+            { header: "Usuário", key: "username", width: 32 },
+            { header: "Telefone", key: "phone", width: 18 },
+            { header: "Origem", key: "activationOrigin", width: 34 },
+            { header: "Código", key: "activationCode", width: 18 },
+            { header: "Pontuação", key: "points", width: 14 },
+            { header: "Palpites salvos", key: "predictionsCount", width: 18 },
+            { header: "Palpites pontuados", key: "scoredPredictions", width: 22 },
+            { header: "Último palpite", key: "lastPredictionAt", width: 24 }
+          ];
+
+          users.forEach((user) => rankingSheet.addRow(user));
+          styleSheet(rankingSheet);
+          rankingSheet.autoFilter = { from: "A1", to: "I1" };
+
+          const usersSheet = workbook.addWorksheet("Usuários Cadastrados");
+
+          usersSheet.columns = [
+            { header: "ID", key: "id", width: 10 },
+            { header: "Usuário", key: "username", width: 32 },
+            { header: "Telefone", key: "phone", width: 18 },
+            { header: "Código de ativação", key: "activationCode", width: 22 },
+            { header: "Origem", key: "activationOrigin", width: 34 },
+            { header: "Data de cadastro", key: "createdAt", width: 24 }
+          ];
+
+          users
+            .sort((a, b) => a.id - b.id)
+            .forEach((user) => usersSheet.addRow(user));
+
+          styleSheet(usersSheet);
+          usersSheet.autoFilter = { from: "A1", to: "F1" };
+
+          const predictionsSheet = workbook.addWorksheet("Palpites Detalhados");
+
+          predictionsSheet.columns = [
+            { header: "Usuário", key: "username", width: 32 },
+            { header: "Telefone", key: "phone", width: 18 },
+            { header: "Origem", key: "activationOrigin", width: 34 },
+            { header: "Jogo", key: "matchId", width: 14 },
+            { header: "Grupo", key: "groupName", width: 12 },
+            { header: "Mandante", key: "homeTeam", width: 24 },
+            { header: "Visitante", key: "awayTeam", width: 24 },
+            { header: "Data", key: "matchDate", width: 16 },
+            { header: "Horário", key: "kickoffAt", width: 24 },
+            { header: "Palpite", key: "prediction", width: 14 },
+            { header: "Resultado", key: "result", width: 20 },
+            { header: "Pontos", key: "points", width: 12 },
+            { header: "Atualizado em", key: "predictionUpdatedAt", width: 24 }
+          ];
+
+          predictionRows.forEach((prediction) => predictionsSheet.addRow(prediction));
+          styleSheet(predictionsSheet);
+          predictionsSheet.autoFilter = { from: "A1", to: "M1" };
+
+          const matchesSheet = workbook.addWorksheet("Jogos da Copa");
+
+          matchesSheet.columns = [
+            { header: "ID", key: "id", width: 14 },
+            { header: "Grupo", key: "group_name", width: 12 },
+            { header: "Mandante", key: "home_team", width: 24 },
+            { header: "Visitante", key: "away_team", width: 24 },
+            { header: "Data", key: "match_date", width: 16 },
+            { header: "Horário", key: "kickoff_at", width: 24 },
+            { header: "Estádio", key: "venue", width: 42 },
+            { header: "Fase", key: "stage", width: 20 }
+          ];
+
+          matchesRows.forEach((match) => matchesSheet.addRow(match));
+          styleSheet(matchesSheet);
+          matchesSheet.autoFilter = { from: "A1", to: "H1" };
+
+          const resultsSheet = workbook.addWorksheet("Resultados Lançados");
+
+          resultsSheet.columns = [
+            { header: "ID do jogo", key: "id", width: 14 },
+            { header: "Grupo", key: "group_name", width: 12 },
+            { header: "Mandante", key: "home_team", width: 24 },
+            { header: "Visitante", key: "away_team", width: 24 },
+            { header: "Resultado", key: "result", width: 18 },
+            { header: "Atualizado em", key: "result_updated_at", width: 24 }
+          ];
+
+          matchesRows
+            .filter((match) => match.result_home_score !== null && match.result_away_score !== null)
+            .forEach((match) => {
+              resultsSheet.addRow({
+                id: match.id,
+                group_name: match.group_name,
+                home_team: match.home_team,
+                away_team: match.away_team,
+                result: `${match.result_home_score} x ${match.result_away_score}`,
+                result_updated_at: match.result_updated_at || "-"
+              });
+            });
+
+          styleSheet(resultsSheet);
+          resultsSheet.autoFilter = { from: "A1", to: "F1" };
+
+          const originSheet = workbook.addWorksheet("Resumo por Origem");
+
+          originSheet.columns = [
+            { header: "Origem", key: "activationOrigin", width: 34 },
+            { header: "Usuários", key: "usersCount", width: 14 },
+            { header: "Palpites", key: "predictionsCount", width: 14 },
+            { header: "Palpites pontuados", key: "scoredPredictions", width: 20 },
+            { header: "Pontos totais", key: "points", width: 16 }
+          ];
+
+          originRows.forEach((origin) => originSheet.addRow(origin));
+          styleSheet(originSheet);
+          originSheet.autoFilter = { from: "A1", to: "E1" };
+
+          const buffer = await workbook.xlsx.writeBuffer();
+          const fileName = `relatorio-solar-copa-${new Date().toISOString().slice(0, 10)}.xlsx`;
+
+          res.setHeader(
+            "Content-Type",
+            "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+          );
+
+          res.setHeader(
+            "Content-Disposition",
+            `attachment; filename="${fileName}"`
+          );
+
+          return res.send(Buffer.from(buffer));
+        }
+      );
+    }
+  );
 });
 
 

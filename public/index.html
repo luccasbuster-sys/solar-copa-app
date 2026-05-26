@@ -4306,6 +4306,1029 @@
     }
   </style>
 
+
+  <style id="home-mobile-app-polish">
+    @media (max-width: 760px) {
+      body {
+        background:
+          radial-gradient(circle at 85% 8%, rgba(255, 37, 31, .22), transparent 26%),
+          radial-gradient(circle at 14% 20%, rgba(33, 211, 202, .22), transparent 25%),
+          linear-gradient(180deg, #fffaf0 0%, #ffffff 54%, #fff8d8 100%) !important;
+      }
+
+      .topbar {
+        display: grid !important;
+        grid-template-columns: 1fr !important;
+        gap: 10px !important;
+        padding: 10px !important;
+        border-radius: 24px !important;
+        margin-top: 8px !important;
+      }
+
+      .brand {
+        display: grid !important;
+        grid-template-columns: 44px 1fr !important;
+        align-items: center !important;
+        gap: 10px !important;
+      }
+
+      .brand-mark {
+        width: 44px !important;
+        height: 44px !important;
+      }
+
+      .brand strong {
+        font-size: 13px !important;
+        line-height: 1 !important;
+      }
+
+      .brand small {
+        font-size: 9px !important;
+        line-height: 1.2 !important;
+      }
+
+      .nav {
+        display: grid !important;
+        grid-template-columns: 1fr 1fr !important;
+        gap: 8px !important;
+        width: 100% !important;
+      }
+
+      .nav a,
+      .user-chip {
+        width: 100% !important;
+        min-height: 38px !important;
+        padding: 8px 10px !important;
+        border-radius: 999px !important;
+        border-width: 3px !important;
+        box-shadow: 3px 3px 0 #050505 !important;
+        font-size: 9px !important;
+        line-height: 1 !important;
+        display: inline-flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+      }
+
+      .admin-login-link {
+        grid-column: 1 / -1 !important;
+        order: -1 !important;
+        background: #ff251f !important;
+        color: #ffffff !important;
+      }
+
+      .hero {
+        padding-top: 22px !important;
+      }
+
+      .hero-grid {
+        gap: 18px !important;
+      }
+
+      .hero .intro {
+        display: grid !important;
+        align-content: start !important;
+      }
+
+      .hero .eyebrow {
+        width: fit-content !important;
+        max-width: 100% !important;
+        margin-bottom: 14px !important;
+        font-size: 8px !important;
+      }
+
+      .hero h1 {
+        font-size: clamp(42px, 15vw, 64px) !important;
+        line-height: .82 !important;
+        letter-spacing: -.075em !important;
+        max-width: 100% !important;
+      }
+
+      .hero h1 .gradient-text {
+        display: block !important;
+        width: 100% !important;
+        margin-top: 6px !important;
+        padding: 8px 10px 10px !important;
+        border-radius: 14px !important;
+        text-align: left !important;
+        box-shadow: 4px 4px 0 #050505 !important;
+      }
+
+      #heroLead {
+        margin-top: 16px !important;
+        padding: 14px !important;
+        border: 3px solid #050505 !important;
+        border-radius: 18px !important;
+        box-shadow: 4px 4px 0 #050505 !important;
+        background: rgba(255,255,255,.82) !important;
+        font-size: 13px !important;
+        line-height: 1.45 !important;
+      }
+
+      body.is-registered #heroLead {
+        background: #d6ff00 !important;
+      }
+
+      .registration-card {
+        margin-top: 4px !important;
+      }
+
+      .card-title {
+        font-size: clamp(32px, 12vw, 48px) !important;
+      }
+
+      .stats-row {
+        margin-top: 14px !important;
+      }
+
+      .stat {
+        min-height: 88px !important;
+        display: grid !important;
+        align-content: center !important;
+      }
+
+      main {
+        margin-top: 0 !important;
+      }
+    }
+
+    @media (max-width: 420px) {
+      .shell {
+        padding-inline: 8px !important;
+      }
+
+      .hero h1 {
+        font-size: clamp(38px, 14.5vw, 56px) !important;
+      }
+
+      .nav {
+        grid-template-columns: 1fr !important;
+      }
+
+      .admin-login-link {
+        grid-column: auto !important;
+      }
+
+      .hero h1 .gradient-text {
+        font-size: .94em !important;
+      }
+    }
+  </style>
+
+
+  <style id="advanced-prediction-animation">
+    .match-card {
+      position: relative;
+      overflow: hidden;
+    }
+
+    .confetti-burst {
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      z-index: 5;
+      overflow: hidden;
+    }
+
+    .confetti-piece {
+      position: absolute;
+      width: 9px;
+      height: 14px;
+      border: 2px solid #050505;
+      border-radius: 4px;
+      box-shadow: 2px 2px 0 #050505;
+      opacity: 0;
+      animation: confettiPop 900ms cubic-bezier(.2,.8,.2,1) forwards;
+    }
+
+    .confetti-piece:nth-child(1) { left: 18%; top: 50%; background: #d6ff00; --x: -70px; --y: -95px; --r: -120deg; }
+    .confetti-piece:nth-child(2) { left: 28%; top: 52%; background: #21d3ca; --x: -38px; --y: -118px; --r: 80deg; }
+    .confetti-piece:nth-child(3) { left: 40%; top: 50%; background: #ff251f; --x: -12px; --y: -105px; --r: 160deg; }
+    .confetti-piece:nth-child(4) { left: 52%; top: 50%; background: #ffffff; --x: 18px; --y: -120px; --r: -80deg; }
+    .confetti-piece:nth-child(5) { left: 64%; top: 51%; background: #d6ff00; --x: 42px; --y: -100px; --r: 120deg; }
+    .confetti-piece:nth-child(6) { left: 76%; top: 50%; background: #21d3ca; --x: 72px; --y: -88px; --r: -160deg; }
+    .confetti-piece:nth-child(7) { left: 35%; top: 52%; background: #ff251f; --x: -58px; --y: -62px; --r: 260deg; }
+    .confetti-piece:nth-child(8) { left: 58%; top: 52%; background: #ffffff; --x: 58px; --y: -66px; --r: -260deg; }
+
+    @keyframes confettiPop {
+      0% {
+        opacity: 0;
+        transform: translate3d(0, 0, 0) scale(.4) rotate(0);
+      }
+
+      18% {
+        opacity: 1;
+      }
+
+      78% {
+        opacity: 1;
+      }
+
+      100% {
+        opacity: 0;
+        transform: translate3d(var(--x), var(--y), 0) scale(1) rotate(var(--r));
+      }
+    }
+
+    .match-card.prediction-cleaning .score-box {
+      animation: cleanScoreBox 720ms cubic-bezier(.2,.8,.2,1) both;
+    }
+
+    .match-card.prediction-cleaning [data-score] {
+      animation: cleanScoreInput 720ms cubic-bezier(.2,.8,.2,1) both;
+    }
+
+    .match-card.prediction-cleaning::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      z-index: 4;
+      pointer-events: none;
+      background: linear-gradient(
+        100deg,
+        transparent 0%,
+        transparent 28%,
+        rgba(255,255,255,.95) 45%,
+        rgba(33,211,202,.55) 52%,
+        transparent 68%,
+        transparent 100%
+      );
+      transform: translateX(-120%) skewX(-12deg);
+      animation: cleanSwipe 760ms cubic-bezier(.2,.8,.2,1) both;
+    }
+
+    @keyframes cleanSwipe {
+      from {
+        transform: translateX(-120%) skewX(-12deg);
+      }
+
+      to {
+        transform: translateX(120%) skewX(-12deg);
+      }
+    }
+
+    @keyframes cleanScoreBox {
+      0% {
+        filter: saturate(1);
+      }
+
+      35% {
+        filter: saturate(.2) brightness(1.18);
+        transform: scale(.98);
+      }
+
+      100% {
+        filter: saturate(1);
+        transform: scale(1);
+      }
+    }
+
+    @keyframes cleanScoreInput {
+      0% {
+        background: #ffffff;
+      }
+
+      40% {
+        background: #21d3ca;
+        color: transparent;
+      }
+
+      100% {
+        background: #ffffff;
+        color: #050505;
+      }
+    }
+
+    .match-card.is-match-locked {
+      opacity: .86;
+    }
+
+    .match-card.is-match-locked .score-box,
+    .match-card.is-match-locked .mini-btn {
+      filter: grayscale(.65);
+    }
+
+    .match-lock-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      border: 3px solid #050505;
+      border-radius: 999px;
+      padding: 7px 10px;
+      background: #ffffff;
+      color: #050505;
+      box-shadow: 3px 3px 0 #050505;
+      font-weight: 1000;
+      text-transform: uppercase;
+      font-size: 10px;
+      animation: lockBadgePulse 1.8s ease-in-out infinite;
+    }
+
+    .match-lock-badge::before {
+      content: "🔒";
+      display: inline-block;
+      animation: lockShake 1.8s ease-in-out infinite;
+    }
+
+    @keyframes lockBadgePulse {
+      0%, 100% {
+        transform: scale(1);
+      }
+
+      50% {
+        transform: scale(1.035);
+      }
+    }
+
+    @keyframes lockShake {
+      0%, 80%, 100% {
+        transform: rotate(0);
+      }
+
+      84% {
+        transform: rotate(-9deg);
+      }
+
+      88% {
+        transform: rotate(9deg);
+      }
+
+      92% {
+        transform: rotate(-5deg);
+      }
+
+      96% {
+        transform: rotate(5deg);
+      }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      .confetti-piece,
+      .match-card.prediction-cleaning .score-box,
+      .match-card.prediction-cleaning [data-score],
+      .match-card.prediction-cleaning::before,
+      .match-lock-badge,
+      .match-lock-badge::before {
+        animation: none !important;
+      }
+    }
+  </style>
+
+
+  <style id="mobile-score-identification-style">
+    .team-score-stack {
+      display: none;
+    }
+
+    .team-score-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 10px 12px;
+      border: 3px solid #050505;
+      border-radius: 18px;
+      background: #ffffff;
+      box-shadow: 3px 3px 0 #050505;
+    }
+
+    .team-score-main {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      min-width: 0;
+    }
+
+    .team-score-main .flag,
+    .team-score-main .real-flag {
+      width: 42px !important;
+      height: 42px !important;
+      flex: 0 0 auto;
+    }
+
+    .team-score-text {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+      min-width: 0;
+      line-height: 1.05;
+    }
+
+    .team-role {
+      font-size: 10px;
+      font-weight: 1000;
+      text-transform: uppercase;
+      opacity: .68;
+      letter-spacing: .04em;
+    }
+
+    .team-name-mobile {
+      font-size: 15px;
+      font-weight: 1000;
+      text-transform: uppercase;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .team-score-input {
+      width: 58px;
+      height: 52px;
+      border: 3px solid #050505;
+      border-radius: 14px;
+      background: #f3f4f8;
+      text-align: center;
+      font-size: 24px;
+      font-weight: 1000;
+      color: #050505;
+      box-shadow: 2px 2px 0 #050505;
+      flex: 0 0 auto;
+    }
+
+    .team-score-input:disabled {
+      opacity: 1;
+      background: #eeeeee;
+      color: #050505;
+      cursor: not-allowed;
+    }
+
+    .team-score-divider {
+      display: none;
+      text-align: center;
+      font-size: 18px;
+      font-weight: 1000;
+      line-height: 1;
+      margin: -2px 0;
+    }
+
+    @media (max-width: 760px) {
+      .match-card .versus {
+        display: none !important;
+      }
+
+      .team-score-stack {
+        display: flex;
+        flex-direction: column;
+        gap: 9px;
+        margin: 14px 0 10px;
+      }
+
+      .team-score-divider {
+        display: block;
+      }
+
+      .team-score-row:first-child {
+        background: linear-gradient(90deg, #ffffff 0%, #eaffff 100%);
+      }
+
+      .team-score-row:last-child {
+        background: linear-gradient(90deg, #ffffff 0%, #fff3f3 100%);
+      }
+    }
+  </style>
+
+
+  <style id="hide-carousel-prize-buttons">
+    #carrosselOnze .carousel-buttons {
+      display: none !important;
+    }
+  </style>
+
+
+  <style id="hide-mobile-ranking-predictions">
+    @media (max-width: 760px) {
+      .ranking-table tbody tr {
+        grid-template-columns: 58px 1fr !important;
+      }
+
+      .ranking-table td:nth-child(5) {
+        display: none !important;
+      }
+
+      .ranking-table td:nth-child(1) {
+        grid-row: 1 / span 3 !important;
+      }
+    }
+  </style>
+
+
+  <style id="ranking-mobile-final-polish">
+    @media (max-width: 760px) {
+      #classificacao {
+        padding-top: 34px !important;
+      }
+
+      #classificacao .section-head {
+        display: grid !important;
+        grid-template-columns: 1fr !important;
+        gap: 14px !important;
+        margin-bottom: 18px !important;
+      }
+
+      #classificacao .section-kicker {
+        width: fit-content !important;
+        font-size: 8px !important;
+        padding: 7px 11px !important;
+        border: 2px solid #050505 !important;
+        box-shadow: 2px 2px 0 #050505 !important;
+      }
+
+      #classificacao h2 {
+        font-size: clamp(36px, 13vw, 58px) !important;
+        line-height: .84 !important;
+        letter-spacing: -.075em !important;
+        max-width: 100% !important;
+      }
+
+      #classificacao .section-head p {
+        font-size: 12px !important;
+        line-height: 1.35 !important;
+        max-width: 95% !important;
+      }
+
+      #refreshLeaderboardBtn {
+        width: 100% !important;
+        min-height: 50px !important;
+        border-radius: 999px !important;
+        background: #21d3ca !important;
+        color: #050505 !important;
+        font-size: 10px !important;
+      }
+
+      .ranking-table-wrap {
+        overflow: visible !important;
+        border: 0 !important;
+        box-shadow: none !important;
+        background: transparent !important;
+      }
+
+      .ranking-table {
+        width: 100% !important;
+        min-width: 0 !important;
+        display: block !important;
+        border-collapse: separate !important;
+      }
+
+      .ranking-table thead {
+        display: none !important;
+      }
+
+      .ranking-table tbody {
+        display: grid !important;
+        gap: 16px !important;
+        width: 100% !important;
+      }
+
+      .ranking-table tbody tr {
+        position: relative !important;
+        display: grid !important;
+        grid-template-columns: 58px 1fr !important;
+        gap: 10px 12px !important;
+        width: 100% !important;
+        padding: 16px !important;
+        border: 4px solid #050505 !important;
+        border-radius: 26px !important;
+        box-shadow: 5px 5px 0 #050505 !important;
+        background:
+          radial-gradient(circle at 92% 12%, rgba(33, 211, 202, .35), transparent 27%),
+          #ffffff !important;
+        overflow: hidden !important;
+      }
+
+      .ranking-table tbody tr.is-top-1 {
+        background:
+          radial-gradient(circle at 94% 10%, rgba(255, 37, 31, .28), transparent 26%),
+          linear-gradient(135deg, #d6ff00 0%, #ffffff 70%) !important;
+      }
+
+      .ranking-table tbody tr.is-top-2 {
+        background:
+          radial-gradient(circle at 94% 10%, rgba(33, 211, 202, .3), transparent 26%),
+          linear-gradient(135deg, #eeeeee 0%, #ffffff 70%) !important;
+      }
+
+      .ranking-table tbody tr.is-top-3 {
+        background:
+          radial-gradient(circle at 94% 10%, rgba(255, 37, 31, .20), transparent 26%),
+          linear-gradient(135deg, #efc28a 0%, #ffffff 70%) !important;
+      }
+
+      .ranking-table td {
+        display: block !important;
+        padding: 0 !important;
+        border: 0 !important;
+        background: transparent !important;
+        white-space: normal !important;
+      }
+
+      .ranking-table td:nth-child(1) {
+        grid-column: 1 !important;
+        grid-row: 1 / span 3 !important;
+        align-self: start !important;
+      }
+
+      .ranking-table td:nth-child(3) {
+        grid-column: 2 !important;
+        grid-row: 1 !important;
+      }
+
+      .ranking-table td:nth-child(2) {
+        grid-column: 2 !important;
+        grid-row: 2 !important;
+      }
+
+      .ranking-table td:nth-child(4) {
+        grid-column: 2 !important;
+        grid-row: 3 !important;
+      }
+
+      .ranking-table td:nth-child(5) {
+        display: none !important;
+      }
+
+      .ranking-position {
+        min-width: 52px !important;
+        width: 52px !important;
+        height: 52px !important;
+        border: 3px solid #050505 !important;
+        box-shadow: 3px 3px 0 #050505 !important;
+        font-size: 18px !important;
+        background: #d6ff00 !important;
+      }
+
+      .ranking-user {
+        font-size: clamp(24px, 8.5vw, 36px) !important;
+        line-height: .88 !important;
+        letter-spacing: -.055em !important;
+        text-transform: uppercase !important;
+        max-width: 100% !important;
+      }
+
+      .ranking-user::before {
+        content: "Usuário";
+        display: block;
+        margin-bottom: 7px;
+        font-size: 9px;
+        line-height: 1;
+        letter-spacing: .05em;
+        opacity: .6;
+        text-transform: uppercase;
+      }
+
+      .ranking-prize {
+        width: 100% !important;
+        max-width: 100% !important;
+        display: grid !important;
+        gap: 6px !important;
+        align-items: start !important;
+        justify-content: stretch !important;
+        padding: 11px 12px !important;
+        border: 3px solid #050505 !important;
+        border-radius: 18px !important;
+        background: #21d3ca !important;
+        box-shadow: 3px 3px 0 #050505 !important;
+        font-size: 11px !important;
+        line-height: 1.25 !important;
+        text-transform: uppercase !important;
+      }
+
+      .ranking-prize::before {
+        content: "Prêmio garantido";
+        width: fit-content;
+        display: inline-flex;
+        padding: 5px 8px;
+        border: 2px solid #050505;
+        border-radius: 999px;
+        background: #ffffff;
+        box-shadow: 2px 2px 0 #050505;
+        font-size: 8px;
+        line-height: 1;
+        font-weight: 1000;
+        text-transform: uppercase;
+      }
+
+      .ranking-prize.no-prize {
+        background: #ffffff !important;
+        color: #555555 !important;
+      }
+
+      .ranking-prize.no-prize::before {
+        content: "Fora da premiação";
+      }
+
+      .ranking-points {
+        width: fit-content !important;
+        min-width: 0 !important;
+        padding: 9px 13px !important;
+        border: 3px solid #050505 !important;
+        border-radius: 999px !important;
+        background: #ff251f !important;
+        color: #ffffff !important;
+        box-shadow: 3px 3px 0 #050505 !important;
+        font-size: 13px !important;
+        font-weight: 1000 !important;
+      }
+
+      .ranking-table tbody tr::after {
+        content: "";
+        position: absolute;
+        right: -18px;
+        bottom: -26px;
+        width: 110px;
+        height: 110px;
+        border-radius: 999px;
+        background: rgba(33, 211, 202, .28);
+        pointer-events: none;
+      }
+
+      .ranking-table tbody tr.is-top-1::after {
+        background: rgba(255, 37, 31, .25);
+      }
+    }
+  </style>
+
+
+  <style id="ranking-mobile-compact-top15">
+    @media (max-width: 760px) {
+      #classificacao h2 {
+        font-size: clamp(32px, 12vw, 48px) !important;
+        line-height: .86 !important;
+      }
+
+      #classificacao .section-head p {
+        font-size: 12px !important;
+        line-height: 1.35 !important;
+      }
+
+      .ranking-table-wrap {
+        overflow: visible !important;
+        border: 0 !important;
+        box-shadow: none !important;
+        background: transparent !important;
+      }
+
+      .ranking-table {
+        display: block !important;
+        width: 100% !important;
+        min-width: 0 !important;
+      }
+
+      .ranking-table thead {
+        display: none !important;
+      }
+
+      .ranking-table tbody {
+        display: grid !important;
+        gap: 9px !important;
+      }
+
+      .ranking-table tbody tr {
+        display: grid !important;
+        grid-template-columns: 46px 1fr auto !important;
+        grid-template-areas:
+          "pos user points"
+          "pos prize prize" !important;
+        align-items: center !important;
+        gap: 6px 10px !important;
+        padding: 10px 11px !important;
+        border: 3px solid #050505 !important;
+        border-radius: 18px !important;
+        box-shadow: 3px 3px 0 #050505 !important;
+        background: #ffffff !important;
+        min-height: auto !important;
+      }
+
+      .ranking-table tbody tr.is-prize-row {
+        background: linear-gradient(90deg, rgba(214,255,0,.35), #ffffff 64%) !important;
+      }
+
+      .ranking-table tbody tr.is-top-1 {
+        background: linear-gradient(90deg, #d6ff00, #ffffff 70%) !important;
+      }
+
+      .ranking-table tbody tr:nth-child(n+16) {
+        display: none !important;
+      }
+
+      .ranking-table td {
+        display: block !important;
+        padding: 0 !important;
+        border: 0 !important;
+        background: transparent !important;
+        white-space: normal !important;
+      }
+
+      .ranking-table td:nth-child(1) {
+        grid-area: pos !important;
+      }
+
+      .ranking-table td:nth-child(2) {
+        grid-area: prize !important;
+      }
+
+      .ranking-table td:nth-child(3) {
+        grid-area: user !important;
+      }
+
+      .ranking-table td:nth-child(4) {
+        grid-area: points !important;
+      }
+
+      .ranking-table td:nth-child(5) {
+        display: none !important;
+      }
+
+      .ranking-position {
+        min-width: 40px !important;
+        width: 40px !important;
+        height: 40px !important;
+        border-width: 3px !important;
+        box-shadow: 2px 2px 0 #050505 !important;
+        font-size: 15px !important;
+      }
+
+      .ranking-user {
+        font-size: 17px !important;
+        line-height: .95 !important;
+        letter-spacing: -.04em !important;
+        white-space: nowrap !important;
+        overflow: hidden !important;
+        text-overflow: ellipsis !important;
+        max-width: 100% !important;
+      }
+
+      .ranking-user::before {
+        display: none !important;
+      }
+
+      .ranking-prize {
+        width: 100% !important;
+        max-width: 100% !important;
+        padding: 7px 9px !important;
+        border-width: 2px !important;
+        border-radius: 12px !important;
+        box-shadow: 2px 2px 0 #050505 !important;
+        font-size: 9px !important;
+        line-height: 1.2 !important;
+        background: #21d3ca !important;
+      }
+
+      .ranking-prize::before {
+        display: none !important;
+      }
+
+      .ranking-points {
+        min-width: 54px !important;
+        padding: 7px 9px !important;
+        border-width: 2px !important;
+        box-shadow: 2px 2px 0 #050505 !important;
+        font-size: 11px !important;
+        white-space: nowrap !important;
+      }
+
+      .ranking-table tbody::after {
+        content: "Mostrando os 15 primeiros colocados";
+        display: block;
+        margin-top: 6px;
+        padding: 10px;
+        border: 3px solid #050505;
+        border-radius: 16px;
+        box-shadow: 3px 3px 0 #050505;
+        background: #ffffff;
+        font-size: 11px;
+        font-weight: 1000;
+        text-transform: uppercase;
+        text-align: center;
+      }
+    }
+  </style>
+
+
+  <style id="install-app-banner-style">
+    .install-app-banner {
+      position: fixed;
+      left: 16px;
+      right: 16px;
+      bottom: 16px;
+      z-index: 99999;
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 12px;
+      align-items: center;
+      padding: 14px;
+      border: 4px solid #050505;
+      border-radius: 22px;
+      background: #d6ff00;
+      box-shadow: 6px 6px 0 #050505;
+      color: #050505;
+      animation: installBannerIn 520ms cubic-bezier(.2,.8,.2,1) both;
+    }
+
+    .install-app-banner[hidden] {
+      display: none !important;
+    }
+
+    .install-app-banner strong {
+      display: block;
+      font-size: 15px;
+      font-weight: 1000;
+      text-transform: uppercase;
+      line-height: 1;
+      margin-bottom: 5px;
+    }
+
+    .install-app-banner span {
+      display: block;
+      font-size: 12px;
+      font-weight: 800;
+      line-height: 1.25;
+    }
+
+    .install-app-actions {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    #installAppBtn,
+    #closeInstallAppBtn {
+      min-height: 40px;
+      border: 3px solid #050505;
+      border-radius: 999px;
+      background: #ffffff;
+      color: #050505;
+      box-shadow: 3px 3px 0 #050505;
+      font-weight: 1000;
+      text-transform: uppercase;
+      cursor: pointer;
+    }
+
+    #installAppBtn {
+      padding: 0 14px;
+      background: #21d3ca;
+    }
+
+    #closeInstallAppBtn {
+      width: 42px;
+      padding: 0;
+      font-size: 22px;
+      line-height: 1;
+    }
+
+    @keyframes installBannerIn {
+      from {
+        opacity: 0;
+        transform: translateY(18px) scale(.98);
+      }
+
+      to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+      }
+    }
+
+    @media (max-width: 560px) {
+      .install-app-banner {
+        grid-template-columns: 1fr;
+        bottom: 12px;
+        left: 10px;
+        right: 10px;
+        padding: 12px;
+        border-width: 3px;
+        border-radius: 18px;
+        box-shadow: 4px 4px 0 #050505;
+      }
+
+      .install-app-actions {
+        display: grid;
+        grid-template-columns: 1fr 44px;
+      }
+
+      #installAppBtn,
+      #closeInstallAppBtn {
+        min-height: 42px;
+        border-width: 2px;
+        box-shadow: 2px 2px 0 #050505;
+      }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      .install-app-banner {
+        animation: none !important;
+      }
+    }
+  </style>
+
+
+  
+  <link rel="manifest" href="/manifest.json">
+  <link rel="icon" type="image/png" href="/icons/app-icon.png">
+  <link rel="apple-touch-icon" href="/icons/app-icon.png">
+  <link rel="apple-touch-icon" sizes="180x180" href="/icons/app-icon.png">
+  <meta name="theme-color" content="#21d3ca">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-title" content="Solar Copa">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+
 </head>
 
 <body class="intro-active">
@@ -4366,27 +5389,14 @@
 
           <form class="form-grid" id="registrationForm">
   <label>
-    Nome
+    Nome e sobrenome
     <input
-      id="firstNameInput"
-      name="firstName"
+      id="fullNameInput"
+      name="fullName"
       type="text"
-      autocomplete="given-name"
-      placeholder="Ex: Ana"
-      minlength="2"
-      required
-    />
-  </label>
-
-  <label>
-    Sobrenome
-    <input
-      id="lastNameInput"
-      name="lastName"
-      type="text"
-      autocomplete="family-name"
-      placeholder="Ex: Silva"
-      minlength="2"
+      autocomplete="name"
+      placeholder="Ex: Ana Silva"
+      minlength="5"
       required
     />
   </label>
@@ -4417,8 +5427,21 @@
     />
   </label>
 
+  <label>
+    Código de ativação
+    <input
+      id="activationCodeInput"
+      name="activationCode"
+      type="text"
+      autocomplete="off"
+      placeholder="Ex: CD2026"
+      minlength="5"
+      required
+    />
+  </label>
+
   <p class="form-hint">
-    Use seu telefone e senha para entrar novamente. O telefone evita cadastros duplicados.
+    Use seu telefone, senha e código de ativação para acessar a Copa Solar.
   </p>
 
   <p class="form-error" id="formError" aria-live="polite"></p>
@@ -4506,13 +5529,14 @@
       
       
       
+      
       <section class="section reveal" id="carrosselOnze">
         <div class="section-head">
           <div>
             <span class="section-kicker">Premiação</span>
             <h2>Premiação Especial</h2>
             <p>
-              Os 11 primeiros colocados na classificação final ganham os prêmios abaixo, seguindo a ordem de posição no ranking.
+              Os 10 primeiros colocados na classificação final ganham os prêmios abaixo, seguindo a ordem de posição no ranking.
             </p>
           </div>
 
@@ -4665,8 +5689,8 @@
                   <div class="carousel-11-image-area">
                     <img
                       class="carousel-11-image"
-                      src="imagens-cards/card-09.png"
-                      alt="9º colocado - Sanduicheira Mondial Fast Grill 750W 220V preta"
+                      src="imagens-cards/card-10.png"
+                      alt="9º colocado - Fritadeira Mondial New Pratic 3,5L 1500W 220V preta"
                       loading="lazy"
                     />
                   </div>
@@ -4674,23 +5698,6 @@
                   <div class="carousel-11-content">
                     <span class="carousel-11-number">9º</span>
                     <h3>9º colocado</h3>
-                    <p>Sanduicheira Mondial Fast Grill 750W 220V preta</p>
-                  </div>
-                </article>
-              
-                <article class="carousel-11-card">
-                  <div class="carousel-11-image-area">
-                    <img
-                      class="carousel-11-image"
-                      src="imagens-cards/card-10.png"
-                      alt="10º colocado - Fritadeira Mondial New Pratic 3,5L 1500W 220V preta"
-                      loading="lazy"
-                    />
-                  </div>
-
-                  <div class="carousel-11-content">
-                    <span class="carousel-11-number">10º</span>
-                    <h3>10º colocado</h3>
                     <p>Fritadeira Mondial New Pratic 3,5L 1500W 220V preta</p>
                   </div>
                 </article>
@@ -4700,14 +5707,14 @@
                     <img
                       class="carousel-11-image"
                       src="imagens-cards/card-11.png"
-                      alt="11º colocado - Parafusadeira Schulz a bateria 12V com acessórios"
+                      alt="10º colocado - Parafusadeira Schulz a bateria 12V com acessórios"
                       loading="lazy"
                     />
                   </div>
 
                   <div class="carousel-11-content">
-                    <span class="carousel-11-number">11º</span>
-                    <h3>11º colocado</h3>
+                    <span class="carousel-11-number">10º</span>
+                    <h3>10º colocado</h3>
                     <p>Parafusadeira Schulz a bateria 12V com acessórios</p>
                   </div>
                 </article>
@@ -4717,6 +5724,7 @@
 
         <div class="carousel-11-dots" id="carousel11Dots" aria-label="Indicadores do carrossel"></div>
       </section>
+
 
 
 
@@ -4763,7 +5771,7 @@
             <span class="section-kicker">Ranking</span>
             <h2>Classificação dos Usuários</h2>
             <p>
-              Os usuários classificados do 1º ao 11º lugar ganham os prêmios da Premiação Especial.
+              Os usuários classificados do 1º ao 10º lugar ganham os prêmios da Premiação Especial.
             </p>
           </div>
 
@@ -5026,6 +6034,7 @@
     }
 
     
+
 function renderRegisteredState() {
   const resetBtn = $("#resetUserBtn");
   const heroTitle = document.querySelector(".hero h1");
@@ -5042,7 +6051,7 @@ function renderRegisteredState() {
       heroTitle.innerHTML = `SEJA BEM-VINDO À <span class="gradient-text">PRIMEIRA RODADA</span>`;
     }
 
-    $("#heroLead").textContent = `Olá, ${displayName}! Seja bem-vindo à primeira rodada. Escolha seu grupo, veja os jogos do dia e salve seus palpites antes do início das partidas.`;
+    $("#heroLead").textContent = `Olá, ${displayName}! Seja bem-vindo à primeira rodada. Código vinculado: ${state.user.activationOrigin || "não informado"}. Veja os jogos do dia e salve seus palpites antes do início das partidas.`;
   } else {
     document.body.classList.remove("is-registered");
     resetBtn.hidden = true;
@@ -5051,7 +6060,7 @@ function renderRegisteredState() {
       heroTitle.innerHTML = `SEJA BEM-VINDO À <span class="gradient-text">PRIMEIRA RODADA</span>`;
     }
 
-    $("#heroLead").textContent = "Entre com seu telefone e senha para acessar a primeira rodada, escolher seu grupo e salvar seus palpites.";
+    $("#heroLead").textContent = "Entre com seu telefone, senha e código de ativação para acessar a primeira rodada e salvar seus palpites.";
   }
 }
 
@@ -5103,6 +6112,7 @@ function setupRegistration() {
   const form = $("#registrationForm");
   const loginButton = $("#loginButton");
   const phoneInput = $("#phoneInput");
+  const activationInput = $("#activationCodeInput");
 
   if (phoneInput) {
     phoneInput.addEventListener("input", () => {
@@ -5120,23 +6130,31 @@ function setupRegistration() {
     });
   }
 
+  if (activationInput) {
+    activationInput.addEventListener("input", () => {
+      activationInput.value = activationInput.value.toUpperCase().replace(/\s/g, "");
+    });
+  }
+
   async function handleAuth(mode) {
-    const firstName = $("#firstNameInput") ? $("#firstNameInput").value.trim() : "";
-    const lastName = $("#lastNameInput") ? $("#lastNameInput").value.trim() : "";
+    const fullNameInput = $("#fullNameInput");
+    const fullName = fullNameInput ? fullNameInput.value.trim().replace(/\s+/g, " ") : "";
     const phone = onlyPhoneDigits($("#phoneInput").value);
     const password = $("#passwordInput").value;
+    const activationCodeInput = $("#activationCodeInput");
+    const activationCode = activationCodeInput ? activationCodeInput.value.trim().toUpperCase() : "";
     const error = $("#formError");
 
     error.textContent = "";
 
     if (mode === "register") {
-      if (firstName.length < 2) {
-        error.textContent = "Informe seu nome.";
+      if (!fullName || fullName.split(" ").filter(Boolean).length < 2) {
+        error.textContent = "Informe nome e sobrenome completos.";
         return;
       }
 
-      if (lastName.length < 2) {
-        error.textContent = "Informe seu sobrenome.";
+      if (!activationCode) {
+        error.textContent = "Informe o código de ativação.";
         return;
       }
     }
@@ -5161,10 +6179,10 @@ function setupRegistration() {
           password
         }
       : {
-          firstName,
-          lastName,
+          fullName,
           phone,
-          password
+          password,
+          activationCode
         };
 
     try {
@@ -5222,6 +6240,7 @@ function setupRegistration() {
 
   checkLoggedUser();
 }
+
 
 
     function renderGroups() {
@@ -5594,6 +6613,7 @@ function renderMatches() {
         <div class="match-meta">
           <span class="tag">Grupo ${match.group_name}</span>
           <span class="tag">${kickoffLabel}</span>
+          ${locked ? '<span class="match-lock-badge">Bloqueado</span>' : ''}
         </div>
 
         <div class="versus">
@@ -5610,6 +6630,57 @@ function renderMatches() {
           <div class="side">
             ${teamBlock(match.away_team)}
           </div>
+        
+        <div class="team-score-stack">
+          <div class="team-score-row">
+            <div class="team-score-main">
+              ${teamBlock(match.home_team)}
+              <div class="team-score-text">
+                <span class="team-role">Mandante</span>
+                <span class="team-name-mobile">${teamDisplayName(match.home_team)}</span>
+              </div>
+            </div>
+
+            <input
+              class="team-score-input"
+              type="number"
+              min="0"
+              max="30"
+              inputmode="numeric"
+              value="${saved.home ?? ""}"
+              placeholder="0"
+              aria-label="Gols de ${teamDisplayName(match.home_team)}"
+              data-score="home"
+              ${shouldDisableInputs ? "disabled" : ""}
+            />
+          </div>
+
+          <div class="team-score-divider">x</div>
+
+          <div class="team-score-row">
+            <div class="team-score-main">
+              ${teamBlock(match.away_team)}
+              <div class="team-score-text">
+                <span class="team-role">Visitante</span>
+                <span class="team-name-mobile">${teamDisplayName(match.away_team)}</span>
+              </div>
+            </div>
+
+            <input
+              class="team-score-input"
+              type="number"
+              min="0"
+              max="30"
+              inputmode="numeric"
+              value="${saved.away ?? ""}"
+              placeholder="0"
+              aria-label="Gols de ${teamDisplayName(match.away_team)}"
+              data-score="away"
+              ${shouldDisableInputs ? "disabled" : ""}
+            />
+          </div>
+        </div>
+
         </div>
 
         <p>${match.venue || "Estádio a confirmar"}</p>
@@ -5808,6 +6879,42 @@ async function loadMatchesByDay(date) {
 
 
 
+
+function createPredictionConfetti(card) {
+  if (!card) return;
+
+  const oldBurst = card.querySelector(".confetti-burst");
+  if (oldBurst) oldBurst.remove();
+
+  const burst = document.createElement("div");
+  burst.className = "confetti-burst";
+
+  for (let index = 0; index < 8; index += 1) {
+    const piece = document.createElement("span");
+    piece.className = "confetti-piece";
+    burst.appendChild(piece);
+  }
+
+  card.appendChild(burst);
+
+  window.setTimeout(() => {
+    burst.remove();
+  }, 1100);
+}
+
+function animatePredictionClean(card) {
+  if (!card) return;
+
+  card.classList.remove("prediction-cleaning");
+  void card.offsetWidth;
+  card.classList.add("prediction-cleaning");
+
+  window.setTimeout(() => {
+    card.classList.remove("prediction-cleaning");
+  }, 900);
+}
+
+
 function animatePredictionCard(card, type) {
   if (!card) return;
 
@@ -5865,13 +6972,13 @@ function renderDailyMatches() {
     const kickoffLabel = formatKickoff(match.kickoff_at);
 
     return `
-      <article class="match-card reveal is-visible" data-daily-match="${match.id}">
+      <article class="match-card reveal is-visible ${locked ? "is-match-locked" : ""}" data-daily-match="${match.id}">
         <div class="match-meta">
           <span class="tag">Grupo ${match.group_name}</span>
           <span class="tag">${kickoffLabel}</span>
         </div>
 
-        <div class="versus">
+        <div class="versus desktop-score-layout">
           <div class="side">
             ${teamBlock(match.home_team)}
           </div>
@@ -5884,6 +6991,56 @@ function renderDailyMatches() {
 
           <div class="side">
             ${teamBlock(match.away_team)}
+          </div>
+        </div>
+
+        <div class="team-score-stack mobile-score-layout" data-mobile-score-daily="true">
+          <div class="team-score-row">
+            <div class="team-score-main">
+              ${teamBlock(match.home_team)}
+              <div class="team-score-text">
+                <span class="team-role">Mandante</span>
+                <span class="team-name-mobile">${teamDisplayName(match.home_team)}</span>
+              </div>
+            </div>
+
+            <input
+              class="team-score-input"
+              type="number"
+              min="0"
+              max="30"
+              inputmode="numeric"
+              value="${saved.home ?? ""}"
+              placeholder="0"
+              aria-label="Gols de ${teamDisplayName(match.home_team)}"
+              data-score="home"
+              ${shouldDisableInputs ? "disabled" : ""}
+            />
+          </div>
+
+          <div class="team-score-divider">x</div>
+
+          <div class="team-score-row">
+            <div class="team-score-main">
+              ${teamBlock(match.away_team)}
+              <div class="team-score-text">
+                <span class="team-role">Visitante</span>
+                <span class="team-name-mobile">${teamDisplayName(match.away_team)}</span>
+              </div>
+            </div>
+
+            <input
+              class="team-score-input"
+              type="number"
+              min="0"
+              max="30"
+              inputmode="numeric"
+              value="${saved.away ?? ""}"
+              placeholder="0"
+              aria-label="Gols de ${teamDisplayName(match.away_team)}"
+              data-score="away"
+              ${shouldDisableInputs ? "disabled" : ""}
+            />
           </div>
         </div>
 
@@ -5913,8 +7070,14 @@ function renderDailyMatches() {
       const matchId = button.dataset.saveDaily;
       const action = button.dataset.predictionAction;
       const card = grid.querySelector(`[data-daily-match="${matchId}"]`);
-      const homeInput = card.querySelector('[data-score="home"]');
-      const awayInput = card.querySelector('[data-score="away"]');
+      const mobileScoreVisible = window.matchMedia("(max-width: 760px)").matches;
+      const homeInput = mobileScoreVisible
+        ? card.querySelector('.mobile-score-layout [data-score="home"]')
+        : card.querySelector('.desktop-score-layout [data-score="home"]');
+
+      const awayInput = mobileScoreVisible
+        ? card.querySelector('.mobile-score-layout [data-score="away"]')
+        : card.querySelector('.desktop-score-layout [data-score="away"]');
       const status = card.querySelector(".save-status");
 
       if (action === "reset") {
@@ -5941,6 +7104,7 @@ function renderDailyMatches() {
           delete state.scores[matchId];
 
           animatePredictionCard(card, "reset");
+          animatePredictionClean(card);
           setButtonMotion(button, "is-reset");
 
           window.setTimeout(() => {
@@ -6001,6 +7165,7 @@ function renderDailyMatches() {
         };
 
         animatePredictionCard(card, "save");
+        createPredictionConfetti(card);
         setButtonMotion(button, "is-success");
 
         window.setTimeout(() => {
@@ -6258,7 +7423,132 @@ function setupCarousel11() {
 
 
 
-    function setupReveal() {
+    
+function setupCarousel11Autoplay() {
+  const track = $("#carousel11Track");
+  const prev = $("#carousel11Prev");
+  const next = $("#carousel11Next");
+
+  if (!track) return;
+
+  const cards = Array.from(track.querySelectorAll(".carousel-11-card"));
+  if (cards.length <= 1) return;
+
+  const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  if (reducedMotion) return;
+
+  let autoplayTimer = null;
+  let currentIndex = 0;
+  let pausedByUser = false;
+
+  function getActiveIndex() {
+    const activeCard = track.querySelector(".carousel-11-card.is-active");
+    const index = cards.indexOf(activeCard);
+
+    if (index >= 0) {
+      currentIndex = index;
+    }
+
+    return currentIndex;
+  }
+
+  function goToAutoplay(index) {
+    currentIndex = index >= cards.length ? 0 : index;
+
+    cards[currentIndex].scrollIntoView({
+      behavior: "smooth",
+      inline: "center",
+      block: "nearest"
+    });
+
+    cards.forEach((card, cardIndex) => {
+      card.classList.toggle("is-active", cardIndex === currentIndex);
+    });
+
+    const dots = Array.from(document.querySelectorAll("[data-carousel11-dot]"));
+    dots.forEach((dot, dotIndex) => {
+      dot.classList.toggle("is-active", dotIndex === currentIndex);
+    });
+  }
+
+  function startAutoplay() {
+    if (autoplayTimer || pausedByUser) return;
+
+    autoplayTimer = window.setInterval(() => {
+      const active = getActiveIndex();
+      goToAutoplay(active + 1);
+    }, 4000);
+  }
+
+  function stopAutoplay() {
+    if (autoplayTimer) {
+      window.clearInterval(autoplayTimer);
+      autoplayTimer = null;
+    }
+  }
+
+  function pauseTemporarily() {
+    pausedByUser = true;
+    stopAutoplay();
+
+    window.clearTimeout(track._autoplayResumeTimer);
+    track._autoplayResumeTimer = window.setTimeout(() => {
+      pausedByUser = false;
+      startAutoplay();
+    }, 7000);
+  }
+
+  track.addEventListener("mouseenter", stopAutoplay);
+  track.addEventListener("mouseleave", startAutoplay);
+
+  track.addEventListener("touchstart", pauseTemporarily, { passive: true });
+  track.addEventListener("mousedown", pauseTemporarily);
+
+  track.addEventListener("scroll", () => {
+    window.clearTimeout(track._autoplayDetectTimer);
+    track._autoplayDetectTimer = window.setTimeout(() => {
+      const center = track.scrollLeft + track.clientWidth / 2;
+
+      let nearestIndex = 0;
+      let nearestDistance = Infinity;
+
+      cards.forEach((card, index) => {
+        const cardCenter = card.offsetLeft + card.offsetWidth / 2;
+        const distance = Math.abs(center - cardCenter);
+
+        if (distance < nearestDistance) {
+          nearestDistance = distance;
+          nearestIndex = index;
+        }
+      });
+
+      currentIndex = nearestIndex;
+    }, 120);
+  });
+
+  [prev, next].forEach((button) => {
+    if (!button) return;
+
+    button.addEventListener("click", () => {
+      pauseTemporarily();
+      window.setTimeout(() => {
+        currentIndex = getActiveIndex();
+      }, 350);
+    });
+  });
+
+  document.querySelectorAll("[data-carousel11-dot]").forEach((dot) => {
+    dot.addEventListener("click", () => {
+      pauseTemporarily();
+      currentIndex = Number(dot.dataset.carousel11Dot || 0);
+    });
+  });
+
+  startAutoplay();
+}
+
+
+function setupReveal() {
       const elements = document.querySelectorAll(".reveal");
 
       const observer = new IntersectionObserver((entries) => {
@@ -6280,6 +7570,7 @@ function setupCarousel11() {
       renderGroups();
       setupCarousel();
       setupCarousel11();
+      setupCarousel11Autoplay();
       renderDateChips(); loadMatchesByGroup(state.selectedGroup || "A"); setupTodayMatchesButton();
       setupScoreActions();
       setupLeaderboard();
@@ -6324,6 +7615,309 @@ function setupCarousel11() {
     }, 15000);
 
   </script>
+
+<style id="home-mobile-app-v2-force">
+  @media (max-width: 760px) {
+    body {
+      background:
+        radial-gradient(circle at 90% 6%, rgba(255, 37, 31, .20), transparent 24%),
+        radial-gradient(circle at 10% 22%, rgba(33, 211, 202, .20), transparent 26%),
+        linear-gradient(180deg, #fff8f1 0%, #ffffff 58%, #fffbe7 100%) !important;
+    }
+
+    .shell {
+      width: 100% !important;
+      max-width: 100% !important;
+      padding: 0 12px !important;
+    }
+
+    .topbar {
+      width: calc(100% - 16px) !important;
+      max-width: calc(100% - 16px) !important;
+      margin: 8px auto 0 !important;
+      padding: 10px !important;
+      display: grid !important;
+      grid-template-columns: 1fr !important;
+      gap: 10px !important;
+      border: 3px solid #050505 !important;
+      border-radius: 24px !important;
+      box-shadow: 4px 4px 0 #050505 !important;
+      background: rgba(255, 255, 255, .94) !important;
+      backdrop-filter: blur(12px) !important;
+    }
+
+    .brand {
+      width: 100% !important;
+      display: grid !important;
+      grid-template-columns: 42px 1fr !important;
+      gap: 9px !important;
+      align-items: center !important;
+      min-width: 0 !important;
+    }
+
+    .brand-mark {
+      width: 42px !important;
+      height: 42px !important;
+      min-width: 42px !important;
+    }
+
+    .brand strong {
+      font-size: 13px !important;
+      line-height: 1 !important;
+      letter-spacing: -.03em !important;
+    }
+
+    .brand small {
+      font-size: 9px !important;
+      line-height: 1.15 !important;
+    }
+
+    .nav {
+      width: 100% !important;
+      display: flex !important;
+      flex-wrap: nowrap !important;
+      gap: 7px !important;
+      overflow-x: auto !important;
+      padding: 2px 2px 7px !important;
+      scrollbar-width: none !important;
+      -webkit-overflow-scrolling: touch !important;
+    }
+
+    .nav::-webkit-scrollbar {
+      display: none !important;
+    }
+
+    .nav a,
+    .user-chip {
+      flex: 0 0 auto !important;
+      width: auto !important;
+      min-width: 92px !important;
+      max-width: none !important;
+      min-height: 34px !important;
+      padding: 7px 12px !important;
+      border: 2px solid #050505 !important;
+      border-radius: 999px !important;
+      box-shadow: 2px 2px 0 #050505 !important;
+      font-size: 8px !important;
+      line-height: 1 !important;
+      white-space: nowrap !important;
+      display: inline-flex !important;
+      align-items: center !important;
+      justify-content: center !important;
+      text-align: center !important;
+    }
+
+    .admin-login-link {
+      order: 99 !important;
+      grid-column: auto !important;
+      width: auto !important;
+      min-width: 96px !important;
+      background: #ff251f !important;
+      color: #ffffff !important;
+    }
+
+    .hero {
+      min-height: auto !important;
+      padding: 26px 0 18px !important;
+    }
+
+    .hero-grid {
+      display: grid !important;
+      grid-template-columns: 1fr !important;
+      gap: 18px !important;
+    }
+
+    .hero .intro {
+      padding: 0 !important;
+    }
+
+    .hero .eyebrow {
+      width: fit-content !important;
+      max-width: calc(100vw - 24px) !important;
+      margin-bottom: 14px !important;
+      padding: 7px 10px !important;
+      border: 2px solid #050505 !important;
+      box-shadow: 2px 2px 0 #050505 !important;
+      font-size: 8px !important;
+      line-height: 1.1 !important;
+    }
+
+    .hero h1 {
+      font-size: clamp(38px, 14vw, 58px) !important;
+      line-height: .84 !important;
+      letter-spacing: -.075em !important;
+      margin: 0 !important;
+      max-width: 100% !important;
+    }
+
+    .hero h1 .gradient-text {
+      display: block !important;
+      width: 100% !important;
+      max-width: 100% !important;
+      margin-top: 7px !important;
+      padding: 8px 10px 10px !important;
+      border: 3px solid #050505 !important;
+      border-radius: 15px !important;
+      box-shadow: 4px 4px 0 #050505 !important;
+      text-shadow: 2px 2px 0 #050505 !important;
+      overflow: hidden !important;
+    }
+
+    #heroLead {
+      margin-top: 14px !important;
+      padding: 13px 14px !important;
+      border: 3px solid #050505 !important;
+      border-radius: 18px !important;
+      box-shadow: 4px 4px 0 #050505 !important;
+      background: #ffffff !important;
+      font-size: 13px !important;
+      line-height: 1.45 !important;
+    }
+
+    .hero-actions {
+      display: none !important;
+    }
+
+    .registration-card {
+      margin-top: 4px !important;
+    }
+  }
+
+  @media (max-width: 390px) {
+    .shell {
+      padding: 0 8px !important;
+    }
+
+    .topbar {
+      width: calc(100% - 10px) !important;
+      max-width: calc(100% - 10px) !important;
+    }
+
+    .hero h1 {
+      font-size: clamp(36px, 13.5vw, 52px) !important;
+    }
+
+    .nav a,
+    .user-chip {
+      min-width: 86px !important;
+      font-size: 7.5px !important;
+      padding-inline: 10px !important;
+    }
+  }
+</style>
+
+
+  <script id="service-worker-register">
+    if ("serviceWorker" in navigator) {
+      window.addEventListener("load", () => {
+        navigator.serviceWorker.register("/service-worker.js")
+          .then(() => {
+            console.log("Service Worker registrado.");
+          })
+          .catch((error) => {
+            console.warn("Erro ao registrar Service Worker:", error);
+          });
+      });
+    }
+  </script>
+
+
+  <div class="install-app-banner" id="installAppBanner" hidden>
+    <div>
+      <strong>Adicionar à tela inicial</strong>
+      <span id="installAppText">Instale o Solar Copa como app no seu celular.</span>
+    </div>
+
+    <div class="install-app-actions">
+      <button type="button" id="installAppBtn">Instalar app</button>
+      <button type="button" id="closeInstallAppBtn" aria-label="Fechar aviso">×</button>
+    </div>
+  </div>
+
+
+  <script id="install-app-script">
+    (() => {
+      let deferredInstallPrompt = null;
+
+      const banner = document.querySelector("#installAppBanner");
+      const installBtn = document.querySelector("#installAppBtn");
+      const closeBtn = document.querySelector("#closeInstallAppBtn");
+      const text = document.querySelector("#installAppText");
+
+      if (!banner || !installBtn || !closeBtn || !text) return;
+
+      const storageKey = "solarCopaInstallBannerClosed";
+
+      function isStandalone() {
+        return window.matchMedia("(display-mode: standalone)").matches ||
+          window.navigator.standalone === true;
+      }
+
+      function isIOS() {
+        return /iphone|ipad|ipod/i.test(window.navigator.userAgent);
+      }
+
+      function wasClosed() {
+        return localStorage.getItem(storageKey) === "1";
+      }
+
+      function showBannerForIOS() {
+        if (isStandalone() || wasClosed()) return;
+
+        text.textContent = "No iPhone, toque em Compartilhar e depois em Adicionar à Tela de Início.";
+        installBtn.textContent = "Como instalar";
+        banner.hidden = false;
+      }
+
+      window.addEventListener("beforeinstallprompt", (event) => {
+        event.preventDefault();
+        deferredInstallPrompt = event;
+
+        if (isStandalone() || wasClosed()) return;
+
+        text.textContent = "Instale o Solar Copa como app no seu celular.";
+        installBtn.textContent = "Instalar app";
+        banner.hidden = false;
+      });
+
+      installBtn.addEventListener("click", async () => {
+        if (deferredInstallPrompt) {
+          deferredInstallPrompt.prompt();
+
+          const result = await deferredInstallPrompt.userChoice;
+          deferredInstallPrompt = null;
+
+          if (result.outcome === "accepted") {
+            banner.hidden = true;
+            localStorage.setItem(storageKey, "1");
+          }
+
+          return;
+        }
+
+        if (isIOS()) {
+          alert("No iPhone: toque no botão Compartilhar do Safari e escolha Adicionar à Tela de Início.");
+        }
+      });
+
+      closeBtn.addEventListener("click", () => {
+        banner.hidden = true;
+        localStorage.setItem(storageKey, "1");
+      });
+
+      window.addEventListener("appinstalled", () => {
+        banner.hidden = true;
+        localStorage.setItem(storageKey, "1");
+      });
+
+      window.setTimeout(() => {
+        if (isIOS() && !deferredInstallPrompt) {
+          showBannerForIOS();
+        }
+      }, 1800);
+    })();
+  </script>
+
 </body>
 </html>
 
