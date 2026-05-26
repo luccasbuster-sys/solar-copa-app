@@ -8399,6 +8399,77 @@ function setupReveal() {
   }
 </style>
 
+
+<style id="preencher-logo-topo-solar">
+  /* ===== LOGO SOLAR PREENCHENDO MELHOR O TOPO ===== */
+
+  .topbar {
+    display: grid !important;
+    grid-template-columns: 1fr !important;
+    justify-items: center !important;
+    align-items: center !important;
+    padding: 18px 16px !important;
+    overflow: visible !important;
+  }
+
+  .topbar .brand {
+    width: 100% !important;
+    max-width: 100% !important;
+    display: flex !important;
+    justify-content: center !important;
+    align-items: center !important;
+    text-align: center !important;
+    padding: 0 !important;
+    margin: 0 !important;
+  }
+
+  .topbar .brand > div {
+    width: 100% !important;
+    max-width: 100% !important;
+    display: flex !important;
+    justify-content: center !important;
+    align-items: center !important;
+  }
+
+  .solar-header-logo {
+    display: block !important;
+    width: min(92%, 430px) !important;
+    max-width: 430px !important;
+    height: auto !important;
+    object-fit: contain !important;
+    object-position: center !important;
+    margin: 0 auto !important;
+  }
+
+  @media (max-width: 760px) {
+    .topbar {
+      width: calc(100% - 12px) !important;
+      max-width: calc(100% - 12px) !important;
+      margin: 8px auto 0 !important;
+      padding: 18px 12px !important;
+      border-radius: 26px !important;
+    }
+
+    .solar-header-logo {
+      width: 94% !important;
+      max-width: 340px !important;
+    }
+  }
+
+  @media (max-width: 390px) {
+    .topbar {
+      width: calc(100% - 8px) !important;
+      max-width: calc(100% - 8px) !important;
+      padding: 16px 10px !important;
+    }
+
+    .solar-header-logo {
+      width: 96% !important;
+      max-width: 320px !important;
+    }
+  }
+</style>
+
 </body>
 </html>
 
