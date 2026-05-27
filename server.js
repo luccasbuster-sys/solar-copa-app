@@ -122,6 +122,23 @@ function splitFullName(fullName) {
   };
 }
 
+
+function normalizeScoreValue(value) {
+  const text = String(value ?? "").trim();
+
+  if (!/^\d{1,2}$/.test(text)) {
+    return null;
+  }
+
+  const number = Number(text);
+
+  if (!Number.isInteger(number) || number < 0 || number > 99) {
+    return null;
+  }
+
+  return number;
+}
+
 function normalizePhone(phone) {
   return String(phone || "").replace(/\D/g, "");
 }
@@ -514,8 +531,15 @@ app.get("/predictions", requireLogin, (req, res) => {
 
 app.post("/predictions", requireLogin, (req, res) => {
   const matchId = req.body.matchId ? String(req.body.matchId).trim() : "";
-  const homeScore = Number(req.body.homeScore);
-  const awayScore = Number(req.body.awayScore);
+  const homeScore = normalizeScoreValue(req.body.homeScore);
+    const awayScore = normalizeScoreValue(req.body.awayScore);
+
+    if (homeScore === null || awayScore === null) {
+      return res.status(400).json({
+        success: false,
+        message: "O placar deve ter no máximo 2 dígitos por seleção."
+      });
+    }
 
   if (!matchId) {
     return res.status(400).json({
@@ -635,58 +659,50 @@ app.post("/predictions", requireLogin, (req, res) => {
 
 
 app.delete("/predictions/:matchId", requireLogin, (req, res) => {
+  const userId = req.session.user && req.session.user.id;
   const matchId = String(req.params.matchId || "").trim();
+
+  if (!userId) {
+    return res.status(401).json({
+      success: false,
+      message: "Você precisa estar logado."
+    });
+  }
 
   if (!matchId) {
     return res.status(400).json({
       success: false,
-      message: "ID do jogo não informado."
+      message: "Jogo inválido para resetar palpite."
     });
   }
 
   db.get(
-    "SELECT * FROM matches WHERE id = ?",
-    [matchId],
-    (matchError, match) => {
-      if (matchError) {
-        console.error("Erro ao buscar jogo para reset:", matchError.message);
+    "SELECT id FROM predictions WHERE user_id = ? AND match_id = ?",
+    [userId, matchId],
+    (findError, prediction) => {
+      if (findError) {
+        console.error("Erro ao buscar palpite para reset:", findError.message);
 
         return res.status(500).json({
           success: false,
-          message: "Erro ao buscar jogo."
+          message: "Erro ao buscar palpite."
         });
       }
 
-      if (!match) {
-        return res.status(404).json({
-          success: false,
-          message: "Jogo não encontrado."
-        });
-      }
-
-      const now = new Date();
-      const kickoff = new Date(match.kickoff_at);
-
-      if (Number.isNaN(kickoff.getTime())) {
-        return res.status(500).json({
-          success: false,
-          message: "Horário do jogo inválido no banco."
-        });
-      }
-
-      if (now >= kickoff) {
-        return res.status(403).json({
-          success: false,
-          message: "O prazo para resetar esse palpite foi encerrado. O jogo já começou."
+      if (!prediction) {
+        return res.json({
+          success: true,
+          message: "Nenhum palpite encontrado para resetar.",
+          deleted: 0
         });
       }
 
       db.run(
         "DELETE FROM predictions WHERE user_id = ? AND match_id = ?",
-        [req.session.user.id, matchId],
-        function (error) {
-          if (error) {
-            console.error("Erro ao resetar palpite:", error.message);
+        [userId, matchId],
+        function (deleteError) {
+          if (deleteError) {
+            console.error("Erro ao resetar palpite:", deleteError.message);
 
             return res.status(500).json({
               success: false,
@@ -697,7 +713,7 @@ app.delete("/predictions/:matchId", requireLogin, (req, res) => {
           return res.json({
             success: true,
             message: "Palpite resetado com sucesso.",
-            deleted: this.changes
+            deleted: this.changes || 0
           });
         }
       );

@@ -5440,19 +5440,13 @@
   <div class="grid-noise"></div>
 
   <header class="topbar">
-    <a class="brand" href="#inicio" aria-label="Ir para o início">
-      <span>
-        <img class="solar-header-logo" src="/logo/solar-logo.png" alt="Solar" />
-      </span>
-    </a>
-
-    <nav class="nav" aria-label="Navegação principal">
-      <a href="/admin" class="admin-login-link">Login ADM</a>
-      <a href="#grupos">Grupos</a>
-      <a href="#jogos">Jogos</a>
-      <a href="#destaques">Destaques</a>
-      <button class="user-chip" id="resetUserBtn" type="button" hidden>Trocar cadastro</button>
-    </nav>
+    <div class="banner-topo-brand">
+      <img
+        class="topo-banner-img"
+        src="/banner/topo-banner.png"
+        alt="Bolão Solar"
+      />
+    </div>
   </header>
 
   <div class="shell">
@@ -5561,7 +5555,24 @@
       </div>
     </section>
 
+  
+
+
     <main id="mainContent">
+      
+      <section class="section opening-prediction-section reveal" id="jogoAberturaPalpite">
+        <div class="section-head">
+          <div>
+            <span class="section-kicker">Jogo de abertura</span>
+            <h2>Jogo de abertura</h2>
+            <p>Palpite especial para México x África do Sul, abertura da Copa 2026.</p>
+          </div>
+        </div>
+
+        <div id="openingPredictionCard"></div>
+      </section>
+
+
       <section class="section reveal" id="jogosDoDia">
         <div class="section-head">
           <div>
@@ -6304,6 +6315,12 @@ function setupRegistration() {
       renderRegisteredState();
       showToast(successMessage);
 
+      renderLoggedContent();
+
+      if (typeof window.renderOpeningPrediction === "function") {
+        window.renderOpeningPrediction();
+      }
+
       if (typeof loadLeaderboard === "function") {
         loadLeaderboard();
       }
@@ -6351,8 +6368,14 @@ function setupRegistration() {
 
 
 
+    
+
+    
+    
     function renderGroups() {
       const track = $("#groupsTrack");
+
+      if (!track || !Array.isArray(groups)) return;
 
       track.innerHTML = groups.map(group => `
         <article class="group-card" aria-label="Grupo ${group.letter}">
@@ -6381,7 +6404,7 @@ function setupRegistration() {
     }
 
     function cardsPerView() {
-      if (window.innerWidth <= 720) return 1;
+      if (window.innerWidth <= 760) return 1;
       if (window.innerWidth <= 980) return 2;
       return 3;
     }
@@ -6389,81 +6412,114 @@ function setupRegistration() {
     function updateCarousel() {
       const track = $("#groupsTrack");
       const viewport = $("#groupsViewport");
-      const maxIndex = Math.max(0, groups.length - cardsPerView());
 
-      state.groupIndex = Math.max(0, Math.min(state.groupIndex, maxIndex));
+      if (!track || !viewport || !Array.isArray(groups) || !groups.length) return;
+
+      const perView = cardsPerView();
+      const maxIndex = Math.max(0, groups.length - perView);
+
+      state.groupIndex = Math.max(0, Math.min(Number(state.groupIndex || 0), maxIndex));
 
       const firstCard = track.querySelector(".group-card");
       if (!firstCard) return;
 
       const gap = 16;
       const cardWidth = firstCard.getBoundingClientRect().width;
+      const offset = state.groupIndex * (cardWidth + gap);
 
-      track.style.transform = `translateX(${-state.groupIndex * (cardWidth + gap)}px)`;
+      track.style.transform = `translate3d(-${offset}px, 0, 0)`;
 
       const startLetter = groups[state.groupIndex]?.letter || "A";
-      const endLetter = groups[Math.min(groups.length - 1, state.groupIndex + cardsPerView() - 1)]?.letter || "C";
+      const endIndex = Math.min(groups.length - 1, state.groupIndex + perView - 1);
+      const endLetter = groups[endIndex]?.letter || startLetter;
 
-      $("#carouselLabel").textContent = `Grupo ${startLetter} até ${endLetter}`;
+      const label = $("#carouselLabel");
 
-      const progress = ((state.groupIndex + cardsPerView()) / groups.length) * 100;
-      $("#groupProgress").style.width = `${Math.min(100, Math.max(8, progress))}%`;
+      if (label) {
+        label.textContent = perView === 1
+          ? `Grupo ${startLetter} de A até L`
+          : `Grupo ${startLetter} até ${endLetter}`;
+      }
 
-      viewport.setAttribute("aria-label", `Visualizando grupos de ${startLetter} até ${endLetter}`);
+      const progress = ((state.groupIndex + perView) / groups.length) * 100;
+      const progressBar = $("#groupProgress");
+
+      if (progressBar) {
+        progressBar.style.width = `${Math.min(100, Math.max(8, progress))}%`;
+      }
+
+      viewport.setAttribute(
+        "aria-label",
+        `Visualizando grupos de ${startLetter} até ${endLetter}`
+      );
     }
 
     function setupCarousel() {
-      $("#prevGroup").addEventListener("click", () => {
-        state.groupIndex -= 1;
-        updateCarousel();
-      });
-
-      $("#nextGroup").addEventListener("click", () => {
-        state.groupIndex += 1;
-        updateCarousel();
-      });
-
-      $("#groupsViewport").addEventListener("keydown", (event) => {
-        if (event.key === "ArrowLeft") {
-          state.groupIndex -= 1;
-          updateCarousel();
-        }
-
-        if (event.key === "ArrowRight") {
-          state.groupIndex += 1;
-          updateCarousel();
-        }
-      });
-
-      let isDown = false;
-      let startX = 0;
-      let diff = 0;
+      const prev = $("#prevGroup");
+      const next = $("#nextGroup");
       const viewport = $("#groupsViewport");
 
-      viewport.addEventListener("pointerdown", (event) => {
-        isDown = true;
-        startX = event.clientX;
-        diff = 0;
-        viewport.setPointerCapture(event.pointerId);
-      });
-
-      viewport.addEventListener("pointermove", (event) => {
-        if (!isDown) return;
-        diff = event.clientX - startX;
-      });
-
-      viewport.addEventListener("pointerup", () => {
-        if (!isDown) return;
-        isDown = false;
-
-        if (Math.abs(diff) > 60) {
-          state.groupIndex += diff < 0 ? 1 : -1;
+      if (prev) {
+        prev.addEventListener("click", () => {
+          state.groupIndex -= 1;
           updateCarousel();
-        }
-      });
+        });
+      }
+
+      if (next) {
+        next.addEventListener("click", () => {
+          state.groupIndex += 1;
+          updateCarousel();
+        });
+      }
+
+      if (viewport) {
+        viewport.addEventListener("keydown", (event) => {
+          if (event.key === "ArrowLeft") {
+            state.groupIndex -= 1;
+            updateCarousel();
+          }
+
+          if (event.key === "ArrowRight") {
+            state.groupIndex += 1;
+            updateCarousel();
+          }
+        });
+
+        let isDown = false;
+        let startX = 0;
+        let diff = 0;
+
+        viewport.addEventListener("pointerdown", (event) => {
+          isDown = true;
+          startX = event.clientX;
+          diff = 0;
+
+          if (viewport.setPointerCapture) {
+            viewport.setPointerCapture(event.pointerId);
+          }
+        });
+
+        viewport.addEventListener("pointermove", (event) => {
+          if (!isDown) return;
+          diff = event.clientX - startX;
+        });
+
+        viewport.addEventListener("pointerup", () => {
+          if (!isDown) return;
+
+          isDown = false;
+
+          if (Math.abs(diff) > 45) {
+            state.groupIndex += diff < 0 ? 1 : -1;
+            updateCarousel();
+          }
+        });
+      }
 
       window.addEventListener("resize", updateCarousel);
     }
+
 
     function uniqueDates() {
       const map = new Map();
@@ -7671,6 +7727,38 @@ function setupReveal() {
       elements.forEach(element => observer.observe(element));
     }
 
+    
+function renderLoggedContent() {
+  try {
+    if (typeof renderGroups === "function") {
+      renderGroups();
+    }
+
+    if (typeof renderDailyMatches === "function") {
+      renderDailyMatches();
+    }
+
+    if (typeof loadMatchesByGroup === "function") {
+      loadMatchesByGroup(state.selectedGroup || "A");
+    }
+
+    if (typeof loadLeaderboard === "function") {
+      loadLeaderboard();
+    }
+
+    if (typeof setupCarousel11 === "function") {
+      setupCarousel11();
+    }
+
+    if (typeof setupReveal === "function") {
+      setupReveal();
+    }
+  } catch (error) {
+    console.warn("Erro ao renderizar conteúdo logado:", error);
+  }
+}
+
+
     function init() {
       loadStorage();
       setupRegistration();
@@ -8469,6 +8557,1753 @@ function setupReveal() {
     }
   }
 </style>
+
+
+
+
+
+<style id="banner-topo-fixo-style">
+  .topbar {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    width: 100% !important;
+    padding: 8px !important;
+    overflow: hidden !important;
+  }
+
+  .banner-topo-brand {
+    width: 100% !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    margin: 0 !important;
+    padding: 0 !important;
+  }
+
+  .topo-banner-img {
+    display: block !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    height: auto !important;
+    object-fit: contain !important;
+    object-position: center !important;
+    margin: 0 auto !important;
+  }
+
+  .topbar .nav,
+  .topbar .brand,
+  .topbar .brand-mark,
+  .topbar .solar-header-logo,
+  .topbar strong,
+  .topbar small,
+  .topbar a,
+  .topbar button {
+    display: none !important;
+  }
+
+  .topbar .banner-topo-brand,
+  .topbar .topo-banner-img {
+    display: flex !important;
+  }
+
+  @media (max-width: 760px) {
+    .topbar {
+      width: calc(100% - 10px) !important;
+      max-width: calc(100% - 10px) !important;
+      margin: 8px auto 0 !important;
+      padding: 6px !important;
+      border-radius: 24px !important;
+    }
+
+    .topo-banner-img {
+      width: 100% !important;
+      max-width: 100% !important;
+    }
+  }
+</style>
+
+
+<style id="banner-sem-quadro-branco-final">
+  /* ===== TOPO SOMENTE COM BANNER FIXO ===== */
+
+  .topbar {
+    background: transparent !important;
+    border: 0 !important;
+    box-shadow: none !important;
+    padding: 0 !important;
+    margin: 8px auto 0 !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    overflow: visible !important;
+  }
+
+  .banner-topo-brand {
+    width: 100% !important;
+    max-width: 100% !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    background: transparent !important;
+    border: 0 !important;
+    box-shadow: none !important;
+  }
+
+  .topo-banner-img {
+    display: block !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    height: auto !important;
+    object-fit: contain !important;
+    object-position: center !important;
+    margin: 0 auto !important;
+    border-radius: 22px !important;
+  }
+
+  .topbar .nav,
+  .topbar .brand,
+  .topbar .brand-mark,
+  .topbar .solar-header-logo,
+  .topbar strong,
+  .topbar small,
+  .topbar a,
+  .topbar button {
+    display: none !important;
+  }
+
+  .topbar .banner-topo-brand,
+  .topbar .topo-banner-img {
+    display: flex !important;
+  }
+
+  @media (max-width: 760px) {
+    .topbar {
+      width: calc(100% - 10px) !important;
+      max-width: calc(100% - 10px) !important;
+      margin: 8px auto 0 !important;
+      padding: 0 !important;
+      border-radius: 0 !important;
+    }
+
+    .topo-banner-img {
+      width: 100% !important;
+      max-width: 100% !important;
+      border-radius: 18px !important;
+    }
+  }
+
+  @media (max-width: 390px) {
+    .topbar {
+      width: calc(100% - 8px) !important;
+      max-width: calc(100% - 8px) !important;
+    }
+
+    .topo-banner-img {
+      border-radius: 16px !important;
+    }
+  }
+</style>
+
+
+  <nav class="bottom-app-nav" id="bottomAppNav" aria-label="Menu principal">
+    <a href="#grupos">Grupos</a>
+    <a href="#jogosDoDia">Jogos</a>
+    <a href="#classificacao">Ranking</a>
+    <a href="#carrosselOnze">Prêmios</a>
+  </nav>
+
+
+<style id="bottom-app-nav-style">
+  .bottom-app-nav {
+    position: fixed;
+    left: 10px;
+    right: 10px;
+    bottom: 10px;
+    z-index: 9999;
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 7px;
+    padding: 8px;
+    border: 3px solid #050505;
+    border-radius: 22px;
+    background: rgba(255, 255, 255, .94);
+    box-shadow: 5px 5px 0 #050505;
+    backdrop-filter: blur(12px);
+  }
+
+  .bottom-app-nav a {
+    min-height: 38px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border: 2px solid #050505;
+    border-radius: 999px;
+    background: #ffffff;
+    color: #050505;
+    box-shadow: 2px 2px 0 #050505;
+    font-size: 8px;
+    font-weight: 1000;
+    text-transform: uppercase;
+    text-decoration: none;
+    line-height: 1;
+    transition: transform 180ms ease, filter 180ms ease;
+  }
+
+  .bottom-app-nav a:active {
+    transform: translateY(2px);
+    box-shadow: 1px 1px 0 #050505;
+  }
+
+  .bottom-app-nav a:nth-child(3) {
+    background: #d6ff00;
+  }
+
+  .bottom-app-nav a:nth-child(4) {
+    background: #21d3ca;
+  }
+
+  body {
+    padding-bottom: 78px;
+  }
+
+  @media (min-width: 761px) {
+    .bottom-app-nav {
+      left: 50%;
+      right: auto;
+      width: min(720px, calc(100% - 32px));
+      transform: translateX(-50%);
+    }
+
+    .bottom-app-nav a {
+      font-size: 10px;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .bottom-app-nav a {
+      transition: none !important;
+    }
+  }
+</style>
+
+
+<style id="corrigir-conteudo-logado-final">
+  /* ===== CORREÇÃO: CONTEÚDO LOGADO VISÍVEL ===== */
+
+  body.is-registered main {
+    display: block !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+    padding-top: 0 !important;
+  }
+
+  body.is-registered .hero {
+    min-height: auto !important;
+    height: auto !important;
+    padding: 18px 0 24px !important;
+    margin-bottom: 18px !important;
+  }
+
+  body.is-registered .hero-grid {
+    display: grid !important;
+    grid-template-columns: 1fr !important;
+    gap: 14px !important;
+    min-height: auto !important;
+  }
+
+  body.is-registered .registration-card {
+    display: none !important;
+  }
+
+  body.is-registered .section,
+  body.is-registered #grupos,
+  body.is-registered #jogosDoDia,
+  body.is-registered #classificacao,
+  body.is-registered #carrosselOnze {
+    display: block !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+    transform: none !important;
+  }
+
+  body.is-registered .section {
+    margin-top: 28px !important;
+    padding-top: 18px !important;
+  }
+
+  body.is-registered #heroLead {
+    margin-bottom: 0 !important;
+  }
+
+  @media (max-width: 760px) {
+    body.is-registered .hero {
+      padding: 14px 0 18px !important;
+      margin-bottom: 12px !important;
+    }
+
+    body.is-registered .section {
+      margin-top: 22px !important;
+      padding-top: 14px !important;
+    }
+
+    body.is-registered main {
+      padding-bottom: 90px !important;
+    }
+  }
+</style>
+
+
+<style id="restaurar-secoes-logado-final">
+  /* ===== RESTAURAÇÃO FINAL DAS SEÇÕES DO SITE LOGADO ===== */
+
+  body.is-registered {
+    overflow-x: hidden !important;
+  }
+
+  body.is-registered main {
+    display: block !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+    min-height: auto !important;
+    height: auto !important;
+    padding-top: 0 !important;
+    padding-bottom: 100px !important;
+  }
+
+  body.is-registered .hero {
+    display: block !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+    min-height: auto !important;
+    height: auto !important;
+    padding: 18px 0 18px !important;
+    margin: 0 0 18px !important;
+  }
+
+  body.is-registered .hero-grid {
+    display: grid !important;
+    grid-template-columns: 1fr !important;
+    min-height: auto !important;
+    height: auto !important;
+    gap: 14px !important;
+  }
+
+  body.is-registered .registration-card {
+    display: none !important;
+  }
+
+  body.is-registered .section,
+  body.is-registered section.section,
+  body.is-registered #jogosDoDia,
+  body.is-registered #carrosselOnze,
+  body.is-registered #grupos,
+  body.is-registered #classificacao {
+    display: block !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+    transform: none !important;
+    min-height: auto !important;
+    height: auto !important;
+    margin-top: 24px !important;
+    padding-top: 18px !important;
+    pointer-events: auto !important;
+  }
+
+  body.is-registered .reveal,
+  body.is-registered .reveal.is-visible {
+    display: block !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+    transform: none !important;
+  }
+
+  body.is-registered #groupsGrid,
+  body.is-registered #dailyMatchesGrid,
+  body.is-registered #leaderboardTableBody,
+  body.is-registered #carousel11Track {
+    display: grid !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+  }
+
+  body.is-registered #carousel11Track {
+    display: flex !important;
+  }
+
+  @media (max-width: 760px) {
+    body.is-registered .hero {
+      padding: 12px 0 12px !important;
+      margin-bottom: 12px !important;
+    }
+
+    body.is-registered .section,
+    body.is-registered section.section,
+    body.is-registered #jogosDoDia,
+    body.is-registered #carrosselOnze,
+    body.is-registered #grupos,
+    body.is-registered #classificacao {
+      margin-top: 20px !important;
+      padding-top: 14px !important;
+    }
+  }
+</style>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<style id="carrossel-grupos-sequencial-style">
+  #grupos .group-jump-nav,
+  #groupJumpNav {
+    display: none !important;
+  }
+
+  #grupos #groupsViewport {
+    width: 100% !important;
+    overflow: hidden !important;
+  }
+
+  #grupos #groupsTrack {
+    display: flex !important;
+    flex-wrap: nowrap !important;
+    gap: 16px !important;
+    width: max-content !important;
+    will-change: transform;
+    transition: transform 320ms cubic-bezier(.2,.8,.2,1) !important;
+  }
+
+  #grupos .group-card {
+    flex: 0 0 calc((100vw - 96px) / 3) !important;
+    width: calc((100vw - 96px) / 3) !important;
+    min-width: calc((100vw - 96px) / 3) !important;
+    max-width: calc((100vw - 96px) / 3) !important;
+    display: block !important;
+    opacity: 1 !important;
+    visibility: visible !important;
+  }
+
+  @media (max-width: 980px) {
+    #grupos .group-card {
+      flex-basis: calc((100vw - 72px) / 2) !important;
+      width: calc((100vw - 72px) / 2) !important;
+      min-width: calc((100vw - 72px) / 2) !important;
+      max-width: calc((100vw - 72px) / 2) !important;
+    }
+  }
+
+  @media (max-width: 760px) {
+    #grupos .group-card {
+      flex: 0 0 calc(100vw - 48px) !important;
+      width: calc(100vw - 48px) !important;
+      min-width: calc(100vw - 48px) !important;
+      max-width: calc(100vw - 48px) !important;
+    }
+
+    #grupos #carouselLabel {
+      font-size: 0 !important;
+    }
+
+    #grupos #carouselLabel::after {
+      content: "Grupos da Copa 2026";
+      font-size: 22px !important;
+      line-height: 1 !important;
+    }
+  }
+</style>
+
+
+<script id="fix-group-carousel-buttons">
+  (() => {
+    function fixGroupCarouselButtons() {
+      const prev = document.querySelector("#prevGroup");
+      const next = document.querySelector("#nextGroup");
+      const track = document.querySelector("#groupsTrack");
+      const viewport = document.querySelector("#groupsViewport");
+
+      if (!prev || !next || !track || !viewport || !window.groups || !window.state) {
+        return;
+      }
+
+      function getCardsPerView() {
+        if (window.innerWidth <= 760) return 1;
+        if (window.innerWidth <= 980) return 2;
+        return 3;
+      }
+
+      function moveGroupCarousel(direction) {
+        const perView = getCardsPerView();
+        const maxIndex = Math.max(0, window.groups.length - perView);
+
+        window.state.groupIndex = Number(window.state.groupIndex || 0) + direction;
+        window.state.groupIndex = Math.max(0, Math.min(window.state.groupIndex, maxIndex));
+
+        if (typeof window.updateCarousel === "function") {
+          window.updateCarousel();
+          return;
+        }
+
+        const firstCard = track.querySelector(".group-card");
+        if (!firstCard) return;
+
+        const gap = 16;
+        const cardWidth = firstCard.getBoundingClientRect().width;
+        const offset = window.state.groupIndex * (cardWidth + gap);
+
+        track.style.transform = `translate3d(-${offset}px, 0, 0)`;
+      }
+
+      prev.onclick = (event) => {
+        event.preventDefault();
+        moveGroupCarousel(-1);
+      };
+
+      next.onclick = (event) => {
+        event.preventDefault();
+        moveGroupCarousel(1);
+      };
+
+      let startX = 0;
+      let currentX = 0;
+      let dragging = false;
+
+      viewport.onpointerdown = (event) => {
+        dragging = true;
+        startX = event.clientX;
+        currentX = event.clientX;
+      };
+
+      viewport.onpointermove = (event) => {
+        if (!dragging) return;
+        currentX = event.clientX;
+      };
+
+      viewport.onpointerup = () => {
+        if (!dragging) return;
+
+        dragging = false;
+        const diff = currentX - startX;
+
+        if (Math.abs(diff) > 45) {
+          moveGroupCarousel(diff < 0 ? 1 : -1);
+        }
+      };
+    }
+
+    window.addEventListener("DOMContentLoaded", () => {
+      setTimeout(fixGroupCarouselButtons, 500);
+    });
+
+    window.addEventListener("load", () => {
+      setTimeout(fixGroupCarouselButtons, 800);
+    });
+  })();
+</script>
+
+
+<style id="fix-group-carousel-buttons-final-style">
+  #prevGroup,
+  #nextGroup {
+    pointer-events: auto !important;
+    cursor: pointer !important;
+    z-index: 20 !important;
+    position: relative !important;
+  }
+
+  #groupsViewport {
+    touch-action: pan-y !important;
+  }
+
+  #groupsTrack {
+    will-change: transform !important;
+  }
+</style>
+
+
+<script id="fix-group-carousel-buttons-final">
+  (() => {
+    function fixGroupCarouselButtonsFinal() {
+      const prev = document.querySelector("#prevGroup");
+      const next = document.querySelector("#nextGroup");
+      const track = document.querySelector("#groupsTrack");
+      const viewport = document.querySelector("#groupsViewport");
+
+      if (!prev || !next || !track || !viewport) {
+        console.warn("Carrossel de grupos: elementos não encontrados.");
+        return;
+      }
+
+      function getGroupsLength() {
+        try {
+          if (typeof groups !== "undefined" && Array.isArray(groups)) {
+            return groups.length;
+          }
+        } catch (error) {}
+
+        return track.querySelectorAll(".group-card").length || 12;
+      }
+
+      function getCardsPerViewSafe() {
+        if (typeof cardsPerView === "function") {
+          return cardsPerView();
+        }
+
+        if (window.innerWidth <= 760) return 1;
+        if (window.innerWidth <= 980) return 2;
+        return 3;
+      }
+
+      function getCurrentIndex() {
+        try {
+          if (typeof state !== "undefined") {
+            return Number(state.groupIndex || 0);
+          }
+        } catch (error) {}
+
+        return Number(track.dataset.groupIndex || 0);
+      }
+
+      function setCurrentIndex(value) {
+        const total = getGroupsLength();
+        const perView = getCardsPerViewSafe();
+        const maxIndex = Math.max(0, total - perView);
+        const nextIndex = Math.max(0, Math.min(Number(value || 0), maxIndex));
+
+        try {
+          if (typeof state !== "undefined") {
+            state.groupIndex = nextIndex;
+          }
+        } catch (error) {}
+
+        track.dataset.groupIndex = String(nextIndex);
+
+        return nextIndex;
+      }
+
+      function forceMove() {
+        if (typeof updateCarousel === "function") {
+          updateCarousel();
+          return;
+        }
+
+        const firstCard = track.querySelector(".group-card");
+        if (!firstCard) return;
+
+        const gap = 16;
+        const index = getCurrentIndex();
+        const cardWidth = firstCard.getBoundingClientRect().width;
+        const offset = index * (cardWidth + gap);
+
+        track.style.transform = `translate3d(-${offset}px, 0, 0)`;
+      }
+
+      function move(direction) {
+        const current = getCurrentIndex();
+        setCurrentIndex(current + direction);
+        forceMove();
+      }
+
+      prev.onclick = (event) => {
+        event.preventDefault();
+        event.stopPropagation();
+        move(-1);
+      };
+
+      next.onclick = (event) => {
+        event.preventDefault();
+        event.stopPropagation();
+        move(1);
+      };
+
+      let dragging = false;
+      let startX = 0;
+      let lastX = 0;
+
+      viewport.onpointerdown = (event) => {
+        dragging = true;
+        startX = event.clientX;
+        lastX = event.clientX;
+      };
+
+      viewport.onpointermove = (event) => {
+        if (!dragging) return;
+        lastX = event.clientX;
+      };
+
+      viewport.onpointerup = () => {
+        if (!dragging) return;
+
+        dragging = false;
+        const diff = lastX - startX;
+
+        if (Math.abs(diff) > 45) {
+          move(diff < 0 ? 1 : -1);
+        }
+      };
+
+      viewport.onpointercancel = () => {
+        dragging = false;
+      };
+
+      forceMove();
+
+      console.log("Setas do carrossel de grupos ativadas.");
+    }
+
+    document.addEventListener("DOMContentLoaded", () => {
+      setTimeout(fixGroupCarouselButtonsFinal, 600);
+    });
+
+    window.addEventListener("load", () => {
+      setTimeout(fixGroupCarouselButtonsFinal, 900);
+    });
+  })();
+</script>
+
+
+<style id="opening-match-shortcut-style">
+  .opening-match-shortcut {
+    width: min(1120px, calc(100% - 24px));
+    margin: 18px auto 0;
+    padding: 14px;
+    border: 4px solid #050505;
+    border-radius: 24px;
+    background:
+      radial-gradient(circle at 92% 10%, rgba(255, 37, 31, .28), transparent 26%),
+      linear-gradient(135deg, #d6ff00 0%, #ffffff 72%);
+    box-shadow: 6px 6px 0 #050505;
+  }
+
+  .opening-match-kicker {
+    width: fit-content;
+    margin-bottom: 10px;
+    padding: 7px 11px;
+    border: 3px solid #050505;
+    border-radius: 999px;
+    background: #21d3ca;
+    box-shadow: 3px 3px 0 #050505;
+    font-size: 10px;
+    font-weight: 1000;
+    text-transform: uppercase;
+  }
+
+  .opening-match-content {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    gap: 14px;
+    align-items: center;
+  }
+
+  .opening-match-content strong {
+    display: block;
+    font-size: clamp(26px, 5vw, 48px);
+    line-height: .9;
+    letter-spacing: -.05em;
+    text-transform: uppercase;
+  }
+
+  .opening-match-content span {
+    display: block;
+    margin-top: 7px;
+    font-size: 13px;
+    font-weight: 900;
+    color: #444444;
+  }
+
+  .opening-match-content a {
+    min-height: 46px;
+    padding: 0 18px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border: 3px solid #050505;
+    border-radius: 999px;
+    background: #ff251f;
+    color: #ffffff;
+    box-shadow: 4px 4px 0 #050505;
+    font-size: 11px;
+    font-weight: 1000;
+    text-transform: uppercase;
+    text-decoration: none;
+    transition: transform 180ms ease, filter 180ms ease;
+  }
+
+  .opening-match-content a:active {
+    transform: translateY(2px);
+    box-shadow: 2px 2px 0 #050505;
+  }
+
+  @media (max-width: 760px) {
+    .opening-match-shortcut {
+      width: calc(100% - 18px);
+      margin-top: 14px;
+      padding: 12px;
+      border-radius: 20px;
+      box-shadow: 4px 4px 0 #050505;
+    }
+
+    .opening-match-content {
+      grid-template-columns: 1fr;
+    }
+
+    .opening-match-content strong {
+      font-size: clamp(28px, 10vw, 42px);
+    }
+
+    .opening-match-content a {
+      width: 100%;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .opening-match-content a {
+      transition: none !important;
+    }
+  }
+</style>
+
+
+<style id="opening-prediction-style">
+  /* Jogo de abertura aparece somente após login */
+  body:not(.is-registered) #jogoAberturaPalpite {
+    display: none !important;
+  }
+
+  body.is-registered #jogoAberturaPalpite {
+    display: block !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+    transform: none !important;
+  }
+
+  #jogoAberturaPalpite {
+    margin-top: 22px;
+  }
+
+  #jogoAberturaPalpite .match-card {
+    background:
+      radial-gradient(circle at 88% 18%, rgba(255, 37, 31, .35), transparent 26%),
+      linear-gradient(135deg, #d6ff00 0%, #ffffff 62%);
+  }
+
+  #jogoAberturaPalpite .opening-label {
+    width: fit-content;
+    display: inline-flex;
+    margin-bottom: 10px;
+    padding: 7px 11px;
+    border: 3px solid #050505;
+    border-radius: 999px;
+    background: #21d3ca;
+    box-shadow: 3px 3px 0 #050505;
+    font-size: 10px;
+    font-weight: 1000;
+    text-transform: uppercase;
+  }
+
+  #jogoAberturaPalpite .opening-title {
+    font-size: clamp(28px, 6vw, 52px);
+    line-height: .9;
+    letter-spacing: -.05em;
+    text-transform: uppercase;
+    margin: 10px 0 12px;
+  }
+
+  #jogoAberturaPalpite .opening-score-layout {
+    display: grid;
+    gap: 10px;
+    margin: 14px 0;
+  }
+
+  #jogoAberturaPalpite .opening-team-row {
+    display: grid;
+    grid-template-columns: 1fr 72px;
+    gap: 12px;
+    align-items: center;
+    padding: 10px 12px;
+    border: 3px solid #050505;
+    border-radius: 18px;
+    background: #ffffff;
+    box-shadow: 3px 3px 0 #050505;
+  }
+
+  #jogoAberturaPalpite .opening-team-info {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    min-width: 0;
+  }
+
+  #jogoAberturaPalpite .opening-team-text {
+    display: grid;
+    gap: 2px;
+    min-width: 0;
+  }
+
+  #jogoAberturaPalpite .opening-team-role {
+    font-size: 9px;
+    font-weight: 1000;
+    text-transform: uppercase;
+    opacity: .65;
+  }
+
+  #jogoAberturaPalpite .opening-team-name {
+    font-size: 16px;
+    font-weight: 1000;
+    text-transform: uppercase;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  #jogoAberturaPalpite .opening-score-input {
+    width: 64px;
+    height: 54px;
+    border: 3px solid #050505;
+    border-radius: 14px;
+    background: #f3f4f8;
+    box-shadow: 2px 2px 0 #050505;
+    text-align: center;
+    font-size: 24px;
+    font-weight: 1000;
+  }
+
+  #jogoAberturaPalpite .opening-versus {
+    text-align: center;
+    font-size: 18px;
+    font-weight: 1000;
+    line-height: 1;
+  }
+
+  #jogoAberturaPalpite .opening-actions {
+    display: grid;
+    gap: 10px;
+    margin-top: 12px;
+  }
+
+  #jogoAberturaPalpite .opening-status {
+    font-size: 12px;
+    font-weight: 1000;
+    color: #444444;
+  }
+
+  #jogoAberturaPalpite .opening-save-btn {
+    min-height: 48px;
+    border: 3px solid #050505;
+    border-radius: 999px;
+    background: #ff251f;
+    color: #ffffff;
+    box-shadow: 4px 4px 0 #050505;
+    font-size: 11px;
+    font-weight: 1000;
+    text-transform: uppercase;
+    cursor: pointer;
+  }
+
+  #jogoAberturaPalpite .opening-save-btn.is-reset {
+    background: #ffffff;
+    color: #050505;
+  }
+
+  @media (max-width: 760px) {
+    #jogoAberturaPalpite {
+      margin-top: 18px;
+    }
+
+    #jogoAberturaPalpite .opening-team-row {
+      grid-template-columns: 1fr 62px;
+      padding: 9px 10px;
+    }
+
+    #jogoAberturaPalpite .opening-score-input {
+      width: 58px;
+      height: 50px;
+      font-size: 22px;
+    }
+
+    #jogoAberturaPalpite .opening-team-name {
+      font-size: 14px;
+    }
+  }
+</style>
+
+
+<script id="opening-prediction-script">
+  (() => {
+    function getOpeningMatch() {
+      if (typeof matches === "undefined" || !Array.isArray(matches)) return null;
+
+      return matches.find((match) => {
+        const home = String(match.home || match.home_team || "").toLowerCase();
+        const away = String(match.away || match.away_team || "").toLowerCase();
+        const id = String(match.id || "").toUpperCase();
+
+        return id === "A-01" ||
+          (home.includes("méxico") && away.includes("áfrica")) ||
+          (home.includes("mexico") && away.includes("africa"));
+      });
+    }
+
+    function openingTeamName(match, side) {
+      const value = side === "home"
+        ? match.home_team || match.home
+        : match.away_team || match.away;
+
+      return value || "-";
+    }
+
+    function renderOpeningPrediction() {
+      const container = document.querySelector("#openingPredictionCard");
+      if (!container) return;
+
+      const match = getOpeningMatch();
+
+      if (!match) {
+        container.innerHTML = `
+          <article class="match-card reveal is-visible">
+            <p>Jogo de abertura ainda não encontrado na base de jogos.</p>
+          </article>
+        `;
+        return;
+      }
+
+      const matchId = "A-01";
+      const saved = state.scores[matchId] || {};
+      const hasSavedPrediction = saved.home !== undefined && saved.away !== undefined;
+      const locked = typeof isMatchLocked === "function" ? isMatchLocked(match.kickoff_at || match.kickoff) : false;
+      const shouldDisable = locked || hasSavedPrediction;
+
+      const homeName = openingTeamName(match, "home");
+      const awayName = openingTeamName(match, "away");
+
+      container.innerHTML = `
+        <article class="match-card reveal is-visible" data-opening-match="A-01">
+          <span class="opening-label">Abertura da Copa 2026</span>
+
+          <div class="match-meta">
+            <span class="tag">Grupo ${match.group_name || match.group || "A"}</span>
+            <span class="tag">${typeof formatKickoff === "function" ? formatKickoff(match.kickoff_at || match.kickoff) : "11/06/2026, 16:00"}</span>
+          </div>
+
+          <h3 class="opening-title">${homeName} x ${awayName}</h3>
+
+          <div class="opening-score-layout">
+            <div class="opening-team-row">
+              <div class="opening-team-info">
+                ${typeof flagImage === "function" && typeof getTeam === "function" ? flagImage(getTeam(homeName)) : ""}
+                <div class="opening-team-text">
+                  <span class="opening-team-role">Mandante</span>
+                  <span class="opening-team-name">${homeName}</span>
+                </div>
+              </div>
+
+              <input
+                class="opening-score-input"
+                type="number"
+                min="0"
+                max="30"
+                inputmode="numeric"
+                value="${saved.home ?? ""}"
+                placeholder="0"
+                data-opening-score="home"
+                ${shouldDisable ? "disabled" : ""}
+              />
+            </div>
+
+            <div class="opening-versus">x</div>
+
+            <div class="opening-team-row">
+              <div class="opening-team-info">
+                ${typeof flagImage === "function" && typeof getTeam === "function" ? flagImage(getTeam(awayName)) : ""}
+                <div class="opening-team-text">
+                  <span class="opening-team-role">Visitante</span>
+                  <span class="opening-team-name">${awayName}</span>
+                </div>
+              </div>
+
+              <input
+                class="opening-score-input"
+                type="number"
+                min="0"
+                max="30"
+                inputmode="numeric"
+                value="${saved.away ?? ""}"
+                placeholder="0"
+                data-opening-score="away"
+                ${shouldDisable ? "disabled" : ""}
+              />
+            </div>
+          </div>
+
+          <p>${match.venue || "Mexico City Stadium (Mexico City)"}</p>
+
+          <div class="opening-actions">
+            <span class="opening-status">
+              ${locked ? "Palpite encerrado: jogo iniciado" : hasSavedPrediction ? "Palpite salvo no banco" : "Ainda não salvo"}
+            </span>
+
+            <button
+              class="opening-save-btn ${hasSavedPrediction ? "is-reset" : ""}"
+              type="button"
+              data-opening-action="${hasSavedPrediction ? "reset" : "save"}"
+              ${locked ? "disabled" : ""}
+            >
+              ${locked ? "Prazo encerrado" : hasSavedPrediction ? "Resetar palpite" : "Salvar placar"}
+            </button>
+          </div>
+        </article>
+      `;
+
+      setupOpeningPredictionAction(match);
+    }
+
+    function setupOpeningPredictionAction(match) {
+      const card = document.querySelector("[data-opening-match]");
+      if (!card) return;
+
+      const button = card.querySelector("[data-opening-action]");
+      if (!button) return;
+
+      button.addEventListener("click", async () => {
+        const matchId = "A-01";
+        const action = button.dataset.openingAction;
+        const status = card.querySelector(".opening-status");
+        const homeInput = card.querySelector('[data-opening-score="home"]');
+        const awayInput = card.querySelector('[data-opening-score="away"]');
+
+        if (action === "reset") {
+          const confirmed = window.confirm("Deseja resetar o palpite do jogo de abertura?");
+
+          if (!confirmed) return;
+
+          try {
+            button.disabled = true;
+            status.textContent = "Resetando palpite...";
+
+            const response = await fetch(`/predictions/${matchId}`, {
+              method: "DELETE",
+              credentials: "include"
+            });
+
+            const data = await response.json();
+
+            if (!response.ok || !data.success) {
+              throw new Error(data.message || "Erro ao resetar palpite.");
+            }
+
+            delete state.scores[matchId];
+
+            if (typeof saveScores === "function") saveScores();
+            if (typeof renderDailyMatches === "function") renderDailyMatches();
+
+            renderOpeningPrediction();
+
+            if (typeof showToast === "function") {
+              showToast("Palpite do jogo de abertura resetado!");
+            }
+          } catch (error) {
+            status.textContent = "Erro ao resetar";
+            if (typeof showToast === "function") showToast(error.message);
+          }
+
+          return;
+        }
+
+        const homeScore = homeInput.value;
+        const awayScore = awayInput.value;
+
+        if (homeScore === "" || awayScore === "") {
+          if (typeof showToast === "function") {
+            showToast("Preencha os dois placares antes de salvar.");
+          }
+          return;
+        }
+
+        try {
+          button.disabled = true;
+          status.textContent = "Salvando no banco...";
+
+          const payload = new URLSearchParams({
+            matchId,
+            homeScore: String(Math.max(0, Number(homeScore))),
+            awayScore: String(Math.max(0, Number(awayScore)))
+          });
+
+          const response = await fetch("/predictions", {
+            method: "POST",
+            credentials: "include",
+            headers: {
+              "Content-Type": "application/x-www-form-urlencoded"
+            },
+            body: payload
+          });
+
+          const data = await response.json();
+
+          if (!response.ok || !data.success) {
+            throw new Error(data.message || "Erro ao salvar palpite.");
+          }
+
+          state.scores[matchId] = {
+            home: Math.max(0, Number(homeScore)),
+            away: Math.max(0, Number(awayScore)),
+            savedAt: new Date().toISOString()
+          };
+
+          if (typeof saveScores === "function") saveScores();
+          if (typeof renderDailyMatches === "function") renderDailyMatches();
+
+          renderOpeningPrediction();
+
+          if (typeof showToast === "function") {
+            showToast("Palpite do jogo de abertura salvo!");
+          }
+        } catch (error) {
+          status.textContent = "Erro ao salvar";
+          if (typeof showToast === "function") showToast(error.message);
+        } finally {
+          button.disabled = false;
+        }
+      });
+    }
+
+    window.renderOpeningPrediction = renderOpeningPrediction;
+
+    document.addEventListener("DOMContentLoaded", () => {
+      setTimeout(renderOpeningPrediction, 800);
+    });
+
+    window.addEventListener("load", () => {
+      setTimeout(renderOpeningPrediction, 1000);
+    });
+  })();
+</script>
+
+
+<style id="opening-flags-real-style">
+  /* ===== BANDEIRAS REAIS NO JOGO DE ABERTURA ===== */
+
+  #jogoAberturaPalpite .opening-team-info .flag {
+    width: 56px !important;
+    height: 56px !important;
+    min-width: 56px !important;
+    border: 3px solid #050505 !important;
+    border-radius: 999px !important;
+    overflow: hidden !important;
+    display: grid !important;
+    place-items: center !important;
+    background: #ffffff !important;
+    box-shadow: 2px 2px 0 #050505 !important;
+  }
+
+  #jogoAberturaPalpite .opening-team-info .flag-img {
+    display: block !important;
+    width: 100% !important;
+    height: 100% !important;
+    object-fit: cover !important;
+  }
+
+  #jogoAberturaPalpite .opening-team-info .flag-fallback {
+    display: none !important;
+  }
+
+  #jogoAberturaPalpite .opening-team-row {
+    grid-template-columns: 1fr 72px !important;
+  }
+
+  #jogoAberturaPalpite .opening-team-info {
+    min-width: 0 !important;
+  }
+
+  #jogoAberturaPalpite .opening-team-name {
+    white-space: normal !important;
+    overflow: visible !important;
+    text-overflow: unset !important;
+  }
+
+  @media (max-width: 760px) {
+    #jogoAberturaPalpite .opening-team-info .flag {
+      width: 50px !important;
+      height: 50px !important;
+      min-width: 50px !important;
+    }
+
+    #jogoAberturaPalpite .opening-team-row {
+      grid-template-columns: 1fr 62px !important;
+      gap: 10px !important;
+    }
+  }
+</style>
+
+
+<script id="limit-score-inputs-2-digits">
+  (() => {
+    function normalizeScoreInput(input) {
+      if (!input) return;
+
+      let value = String(input.value || "")
+        .replace(/\D/g, "")
+        .slice(0, 2);
+
+      if (value !== "") {
+        const number = Math.max(0, Math.min(99, Number(value)));
+        value = String(number);
+      }
+
+      input.value = value;
+    }
+
+    function applyScoreInputLimits(root = document) {
+      const selectors = [
+        'input[data-score="home"]',
+        'input[data-score="away"]',
+        'input[data-opening-score="home"]',
+        'input[data-opening-score="away"]',
+        '.team-score-input',
+        '.opening-score-input'
+      ];
+
+      root.querySelectorAll(selectors.join(",")).forEach((input) => {
+        input.setAttribute("maxlength", "2");
+        input.setAttribute("min", "0");
+        input.setAttribute("max", "99");
+        input.setAttribute("inputmode", "numeric");
+        input.setAttribute("pattern", "[0-9]{1,2}");
+
+        input.addEventListener("input", () => normalizeScoreInput(input));
+        input.addEventListener("paste", () => {
+          window.setTimeout(() => normalizeScoreInput(input), 0);
+        });
+      });
+    }
+
+    document.addEventListener("DOMContentLoaded", () => {
+      applyScoreInputLimits();
+    });
+
+    window.addEventListener("load", () => {
+      applyScoreInputLimits();
+    });
+
+    const observer = new MutationObserver(() => {
+      applyScoreInputLimits();
+    });
+
+    observer.observe(document.documentElement, {
+      childList: true,
+      subtree: true
+    });
+
+    window.applyScoreInputLimits = applyScoreInputLimits;
+  })();
+</script>
+
+
+<script id="fix-save-score-frontend">
+  (() => {
+    function cleanScore(value) {
+      const digits = String(value || "").replace(/\D/g, "").slice(0, 2);
+
+      if (digits === "") return "";
+
+      return String(Math.max(0, Math.min(99, Number(digits))));
+    }
+
+    function patchScoreInputs() {
+      document
+        .querySelectorAll('[data-score="home"], [data-score="away"], [data-opening-score="home"], [data-opening-score="away"]')
+        .forEach((input) => {
+          input.setAttribute("maxlength", "2");
+          input.setAttribute("max", "99");
+          input.setAttribute("min", "0");
+          input.setAttribute("inputmode", "numeric");
+
+          input.addEventListener("input", () => {
+            input.value = cleanScore(input.value);
+          });
+        });
+    }
+
+    function patchOpeningSaveButton() {
+      const card = document.querySelector("[data-opening-match]");
+      if (!card) return;
+
+      const button = card.querySelector("[data-opening-action]");
+      if (!button || button.dataset.frontendSavePatched === "1") return;
+
+      button.dataset.frontendSavePatched = "1";
+
+      button.addEventListener("click", async (event) => {
+        const action = button.dataset.openingAction;
+
+        if (action !== "save") return;
+
+        event.preventDefault();
+        event.stopImmediatePropagation();
+
+        const matchId = "A-01";
+        const homeInput = card.querySelector('[data-opening-score="home"]');
+        const awayInput = card.querySelector('[data-opening-score="away"]');
+        const status = card.querySelector(".opening-status");
+
+        const homeScore = cleanScore(homeInput && homeInput.value);
+        const awayScore = cleanScore(awayInput && awayInput.value);
+
+        if (homeInput) homeInput.value = homeScore;
+        if (awayInput) awayInput.value = awayScore;
+
+        if (homeScore === "" || awayScore === "") {
+          if (typeof showToast === "function") {
+            showToast("Preencha os dois placares antes de salvar.");
+          }
+          return;
+        }
+
+        try {
+          button.disabled = true;
+
+          if (status) {
+            status.textContent = "Salvando no banco...";
+          }
+
+          const payload = new URLSearchParams({
+            matchId,
+            homeScore,
+            awayScore
+          });
+
+          const response = await fetch("/predictions", {
+            method: "POST",
+            credentials: "include",
+            headers: {
+              "Content-Type": "application/x-www-form-urlencoded"
+            },
+            body: payload
+          });
+
+          const data = await response.json();
+
+          if (!response.ok || !data.success) {
+            throw new Error(data.message || "Erro ao salvar placar.");
+          }
+
+          if (typeof state !== "undefined") {
+            state.scores[matchId] = {
+              home: Number(homeScore),
+              away: Number(awayScore),
+              savedAt: new Date().toISOString()
+            };
+          }
+
+          if (typeof saveScores === "function") saveScores();
+          if (typeof renderDailyMatches === "function") renderDailyMatches();
+          if (typeof window.renderOpeningPrediction === "function") {
+            window.renderOpeningPrediction();
+          }
+
+          if (typeof showToast === "function") {
+            showToast("Palpite salvo no banco com sucesso!");
+          }
+        } catch (error) {
+          if (status) {
+            status.textContent = "Erro ao salvar";
+          }
+
+          if (typeof showToast === "function") {
+            showToast(error.message || "Erro ao salvar placar.");
+          }
+        } finally {
+          button.disabled = false;
+        }
+      }, true);
+    }
+
+    function patchAll() {
+      patchScoreInputs();
+      patchOpeningSaveButton();
+    }
+
+    document.addEventListener("DOMContentLoaded", () => {
+      patchAll();
+      setInterval(patchAll, 800);
+    });
+
+    window.addEventListener("load", patchAll);
+  })();
+</script>
+
+
+<script id="save-score-frontend-final-fix">
+  (() => {
+    function cleanScore(value) {
+      const digits = String(value || "").replace(/\D/g, "").slice(0, 2);
+
+      if (digits === "") return "";
+
+      const number = Number(digits);
+
+      if (!Number.isInteger(number) || number < 0 || number > 99) {
+        return "";
+      }
+
+      return String(number);
+    }
+
+    function limitScoreInputs() {
+      document
+        .querySelectorAll('[data-score="home"], [data-score="away"], [data-opening-score="home"], [data-opening-score="away"], .team-score-input, .opening-score-input')
+        .forEach((input) => {
+          input.setAttribute("maxlength", "2");
+          input.setAttribute("min", "0");
+          input.setAttribute("max", "99");
+          input.setAttribute("inputmode", "numeric");
+          input.setAttribute("pattern", "[0-9]{1,2}");
+
+          if (input.dataset.scoreLimitApplied === "1") return;
+
+          input.dataset.scoreLimitApplied = "1";
+
+          input.addEventListener("input", () => {
+            input.value = cleanScore(input.value);
+          });
+
+          input.addEventListener("paste", () => {
+            setTimeout(() => {
+              input.value = cleanScore(input.value);
+            }, 0);
+          });
+        });
+    }
+
+    function getVisibleInput(card, selector) {
+      const inputs = Array.from(card.querySelectorAll(selector));
+
+      const visibleInput = inputs.find((input) => {
+        const style = window.getComputedStyle(input);
+        const rect = input.getBoundingClientRect();
+
+        return style.display !== "none" &&
+          style.visibility !== "hidden" &&
+          rect.width > 0 &&
+          rect.height > 0;
+      });
+
+      return visibleInput || inputs[0] || null;
+    }
+
+    function getMatchIdFromButton(button) {
+      if (button.dataset.saveDaily) return button.dataset.saveDaily;
+
+      const openingCard = button.closest("[data-opening-match]");
+      if (openingCard) return "A-01";
+
+      const dailyCard = button.closest("[data-daily-match]");
+      if (dailyCard) return dailyCard.dataset.dailyMatch;
+
+      return "";
+    }
+
+    function getScoreInputs(card) {
+      const homeInput =
+        getVisibleInput(card, '[data-opening-score="home"]') ||
+        getVisibleInput(card, '[data-score="home"]');
+
+      const awayInput =
+        getVisibleInput(card, '[data-opening-score="away"]') ||
+        getVisibleInput(card, '[data-score="away"]');
+
+      return {
+        homeInput,
+        awayInput
+      };
+    }
+
+    async function savePredictionFromButton(button) {
+      const card =
+        button.closest("[data-opening-match]") ||
+        button.closest("[data-daily-match]") ||
+        button.closest(".match-card");
+
+      if (!card) {
+        throw new Error("Card do jogo não encontrado.");
+      }
+
+      const matchId = getMatchIdFromButton(button);
+
+      if (!matchId) {
+        throw new Error("Jogo inválido para salvar.");
+      }
+
+      const { homeInput, awayInput } = getScoreInputs(card);
+
+      if (!homeInput || !awayInput) {
+        throw new Error("Campos de placar não encontrados.");
+      }
+
+      const homeScore = cleanScore(homeInput.value);
+      const awayScore = cleanScore(awayInput.value);
+
+      homeInput.value = homeScore;
+      awayInput.value = awayScore;
+
+      if (homeScore === "" || awayScore === "") {
+        throw new Error("Preencha os dois placares antes de salvar.");
+      }
+
+      const payload = new URLSearchParams({
+        matchId,
+        homeScore,
+        awayScore
+      });
+
+      const response = await fetch("/predictions", {
+        method: "POST",
+        credentials: "include",
+        headers: {
+          "Content-Type": "application/x-www-form-urlencoded"
+        },
+        body: payload
+      });
+
+      let data = null;
+
+      try {
+        data = await response.json();
+      } catch (error) {
+        throw new Error("Resposta inválida do servidor ao salvar placar.");
+      }
+
+      if (!response.ok || !data.success) {
+        throw new Error(data.message || "Erro ao salvar placar.");
+      }
+
+      if (typeof state !== "undefined") {
+        state.scores[matchId] = {
+          home: Number(homeScore),
+          away: Number(awayScore),
+          savedAt: new Date().toISOString()
+        };
+      }
+
+      if (typeof saveScores === "function") {
+        saveScores();
+      }
+
+      return {
+        matchId,
+        homeScore,
+        awayScore,
+        data
+      };
+    }
+
+    function patchSaveButtons() {
+      limitScoreInputs();
+
+      document
+        .querySelectorAll('[data-save-daily], [data-opening-action]')
+        .forEach((button) => {
+          if (button.dataset.finalSavePatch === "1") return;
+
+          button.dataset.finalSavePatch = "1";
+
+          button.addEventListener("click", async (event) => {
+            const dailyAction = button.dataset.predictionAction;
+            const openingAction = button.dataset.openingAction;
+
+            const isSave =
+              dailyAction === "save" ||
+              openingAction === "save" ||
+              button.textContent.toLowerCase().includes("salvar");
+
+            if (!isSave) return;
+
+            event.preventDefault();
+            event.stopPropagation();
+            event.stopImmediatePropagation();
+
+            const card =
+              button.closest("[data-opening-match]") ||
+              button.closest("[data-daily-match]") ||
+              button.closest(".match-card");
+
+            const status =
+              card && (
+                card.querySelector(".opening-status") ||
+                card.querySelector(".save-status")
+              );
+
+            try {
+              button.disabled = true;
+
+              if (status) {
+                status.textContent = "Salvando no banco...";
+              }
+
+              await savePredictionFromButton(button);
+
+              if (status) {
+                status.textContent = "Palpite salvo no banco";
+              }
+
+              if (typeof showToast === "function") {
+                showToast("Palpite salvo no banco com sucesso!");
+              }
+
+              setTimeout(() => {
+                if (typeof renderDailyMatches === "function") {
+                  renderDailyMatches();
+                }
+
+                if (typeof window.renderOpeningPrediction === "function") {
+                  window.renderOpeningPrediction();
+                }
+
+                if (typeof loadLeaderboard === "function") {
+                  loadLeaderboard();
+                }
+
+                patchSaveButtons();
+              }, 250);
+            } catch (error) {
+              console.error("Erro real ao salvar placar:", error);
+
+              if (status) {
+                status.textContent = "Erro ao salvar";
+              }
+
+              if (typeof showToast === "function") {
+                showToast(error.message || "Erro ao salvar placar.");
+              } else {
+                alert(error.message || "Erro ao salvar placar.");
+              }
+            } finally {
+              button.disabled = false;
+            }
+          }, true);
+        });
+    }
+
+    document.addEventListener("DOMContentLoaded", () => {
+      patchSaveButtons();
+      setInterval(patchSaveButtons, 700);
+    });
+
+    window.addEventListener("load", patchSaveButtons);
+  })();
+</script>
 
 </body>
 </html>
