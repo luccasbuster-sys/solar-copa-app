@@ -10305,6 +10305,56 @@ function renderLoggedContent() {
   })();
 </script>
 
+
+<style id="hide-menu-before-login-final">
+  /* ===== MENU APARECE SOMENTE APÓS LOGIN ===== */
+
+  body:not(.is-registered) .bottom-app-nav,
+  body:not(.is-registered) #bottomAppNav {
+    display: none !important;
+    visibility: hidden !important;
+    pointer-events: none !important;
+  }
+
+  body.is-registered .bottom-app-nav,
+  body.is-registered #bottomAppNav {
+    display: grid !important;
+    visibility: visible !important;
+    pointer-events: auto !important;
+  }
+
+  body:not(.is-registered) .topbar .nav,
+  body:not(.is-registered) .topbar a,
+  body:not(.is-registered) .topbar button,
+  body:not(.is-registered) .topbar .user-chip {
+    display: none !important;
+    visibility: hidden !important;
+    pointer-events: none !important;
+  }
+
+  body.is-registered .topbar .nav {
+    display: none !important;
+  }
+
+  body:not(.is-registered) {
+    padding-bottom: 0 !important;
+  }
+
+  body.is-registered {
+    padding-bottom: 78px !important;
+  }
+
+  @media (max-width: 760px) {
+    body:not(.is-registered) {
+      padding-bottom: 0 !important;
+    }
+
+    body.is-registered {
+      padding-bottom: 84px !important;
+    }
+  }
+</style>
+
 </body>
 </html>
 
