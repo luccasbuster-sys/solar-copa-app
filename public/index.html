@@ -5521,14 +5521,14 @@
       name="activationCode"
       type="text"
       autocomplete="off"
-      placeholder="Ex: CD2026"
-      minlength="5"
-      required
+      placeholder="Opcional"
+      
+      
     />
   </label>
 
   <p class="form-hint">
-    Use seu telefone, senha e código de ativação para acessar a Copa Solar.
+    Use seu telefone e senha para acessar. O código de ativação é opcional.
   </p>
 
   <p class="form-error" id="formError" aria-live="polite"></p>
@@ -6179,7 +6179,7 @@ function renderRegisteredState() {
       heroTitle.innerHTML = `SEJA BEM-VINDO À <span class="gradient-text">PRIMEIRA RODADA</span>`;
     }
 
-    $("#heroLead").textContent = "Entre com seu telefone, senha e código de ativação para acessar a primeira rodada e salvar seus palpites.";
+    $("#heroLead").textContent = "Entre com seu telefone e senha para acessar a primeira rodada e salvar seus palpites.";
   }
 }
 
@@ -6272,10 +6272,7 @@ function setupRegistration() {
         return;
       }
 
-      if (!activationCode) {
-        error.textContent = "Informe o código de ativação.";
-        return;
-      }
+      
     }
 
     if (phone.length < 10 || phone.length > 11) {
