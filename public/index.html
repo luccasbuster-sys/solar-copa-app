@@ -5458,10 +5458,7 @@
             SEJA BEM-VINDO À
             <span class="gradient-text">PRIMEIRA RODADA</span>
           </h1>
-          <p class="lead" id="heroLead">
-            Uma interface simples, visual e interativa para o cliente informar nome, telefone e loja Solar.
-            Depois do cadastro, o site libera o carrossel dos grupos, jogos do dia, destaques e palpites salvos.
-          </p>
+          
           <div class="hero-actions">
             <a class="btn btn-primary" href="#cadastro">Começar cadastro</a>
             <a class="btn" href="#grupos">Ver experiência</a>
@@ -5560,6 +5557,24 @@
 
     <main id="mainContent">
       
+      
+  <section class="install-webapp-card" id="installWebAppCard">
+    <div class="install-webapp-icon">📲</div>
+
+    <div class="install-webapp-content">
+      <strong>Salvar app na tela inicial</strong>
+      <span id="installWebAppText">
+        Acesse o Bolão Solar mais rápido pelo ícone na tela inicial do celular.
+      </span>
+    </div>
+
+    <div class="install-webapp-actions">
+      <button type="button" id="installWebAppBtn">Instalar app</button>
+      <button type="button" id="dismissInstallWebAppBtn" aria-label="Fechar aviso">×</button>
+    </div>
+  </section>
+
+
       <section class="section opening-prediction-section reveal" id="jogoAberturaPalpite">
         <div class="section-head">
           <div>
@@ -10351,6 +10366,443 @@ function renderLoggedContent() {
     }
   }
 </style>
+
+
+<style id="restaurar-cards-grupos-carrossel-final">
+  /* ===== RESTAURA OS CARDS DOS GRUPOS NO CARROSSEL ===== */
+
+  #grupos {
+    display: block !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+  }
+
+  #grupos .carousel-viewport,
+  #grupos #groupsViewport {
+    width: 100% !important;
+    overflow: hidden !important;
+    display: block !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+  }
+
+  #grupos .groups-track,
+  #grupos #groupsTrack {
+    display: flex !important;
+    flex-wrap: nowrap !important;
+    gap: 16px !important;
+    width: max-content !important;
+    min-height: 1px !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+    transition: transform 320ms cubic-bezier(.2,.8,.2,1) !important;
+  }
+
+  #grupos .group-card {
+    display: block !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+    flex: 0 0 calc(100vw - 48px) !important;
+    width: calc(100vw - 48px) !important;
+    min-width: calc(100vw - 48px) !important;
+    max-width: calc(100vw - 48px) !important;
+    transform: none !important;
+  }
+
+  #grupos .group-top,
+  #grupos .team-list,
+  #grupos .team-row {
+    display: flex !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+  }
+
+  #grupos .team-list {
+    flex-direction: column !important;
+  }
+
+  #grupos .carousel-controls,
+  #grupos #prevGroup,
+  #grupos #nextGroup {
+    display: flex !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+    pointer-events: auto !important;
+  }
+
+  #grupos .group-progress {
+    display: block !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+  }
+
+  @media (min-width: 761px) {
+    #grupos .group-card {
+      flex: 0 0 calc((100vw - 96px) / 3) !important;
+      width: calc((100vw - 96px) / 3) !important;
+      min-width: calc((100vw - 96px) / 3) !important;
+      max-width: calc((100vw - 96px) / 3) !important;
+    }
+  }
+
+  @media (min-width: 761px) and (max-width: 980px) {
+    #grupos .group-card {
+      flex: 0 0 calc((100vw - 72px) / 2) !important;
+      width: calc((100vw - 72px) / 2) !important;
+      min-width: calc((100vw - 72px) / 2) !important;
+      max-width: calc((100vw - 72px) / 2) !important;
+    }
+  }
+</style>
+
+
+<script id="restaurar-render-grupos-final">
+  (() => {
+    function restaurarRenderGrupos() {
+      try {
+        if (typeof renderGroups === "function") {
+          renderGroups();
+        }
+
+        if (typeof updateCarousel === "function") {
+          updateCarousel();
+        }
+      } catch (error) {
+        console.warn("Erro ao restaurar grupos:", error);
+      }
+    }
+
+    document.addEventListener("DOMContentLoaded", () => {
+      setTimeout(restaurarRenderGrupos, 600);
+    });
+
+    window.addEventListener("load", () => {
+      setTimeout(restaurarRenderGrupos, 900);
+    });
+
+    window.addEventListener("resize", () => {
+      setTimeout(restaurarRenderGrupos, 150);
+    });
+  })();
+</script>
+
+
+<script id="ranking-tempo-real-script">
+  (() => {
+    let leaderboardTimer = null;
+    let isLoadingLeaderboard = false;
+
+    async function atualizarRankingTempoReal() {
+      if (isLoadingLeaderboard) return;
+
+      if (!document.body.classList.contains("is-registered")) return;
+
+      if (typeof loadLeaderboard !== "function") return;
+
+      try {
+        isLoadingLeaderboard = true;
+        await loadLeaderboard();
+      } catch (error) {
+        console.warn("Erro ao atualizar classificação em tempo real:", error);
+      } finally {
+        isLoadingLeaderboard = false;
+      }
+    }
+
+    function iniciarRankingTempoReal() {
+      if (leaderboardTimer) {
+        window.clearInterval(leaderboardTimer);
+      }
+
+      atualizarRankingTempoReal();
+
+      leaderboardTimer = window.setInterval(() => {
+        atualizarRankingTempoReal();
+      }, 10000);
+    }
+
+    document.addEventListener("DOMContentLoaded", () => {
+      setTimeout(iniciarRankingTempoReal, 1200);
+    });
+
+    window.addEventListener("load", () => {
+      setTimeout(iniciarRankingTempoReal, 1500);
+    });
+
+    document.addEventListener("visibilitychange", () => {
+      if (!document.hidden) {
+        atualizarRankingTempoReal();
+      }
+    });
+
+    window.iniciarRankingTempoReal = iniciarRankingTempoReal;
+  })();
+</script>
+
+
+<style id="install-webapp-card-style">
+  .install-webapp-card {
+    width: min(1120px, calc(100% - 24px));
+    margin: 18px auto 0;
+    padding: 14px;
+    border: 4px solid #050505;
+    border-radius: 24px;
+    background:
+      radial-gradient(circle at 94% 10%, rgba(33, 211, 202, .25), transparent 28%),
+      linear-gradient(135deg, #ffffff 0%, #fff8d8 100%);
+    box-shadow: 6px 6px 0 #050505;
+    display: none;
+    grid-template-columns: auto 1fr auto;
+    gap: 12px;
+    align-items: center;
+  }
+
+  body.is-registered .install-webapp-card {
+    display: grid;
+  }
+
+  body.webapp-installed .install-webapp-card,
+  body.install-webapp-dismissed .install-webapp-card {
+    display: none !important;
+  }
+
+  .install-webapp-icon {
+    width: 46px;
+    height: 46px;
+    display: grid;
+    place-items: center;
+    border: 3px solid #050505;
+    border-radius: 16px;
+    background: #d6ff00;
+    box-shadow: 3px 3px 0 #050505;
+    font-size: 22px;
+  }
+
+  .install-webapp-content {
+    display: grid;
+    gap: 4px;
+    min-width: 0;
+  }
+
+  .install-webapp-content strong {
+    font-size: 16px;
+    line-height: 1;
+    font-weight: 1000;
+    text-transform: uppercase;
+  }
+
+  .install-webapp-content span {
+    font-size: 12px;
+    line-height: 1.35;
+    font-weight: 800;
+    color: #444444;
+  }
+
+  .install-webapp-actions {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+  }
+
+  #installWebAppBtn,
+  #dismissInstallWebAppBtn {
+    min-height: 42px;
+    border: 3px solid #050505;
+    border-radius: 999px;
+    background: #ffffff;
+    color: #050505;
+    box-shadow: 3px 3px 0 #050505;
+    font-size: 10px;
+    font-weight: 1000;
+    text-transform: uppercase;
+    cursor: pointer;
+  }
+
+  #installWebAppBtn {
+    padding: 0 15px;
+    background: #21d3ca;
+  }
+
+  #dismissInstallWebAppBtn {
+    width: 42px;
+    padding: 0;
+    font-size: 22px;
+    line-height: 1;
+  }
+
+  @media (max-width: 760px) {
+    .install-webapp-card {
+      width: calc(100% - 18px);
+      margin-top: 14px;
+      padding: 12px;
+      grid-template-columns: auto 1fr;
+      border-radius: 20px;
+      box-shadow: 4px 4px 0 #050505;
+    }
+
+    .install-webapp-actions {
+      grid-column: 1 / -1;
+      display: grid;
+      grid-template-columns: 1fr 44px;
+      width: 100%;
+    }
+
+    #installWebAppBtn,
+    #dismissInstallWebAppBtn {
+      min-height: 42px;
+      border-width: 2px;
+      box-shadow: 2px 2px 0 #050505;
+    }
+  }
+</style>
+
+
+<script id="install-webapp-logic">
+  (() => {
+    let deferredInstallPrompt = null;
+
+    const storageKey = "solarCopaInstallCardDismissed";
+
+    function isStandaloneMode() {
+      return window.matchMedia("(display-mode: standalone)").matches ||
+        window.navigator.standalone === true;
+    }
+
+    function isIOSDevice() {
+      return /iphone|ipad|ipod/i.test(window.navigator.userAgent);
+    }
+
+    function isDismissed() {
+      return localStorage.getItem(storageKey) === "1";
+    }
+
+    function markDismissed() {
+      localStorage.setItem(storageKey, "1");
+      document.body.classList.add("install-webapp-dismissed");
+    }
+
+    function updateInstallCardText() {
+      const card = document.querySelector("#installWebAppCard");
+      const text = document.querySelector("#installWebAppText");
+      const button = document.querySelector("#installWebAppBtn");
+
+      if (!card || !text || !button) return;
+
+      if (isStandaloneMode()) {
+        document.body.classList.add("webapp-installed");
+        return;
+      }
+
+      if (isDismissed()) {
+        document.body.classList.add("install-webapp-dismissed");
+        return;
+      }
+
+      if (isIOSDevice()) {
+        text.textContent = "No iPhone, abra pelo Safari, toque em Compartilhar e escolha Adicionar à Tela de Início.";
+        button.textContent = "Como instalar";
+        return;
+      }
+
+      text.textContent = "Acesse o Bolão Solar mais rápido pelo ícone na tela inicial do celular.";
+      button.textContent = deferredInstallPrompt ? "Instalar app" : "Ver instruções";
+    }
+
+    async function handleInstallClick() {
+      const text = document.querySelector("#installWebAppText");
+      const button = document.querySelector("#installWebAppBtn");
+
+      if (deferredInstallPrompt) {
+        deferredInstallPrompt.prompt();
+
+        const result = await deferredInstallPrompt.userChoice;
+        deferredInstallPrompt = null;
+
+        if (result && result.outcome === "accepted") {
+          markDismissed();
+          return;
+        }
+
+        updateInstallCardText();
+        return;
+      }
+
+      if (isIOSDevice()) {
+        if (text) {
+          text.textContent = "Passo a passo: no Safari, toque no botão Compartilhar, role as opções e selecione Adicionar à Tela de Início.";
+        }
+
+        if (button) {
+          button.textContent = "Entendi";
+        }
+
+        return;
+      }
+
+      if (text) {
+        text.textContent = "No Android, abra pelo Chrome. Se o app estiver disponível para instalação, o botão Instalar app aparecerá automaticamente.";
+      }
+
+      if (button) {
+        button.textContent = "Entendi";
+      }
+    }
+
+    function setupInstallWebAppCard() {
+      const button = document.querySelector("#installWebAppBtn");
+      const dismiss = document.querySelector("#dismissInstallWebAppBtn");
+
+      if (isStandaloneMode()) {
+        document.body.classList.add("webapp-installed");
+      }
+
+      if (isDismissed()) {
+        document.body.classList.add("install-webapp-dismissed");
+      }
+
+      if (button && button.dataset.installPatched !== "1") {
+        button.dataset.installPatched = "1";
+
+        button.addEventListener("click", async () => {
+          if (button.textContent.trim().toLowerCase() === "entendi") {
+            markDismissed();
+            return;
+          }
+
+          await handleInstallClick();
+        });
+      }
+
+      if (dismiss && dismiss.dataset.installDismissPatched !== "1") {
+        dismiss.dataset.installDismissPatched = "1";
+
+        dismiss.addEventListener("click", () => {
+          markDismissed();
+        });
+      }
+
+      updateInstallCardText();
+    }
+
+    window.addEventListener("beforeinstallprompt", (event) => {
+      event.preventDefault();
+      deferredInstallPrompt = event;
+      updateInstallCardText();
+    });
+
+    window.addEventListener("appinstalled", () => {
+      document.body.classList.add("webapp-installed");
+      markDismissed();
+    });
+
+    document.addEventListener("DOMContentLoaded", () => {
+      setupInstallWebAppCard();
+      setInterval(setupInstallWebAppCard, 1200);
+    });
+
+    window.addEventListener("load", setupInstallWebAppCard);
+  })();
+</script>
 
 </body>
 </html>
