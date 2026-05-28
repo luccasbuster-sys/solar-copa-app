@@ -6141,6 +6141,10 @@
       try {
         state.user = JSON.parse(localStorage.getItem(storageKeys.user)) || null;
         state.scores = JSON.parse(localStorage.getItem(storageKeys.scores)) || {};
+
+        if (state.user && typeof window.clearLocalPredictionsForNewUser === "function") {
+          window.clearLocalPredictionsForNewUser(state.user);
+        }
       } catch (error) {
         state.user = null;
         state.scores = {};
@@ -6227,6 +6231,10 @@ async function checkLoggedUser() {
 
     if (response.ok && data.success && data.user) {
       state.user = data.user;
+
+            if (typeof window.clearLocalPredictionsForNewUser === "function") {
+              window.clearLocalPredictionsForNewUser(state.user);
+            }
       renderRegisteredState();
 
       if (typeof loadLeaderboard === "function") {
@@ -6322,6 +6330,10 @@ function setupRegistration() {
       const data = await requestAuth(endpoint, payload);
 
       state.user = data.user;
+
+            if (typeof window.clearLocalPredictionsForNewUser === "function") {
+              window.clearLocalPredictionsForNewUser(state.user);
+            }
 
       error.textContent = "";
       renderRegisteredState();
@@ -10917,6 +10929,10 @@ function renderLoggedContent() {
 
             if (typeof state !== "undefined") {
               state.user = data.user;
+
+            if (typeof window.clearLocalPredictionsForNewUser === "function") {
+              window.clearLocalPredictionsForNewUser(state.user);
+            }
             }
 
             try {
@@ -10957,6 +10973,201 @@ function renderLoggedContent() {
     });
 
     window.addEventListener("load", patchRegistrationForm);
+  })();
+</script>
+
+
+<script id="clear-predictions-on-user-change">
+  (() => {
+    const userKeyStorage = "solarCopaCurrentUserIdentity";
+
+    function getUserIdentity(user) {
+      if (!user) return "";
+
+      return String(
+        user.id ||
+        user.phone ||
+        user.username ||
+        user.firstName ||
+        ""
+      );
+    }
+
+    function clearLocalPredictionsForNewUser(user) {
+      const identity = getUserIdentity(user);
+
+      if (!identity) return;
+
+      const previousIdentity = localStorage.getItem(userKeyStorage);
+
+      if (previousIdentity && previousIdentity !== identity) {
+        try {
+          localStorage.removeItem("solarCopa2026Scores");
+
+          if (typeof state !== "undefined") {
+            state.scores = {};
+          }
+
+          console.log("Palpites locais limpos para novo usuário.");
+        } catch (error) {
+          console.warn("Erro ao limpar palpites locais:", error);
+        }
+      }
+
+      localStorage.setItem(userKeyStorage, identity);
+    }
+
+    function patchUserSession() {
+      try {
+        if (typeof state !== "undefined" && state.user) {
+          clearLocalPredictionsForNewUser(state.user);
+        }
+      } catch (error) {
+        console.warn("Erro ao verificar usuário atual:", error);
+      }
+    }
+
+    window.clearLocalPredictionsForNewUser = clearLocalPredictionsForNewUser;
+
+    document.addEventListener("DOMContentLoaded", () => {
+      setTimeout(patchUserSession, 300);
+      setTimeout(patchUserSession, 1000);
+    });
+
+    window.addEventListener("load", () => {
+      setTimeout(patchUserSession, 600);
+    });
+  })();
+</script>
+
+
+<script id="clear-scores-after-new-register-final">
+  (() => {
+    function clearAllLocalPredictions() {
+      try {
+        localStorage.removeItem("solarCopa2026Scores");
+        localStorage.removeItem("solarCopaCurrentUserIdentity");
+
+        Object.keys(localStorage).forEach((key) => {
+          if (
+            key.toLowerCase().includes("score") ||
+            key.toLowerCase().includes("palpite") ||
+            key.toLowerCase().includes("prediction")
+          ) {
+            localStorage.removeItem(key);
+          }
+        });
+
+        if (typeof state !== "undefined") {
+          state.scores = {};
+        }
+
+        document
+          .querySelectorAll(
+            '[data-score="home"], [data-score="away"], [data-opening-score="home"], [data-opening-score="away"]'
+          )
+          .forEach((input) => {
+            input.value = "";
+            input.removeAttribute("disabled");
+          });
+
+        document
+          .querySelectorAll(".save-status, .opening-status")
+          .forEach((status) => {
+            status.textContent = "Ainda não salvo";
+          });
+
+        console.log("Palpites locais limpos para cadastro novo.");
+      } catch (error) {
+        console.warn("Erro ao limpar palpites locais:", error);
+      }
+    }
+
+    function patchRegisterFormClearScores() {
+      const forms = Array.from(document.querySelectorAll("form"));
+
+      forms.forEach((form) => {
+        const hasActivation = form.querySelector(
+          'input[name="activationCode"], #activationCodeInput, #activationCode'
+        );
+
+        const hasFullName = form.querySelector(
+          'input[name="fullName"], #fullNameInput, #fullName, input[name="name"]'
+        );
+
+        const hasPhone = form.querySelector(
+          'input[name="phone"], #phoneInput, #phone'
+        );
+
+        const hasPassword = form.querySelector(
+          'input[name="password"], #passwordInput, #password'
+        );
+
+        if (!hasPhone || !hasPassword || !hasFullName) return;
+        if (form.dataset.clearScoresRegisterPatched === "1") return;
+
+        form.dataset.clearScoresRegisterPatched = "1";
+
+        form.addEventListener("submit", () => {
+          clearAllLocalPredictions();
+        }, true);
+      });
+    }
+
+    function patchFetchRegisterResponse() {
+      if (window.__solarRegisterClearFetchPatched) return;
+      window.__solarRegisterClearFetchPatched = true;
+
+      const originalFetch = window.fetch;
+
+      window.fetch = async function patchedFetch(input, init = {}) {
+        const url = typeof input === "string" ? input : input && input.url;
+        const method = String(init.method || "GET").toUpperCase();
+
+        const response = await originalFetch.apply(this, arguments);
+
+        if (url && url.includes("/register") && method === "POST") {
+          try {
+            const clone = response.clone();
+            const data = await clone.json();
+
+            if (data && data.success) {
+              clearAllLocalPredictions();
+
+              window.setTimeout(() => {
+                if (typeof renderDailyMatches === "function") {
+                  renderDailyMatches();
+                }
+
+                if (typeof window.renderOpeningPrediction === "function") {
+                  window.renderOpeningPrediction();
+                }
+              }, 250);
+            }
+          } catch (error) {
+            console.warn("Não foi possível verificar resposta do cadastro:", error);
+          }
+        }
+
+        return response;
+      };
+    }
+
+    window.clearAllLocalPredictions = clearAllLocalPredictions;
+
+    document.addEventListener("DOMContentLoaded", () => {
+      patchRegisterFormClearScores();
+      patchFetchRegisterResponse();
+
+      setInterval(() => {
+        patchRegisterFormClearScores();
+      }, 800);
+    });
+
+    window.addEventListener("load", () => {
+      patchRegisterFormClearScores();
+      patchFetchRegisterResponse();
+    });
   })();
 </script>
 
