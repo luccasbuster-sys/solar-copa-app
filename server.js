@@ -1536,45 +1536,7 @@ app.get("/admin/export-users", requireAdmin, (req, res) => {
 });
 
 
-app.get("/admin/summary", requireAdmin, (req, res) => {
-  db.get(
-    `
-      SELECT
-        (SELECT COUNT(*) FROM users) AS total_users,
-        (SELECT COUNT(*) FROM predictions) AS total_predictions,
-        (SELECT COUNT(*) FROM match_results) AS total_results,
-        (SELECT COUNT(*) FROM matches) AS total_matches
-    `,
-    [],
-    (error, row) => {
-      if (error) {
-        console.error("Erro ao buscar resumo admin:", error.message);
 
-        return res.status(500).json({
-          success: false,
-          message: "Erro ao buscar resumo administrativo."
-        });
-      }
-
-      const totalUsers = Number(row.total_users || 0);
-      const totalPredictions = Number(row.total_predictions || 0);
-      const averagePredictions = totalUsers > 0
-        ? Number((totalPredictions / totalUsers).toFixed(2))
-        : 0;
-
-      return res.json({
-        success: true,
-        summary: {
-          totalUsers,
-          totalPredictions,
-          totalResults: Number(row.total_results || 0),
-          totalMatches: Number(row.total_matches || 0),
-          averagePredictions
-        }
-      });
-    }
-  );
-});
 
 app.get("/admin/leaderboard", requireAdmin, (req, res) => {
   db.all(
@@ -1807,6 +1769,56 @@ app.post("/admin/results", requireAdmin, (req, res) => {
 });
 
 // ===== END ADMIN DASHBOARD ROUTES =====
+
+
+
+
+
+
+app.get("/admin/summary", requireAdmin, (req, res) => {
+  const summary = {
+    users: 0,
+    predictions: 0,
+    results: 0,
+    averagePerUser: 0
+  };
+
+  db.get("SELECT COUNT(*) AS total FROM users", [], (usersError, usersRow) => {
+    if (usersError) {
+      console.error("Erro ao contar usuários:", usersError.message);
+      return res.status(500).json({ success: false, message: "Erro ao contar usuários." });
+    }
+
+    summary.users = Number(usersRow?.total || 0);
+
+    db.get("SELECT COUNT(*) AS total FROM predictions", [], (predictionsError, predictionsRow) => {
+      if (predictionsError) {
+        console.error("Erro ao contar palpites:", predictionsError.message);
+        return res.status(500).json({ success: false, message: "Erro ao contar palpites." });
+      }
+
+      summary.predictions = Number(predictionsRow?.total || 0);
+
+      db.get("SELECT COUNT(*) AS total FROM match_results", [], (resultsError, resultsRow) => {
+        if (resultsError) {
+          console.error("Erro ao contar resultados:", resultsError.message);
+          return res.status(500).json({ success: false, message: "Erro ao contar resultados." });
+        }
+
+        summary.results = Number(resultsRow?.total || 0);
+        summary.averagePerUser = summary.users > 0
+          ? Number((summary.predictions / summary.users).toFixed(1))
+          : 0;
+
+        return res.json({
+          success: true,
+          summary
+        });
+      });
+    });
+  });
+});
+
 
 app.listen(PORT, () => {
   console.log(`Servidor rodando em http://localhost:${PORT}`);

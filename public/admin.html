@@ -854,5 +854,313 @@
 
     document.addEventListener("DOMContentLoaded", init);
   </script>
+
+<script id="dashboard-realtime-summary">
+  (() => {
+    let summaryTimer = null;
+    let isLoadingSummary = false;
+
+    function normalizeText(value) {
+      return String(value || "")
+        .normalize("NFD")
+        .replace(/[\u0300-\u036f]/g, "")
+        .toUpperCase()
+        .trim();
+    }
+
+    function findMetricCard(label) {
+      const target = normalizeText(label);
+
+      const elements = Array.from(document.querySelectorAll("article, section, div"));
+
+      const matches = elements
+        .filter((element) => normalizeText(element.textContent).includes(target))
+        .sort((a, b) => a.textContent.length - b.textContent.length);
+
+      return matches[0] || null;
+    }
+
+    function updateMetric(label, value) {
+      const card = findMetricCard(label);
+
+      if (!card) return;
+
+      let numberElement = Array.from(card.querySelectorAll("*")).find((element) => {
+        const text = element.textContent.trim();
+        return /^\d+(?:[,.]\d+)?$/.test(text);
+      });
+
+      if (!numberElement) {
+        numberElement = card.firstElementChild;
+      }
+
+      if (numberElement) {
+        numberElement.textContent = String(value);
+      }
+    }
+
+    async function loadDashboardSummary() {
+      if (isLoadingSummary) return;
+
+      try {
+        isLoadingSummary = true;
+
+        const response = await fetch("/admin/summary", {
+          credentials: "include",
+          cache: "no-store"
+        });
+
+        const data = await response.json();
+
+        if (!response.ok || !data.success) {
+          throw new Error(data.message || "Erro ao carregar resumo.");
+        }
+
+        const summary = data.summary || {};
+
+        updateMetric("USUÁRIOS CADASTRADOS", summary.users || 0);
+        updateMetric("PALPITES SALVOS", summary.predictions || 0);
+        updateMetric("RESULTADOS LANÇADOS", summary.results || 0);
+        updateMetric("MÉDIA POR USUÁRIO", summary.averagePerUser || 0);
+
+        const status = document.querySelector("#dashboardRealtimeStatus");
+
+        if (status) {
+          const now = new Date();
+          status.textContent = "Atualizado às " + now.toLocaleTimeString("pt-BR", {
+            hour: "2-digit",
+            minute: "2-digit",
+            second: "2-digit"
+          });
+        }
+      } catch (error) {
+        console.warn("Erro ao atualizar dashboard em tempo real:", error);
+      } finally {
+        isLoadingSummary = false;
+      }
+    }
+
+    function createRealtimeStatus() {
+      if (document.querySelector("#dashboardRealtimeStatus")) return;
+
+      const firstMetric = findMetricCard("USUÁRIOS CADASTRADOS");
+
+      if (!firstMetric || !firstMetric.parentElement) return;
+
+      const status = document.createElement("div");
+      status.id = "dashboardRealtimeStatus";
+      status.textContent = "Atualizando dados...";
+      status.style.cssText = [
+        "width: fit-content",
+        "margin: 10px 0 14px",
+        "padding: 8px 12px",
+        "border: 2px solid #050505",
+        "border-radius: 999px",
+        "background: #21d3ca",
+        "box-shadow: 2px 2px 0 #050505",
+        "font-size: 10px",
+        "font-weight: 1000",
+        "text-transform: uppercase"
+      ].join(";");
+
+      firstMetric.parentElement.insertAdjacentElement("beforebegin", status);
+    }
+
+    function startRealtimeDashboard() {
+      createRealtimeStatus();
+      loadDashboardSummary();
+
+      if (summaryTimer) {
+        window.clearInterval(summaryTimer);
+      }
+
+      summaryTimer = window.setInterval(loadDashboardSummary, 5000);
+    }
+
+    document.addEventListener("DOMContentLoaded", () => {
+      setTimeout(startRealtimeDashboard, 500);
+    });
+
+    window.addEventListener("load", () => {
+      setTimeout(startRealtimeDashboard, 800);
+    });
+
+    document.addEventListener("visibilitychange", () => {
+      if (!document.hidden) {
+        loadDashboardSummary();
+      }
+    });
+
+    window.loadDashboardSummary = loadDashboardSummary;
+  })();
+</script>
+
+
+<script id="dashboard-summary-realtime-final">
+  (() => {
+    let timer = null;
+    let loading = false;
+
+    function normalize(text) {
+      return String(text || "")
+        .normalize("NFD")
+        .replace(/[\u0300-\u036f]/g, "")
+        .toUpperCase()
+        .trim();
+    }
+
+    function findCardByLabel(label) {
+      const target = normalize(label);
+
+      const candidates = Array.from(document.querySelectorAll("article, .summary-card, .metric-card, .stat-card, div"))
+        .filter((element) => {
+          const text = normalize(element.textContent);
+          return text.includes(target) && text.length < 180;
+        })
+        .sort((a, b) => a.textContent.length - b.textContent.length);
+
+      return candidates[0] || null;
+    }
+
+    function setCardValue(label, value) {
+      const card = findCardByLabel(label);
+      if (!card) return;
+
+      const numberCandidates = Array.from(card.querySelectorAll("*"))
+        .filter((element) => /^\d+(?:[,.]\d+)?$/.test(element.textContent.trim()))
+        .sort((a, b) => a.textContent.length - b.textContent.length);
+
+      const target = numberCandidates[0] || card.firstElementChild;
+
+      if (target) {
+        target.textContent = String(value);
+      }
+    }
+
+    function countUsersFromTable() {
+      const rows = Array.from(document.querySelectorAll("table tbody tr"));
+      return rows.filter((row) => row.textContent.trim().length > 0).length;
+    }
+
+    function countPredictionsFromTable() {
+      const rows = Array.from(document.querySelectorAll("table tbody tr"));
+      let total = 0;
+
+      rows.forEach((row) => {
+        const cells = Array.from(row.querySelectorAll("td"));
+        const possiblePredictionCell = cells.find((cell) => {
+          const text = cell.textContent.trim();
+          return /^\d+$/.test(text);
+        });
+
+        if (possiblePredictionCell) {
+          const value = Number(possiblePredictionCell.textContent.trim());
+          if (Number.isFinite(value)) total += value;
+        }
+      });
+
+      return total;
+    }
+
+    function applyFallbackFromTable() {
+      const tableUsers = countUsersFromTable();
+
+      if (tableUsers > 0) {
+        setCardValue("USUÁRIOS CADASTRADOS", tableUsers);
+      }
+    }
+
+    async function loadSummary() {
+      if (loading) return;
+
+      try {
+        loading = true;
+
+        applyFallbackFromTable();
+
+        const response = await fetch("/admin/summary", {
+          credentials: "include",
+          cache: "no-store"
+        });
+
+        const data = await response.json();
+
+        if (!response.ok || !data.success) {
+          throw new Error(data.message || "Erro ao carregar resumo.");
+        }
+
+        const summary = data.summary || {};
+
+        setCardValue("USUÁRIOS CADASTRADOS", summary.users || 0);
+        setCardValue("PALPITES SALVOS", summary.predictions || 0);
+        setCardValue("RESULTADOS LANÇADOS", summary.results || 0);
+        setCardValue("MÉDIA POR USUÁRIO", summary.averagePerUser || 0);
+
+        let status = document.querySelector("#dashboardSummaryStatus");
+
+        if (!status) {
+          const cardsRow = findCardByLabel("USUÁRIOS CADASTRADOS")?.parentElement;
+
+          if (cardsRow) {
+            status = document.createElement("div");
+            status.id = "dashboardSummaryStatus";
+            status.style.cssText = [
+              "width: fit-content",
+              "margin: 10px 0 12px",
+              "padding: 8px 12px",
+              "border: 2px solid #050505",
+              "border-radius: 999px",
+              "background: #21d3ca",
+              "box-shadow: 2px 2px 0 #050505",
+              "font-size: 10px",
+              "font-weight: 1000",
+              "text-transform: uppercase"
+            ].join(";");
+
+            cardsRow.insertAdjacentElement("beforebegin", status);
+          }
+        }
+
+        if (status) {
+          status.textContent = "Dashboard atualizado às " + new Date().toLocaleTimeString("pt-BR");
+        }
+      } catch (error) {
+        console.warn("Resumo do dashboard: usando dados visíveis da tabela.", error);
+        applyFallbackFromTable();
+      } finally {
+        loading = false;
+      }
+    }
+
+    function start() {
+      loadSummary();
+
+      if (timer) {
+        clearInterval(timer);
+      }
+
+      timer = setInterval(loadSummary, 5000);
+    }
+
+    document.addEventListener("DOMContentLoaded", () => {
+      setTimeout(start, 500);
+      setTimeout(loadSummary, 1500);
+      setTimeout(loadSummary, 3000);
+    });
+
+    window.addEventListener("load", () => {
+      setTimeout(start, 800);
+    });
+
+    document.addEventListener("visibilitychange", () => {
+      if (!document.hidden) {
+        loadSummary();
+      }
+    });
+
+    window.loadDashboardSummary = loadSummary;
+  })();
+</script>
+
 </body>
 </html>
