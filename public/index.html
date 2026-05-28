@@ -10816,6 +10816,150 @@ function renderLoggedContent() {
   }
 </style>
 
+
+<script id="cadastro-publico-sem-codigo-final">
+  (() => {
+    function cleanActivationField() {
+      document
+        .querySelectorAll('input[name="activationCode"], #activationCodeInput, #activationCode')
+        .forEach((input) => {
+          input.required = false;
+          input.removeAttribute("required");
+          input.removeAttribute("minlength");
+          input.removeAttribute("aria-required");
+          input.placeholder = "Opcional";
+        });
+    }
+
+    function patchRegistrationForm() {
+      cleanActivationField();
+
+      const forms = Array.from(document.querySelectorAll("form"));
+
+      forms.forEach((form) => {
+        const hasPhone = form.querySelector('input[name="phone"], #phoneInput, #phone');
+        const hasPassword = form.querySelector('input[name="password"], #passwordInput, #password');
+        const hasActivation = form.querySelector('input[name="activationCode"], #activationCodeInput, #activationCode');
+
+        if (!hasPhone || !hasPassword || !hasActivation) return;
+        if (form.dataset.publicRegisterPatched === "1") return;
+
+        form.dataset.publicRegisterPatched = "1";
+
+        form.addEventListener("submit", async (event) => {
+          event.preventDefault();
+          event.stopPropagation();
+          event.stopImmediatePropagation();
+
+          cleanActivationField();
+
+          const fullNameInput =
+            form.querySelector('input[name="fullName"]') ||
+            form.querySelector("#fullNameInput") ||
+            form.querySelector("#fullName") ||
+            form.querySelector('input[name="name"]');
+
+          const phoneInput =
+            form.querySelector('input[name="phone"]') ||
+            form.querySelector("#phoneInput") ||
+            form.querySelector("#phone");
+
+          const passwordInput =
+            form.querySelector('input[name="password"]') ||
+            form.querySelector("#passwordInput") ||
+            form.querySelector("#password");
+
+          const activationInput =
+            form.querySelector('input[name="activationCode"]') ||
+            form.querySelector("#activationCodeInput") ||
+            form.querySelector("#activationCode");
+
+          const fullName = String(fullNameInput && fullNameInput.value || "").trim();
+          const phone = String(phoneInput && phoneInput.value || "").trim();
+          const password = String(passwordInput && passwordInput.value || "").trim();
+          const activationCode = String(activationInput && activationInput.value || "").trim();
+
+          if (!fullName || !phone || !password) {
+            if (typeof showToast === "function") {
+              showToast("Informe nome e sobrenome, telefone e senha.");
+            } else {
+              alert("Informe nome e sobrenome, telefone e senha.");
+            }
+            return;
+          }
+
+          const submitButton = form.querySelector('button[type="submit"], button:not([type])');
+
+          try {
+            if (submitButton) submitButton.disabled = true;
+
+            const payload = new URLSearchParams({
+              fullName,
+              phone,
+              password,
+              activationCode
+            });
+
+            const response = await fetch("/register", {
+              method: "POST",
+              credentials: "include",
+              headers: {
+                "Content-Type": "application/x-www-form-urlencoded"
+              },
+              body: payload
+            });
+
+            const data = await response.json();
+
+            if (!response.ok || !data.success) {
+              throw new Error(data.message || "Erro ao criar cadastro.");
+            }
+
+            if (typeof state !== "undefined") {
+              state.user = data.user;
+            }
+
+            try {
+              localStorage.setItem("solarCopa2026User", JSON.stringify(data.user));
+            } catch (error) {}
+
+            if (typeof renderRegisteredState === "function") renderRegisteredState();
+            if (typeof renderLoggedContent === "function") renderLoggedContent();
+            if (typeof renderGroups === "function") renderGroups();
+            if (typeof renderDailyMatches === "function") renderDailyMatches();
+            if (typeof loadLeaderboard === "function") loadLeaderboard();
+            if (typeof window.renderOpeningPrediction === "function") window.renderOpeningPrediction();
+
+            if (typeof showToast === "function") {
+              showToast("Cadastro criado com sucesso!");
+            }
+
+            window.setTimeout(() => {
+              const main = document.querySelector("main");
+              if (main) main.scrollIntoView({ behavior: "smooth", block: "start" });
+            }, 250);
+          } catch (error) {
+            if (typeof showToast === "function") {
+              showToast(error.message || "Erro ao criar cadastro.");
+            } else {
+              alert(error.message || "Erro ao criar cadastro.");
+            }
+          } finally {
+            if (submitButton) submitButton.disabled = false;
+          }
+        }, true);
+      });
+    }
+
+    document.addEventListener("DOMContentLoaded", () => {
+      patchRegistrationForm();
+      setInterval(patchRegistrationForm, 700);
+    });
+
+    window.addEventListener("load", patchRegistrationForm);
+  })();
+</script>
+
 </body>
 </html>
 

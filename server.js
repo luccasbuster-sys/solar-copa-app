@@ -156,6 +156,131 @@ function publicUser(user) {
 }
 
 
+
+/* ===== CADASTRO PÚBLICO COM CÓDIGO OPCIONAL ===== */
+app.post("/register", (req, res) => {
+  const fullName = String(req.body.fullName || req.body.name || req.body.username || "").trim();
+  const phone = typeof normalizePhone === "function"
+    ? normalizePhone(req.body.phone)
+    : String(req.body.phone || "").replace(/\D/g, "");
+
+  const password = String(req.body.password || "").trim();
+  const activationCode = String(req.body.activationCode || "").trim().toUpperCase();
+
+  const codeMap = typeof ACTIVATION_CODES !== "undefined"
+    ? ACTIVATION_CODES
+    : typeof activationCodes !== "undefined"
+      ? activationCodes
+      : {};
+
+  if (!fullName || !phone || !password) {
+    return res.status(400).json({
+      success: false,
+      message: "Informe nome e sobrenome, telefone e senha."
+    });
+  }
+
+  if (activationCode && !codeMap[activationCode]) {
+    return res.status(400).json({
+      success: false,
+      message: "Código de ativação inválido."
+    });
+  }
+
+  const activationOrigin = activationCode ? codeMap[activationCode] : "Público Instagram";
+
+  const nameParts = fullName.split(/\s+/).filter(Boolean);
+  const firstName = nameParts.shift() || fullName;
+  const lastName = nameParts.join(" ");
+
+  db.get(
+    "SELECT id FROM users WHERE phone = ?",
+    [phone],
+    (findError, existingUser) => {
+      if (findError) {
+        console.error("Erro ao verificar telefone:", findError.message);
+
+        return res.status(500).json({
+          success: false,
+          message: "Erro ao verificar cadastro."
+        });
+      }
+
+      if (existingUser) {
+        return res.status(400).json({
+          success: false,
+          message: "Esse telefone já está cadastrado."
+        });
+      }
+
+      bcrypt.hash(password, 10, (hashError, passwordHash) => {
+        if (hashError) {
+          console.error("Erro ao gerar senha:", hashError.message);
+
+          return res.status(500).json({
+            success: false,
+            message: "Erro ao criar senha."
+          });
+        }
+
+        db.run(
+          `
+            INSERT INTO users (
+              username,
+              first_name,
+              last_name,
+              phone,
+              activation_code,
+              activation_origin,
+              password_hash,
+              created_at
+            )
+            VALUES (?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP)
+          `,
+          [
+            fullName,
+            firstName,
+            lastName,
+            phone,
+            activationCode || null,
+            activationOrigin,
+            passwordHash
+          ],
+          function (insertError) {
+            if (insertError) {
+              console.error("Erro ao criar cadastro:", insertError.message);
+
+              return res.status(500).json({
+                success: false,
+                message: "Erro ao criar cadastro."
+              });
+            }
+
+            const user = {
+              id: this.lastID,
+              username: fullName,
+              firstName,
+              lastName,
+              phone,
+              activationCode: activationCode || "",
+              activationOrigin
+            };
+
+            req.session.user = user;
+
+            return res.json({
+              success: true,
+              message: "Cadastro criado com sucesso.",
+              user
+            });
+          }
+        );
+      });
+    }
+  );
+});
+
+
 app.post("/register", authLimiter, async (req, res) => {
   try {
     const fullName = req.body.fullName ? req.body.fullName.trim() : "";
