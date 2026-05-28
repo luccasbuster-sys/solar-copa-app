@@ -1,4 +1,4 @@
-const CACHE_NAME = "solar-copa-2026-v1779971981502";
+const CACHE_NAME = "solar-copa-2026-v1779973334152";
 
 const APP_SHELL = [
   "/",
