@@ -1376,5 +1376,139 @@
   })();
 </script>
 
+
+<script id="admin-neon-summary-cards">
+  (() => {
+    let neonSummaryTimer = null;
+    let loadingSummary = false;
+
+    function normalizeText(value) {
+      return String(value || "")
+        .normalize("NFD")
+        .replace(/[\u0300-\u036f]/g, "")
+        .toLowerCase()
+        .trim();
+    }
+
+    function findMetricCard(label) {
+      const target = normalizeText(label);
+
+      const candidates = Array.from(document.querySelectorAll("article, section, div"))
+        .filter((element) => {
+          const text = normalizeText(element.textContent);
+          return text.includes(target) && text.length < 180;
+        })
+        .sort((a, b) => a.textContent.length - b.textContent.length);
+
+      return candidates[0] || null;
+    }
+
+    function setMetric(label, value) {
+      const card = findMetricCard(label);
+      if (!card) return;
+
+      const numberElement = Array.from(card.querySelectorAll("*"))
+        .find((element) => /^\d+(?:[,.]\d+)?$/.test(element.textContent.trim()));
+
+      if (numberElement) {
+        numberElement.textContent = String(value);
+      }
+    }
+
+    function ensureSummaryBadge() {
+      let badge = document.querySelector("#adminNeonSummaryStatus");
+      if (badge) return badge;
+
+      const firstCard = findMetricCard("usuários cadastrados");
+      if (!firstCard || !firstCard.parentElement) return null;
+
+      badge = document.createElement("div");
+      badge.id = "adminNeonSummaryStatus";
+      badge.textContent = "Carregando resumo Neon...";
+      badge.style.cssText = [
+        "width: fit-content",
+        "margin: 10px 0 14px",
+        "padding: 8px 12px",
+        "border: 2px solid #050505",
+        "border-radius: 999px",
+        "background: #d6ff00",
+        "box-shadow: 2px 2px 0 #050505",
+        "font-size: 10px",
+        "font-weight: 1000",
+        "text-transform: uppercase"
+      ].join(";");
+
+      firstCard.parentElement.insertAdjacentElement("beforebegin", badge);
+      return badge;
+    }
+
+    async function loadNeonSummaryCards() {
+      if (loadingSummary) return;
+
+      const badge = ensureSummaryBadge();
+
+      try {
+        loadingSummary = true;
+
+        const response = await fetch("/admin/neon-summary", {
+          credentials: "include",
+          cache: "no-store"
+        });
+
+        const data = await response.json();
+
+        if (!response.ok || !data.success) {
+          throw new Error(data.message || "Erro ao carregar resumo Neon.");
+        }
+
+        const summary = data.summary || {};
+
+        setMetric("usuários cadastrados", summary.users || 0);
+        setMetric("palpites salvos", summary.predictions || 0);
+        setMetric("resultados lançados", summary.results || 0);
+        setMetric("média por usuário", summary.averagePerUser || 0);
+
+        if (badge) {
+          badge.textContent = "Resumo Neon atualizado às " + new Date().toLocaleTimeString("pt-BR");
+        }
+      } catch (error) {
+        console.warn("Erro ao carregar resumo Neon:", error);
+
+        if (badge) {
+          badge.textContent = "Erro ao carregar resumo Neon.";
+        }
+      } finally {
+        loadingSummary = false;
+      }
+    }
+
+    function startNeonSummaryCards() {
+      loadNeonSummaryCards();
+
+      if (neonSummaryTimer) {
+        clearInterval(neonSummaryTimer);
+      }
+
+      neonSummaryTimer = setInterval(loadNeonSummaryCards, 7000);
+    }
+
+    document.addEventListener("DOMContentLoaded", () => {
+      setTimeout(startNeonSummaryCards, 900);
+    });
+
+    window.addEventListener("load", () => {
+      setTimeout(startNeonSummaryCards, 1300);
+    });
+
+    document.addEventListener("visibilitychange", () => {
+      if (!document.hidden) {
+        loadNeonSummaryCards();
+      }
+    });
+
+    window.loadNeonSummaryCards = loadNeonSummaryCards;
+  })();
+</script>
+
 </body>
 </html>

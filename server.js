@@ -2224,6 +2224,48 @@ app.get("/admin/neon-users", requireAdmin, async (req, res) => {
 });
 
 
+
+app.get("/admin/neon-summary", requireAdmin, async (req, res) => {
+  try {
+    const neon = require("./neon-db");
+    const pool = neon.getNeonPool();
+
+    if (!pool) {
+      return res.status(500).json({
+        success: false,
+        message: "Neon não configurado."
+      });
+    }
+
+    const usersResult = await pool.query("SELECT COUNT(*) AS total FROM users");
+    const predictionsResult = await pool.query("SELECT COUNT(*) AS total FROM predictions");
+    const resultsResult = await pool.query("SELECT COUNT(*) AS total FROM match_results");
+
+    const users = Number(usersResult.rows[0]?.total || 0);
+    const predictions = Number(predictionsResult.rows[0]?.total || 0);
+    const results = Number(resultsResult.rows[0]?.total || 0);
+
+    return res.json({
+      success: true,
+      summary: {
+        users,
+        predictions,
+        results,
+        averagePerUser: users > 0 ? Number((predictions / users).toFixed(1)) : 0
+      }
+    });
+  } catch (error) {
+    console.error("Erro ao carregar resumo do Neon:", error.message);
+
+    return res.status(500).json({
+      success: false,
+      message: "Erro ao carregar resumo do Neon.",
+      error: error.message
+    });
+  }
+});
+
+
 app.listen(PORT, () => {
   console.log(`Servidor rodando em http://localhost:${PORT}`);
 });
