@@ -6,7 +6,7 @@ const SQLiteStore = require("connect-sqlite3")(session);
 const path = require("path");
 const helmet = require("helmet");
 const rateLimit = require("express-rate-limit");
-const db = require("./db-adapter");
+const db = require("./database");
 const ExcelJS = require("exceljs");
 
 const app = express();
@@ -1877,27 +1877,6 @@ app.get("/admin/summary", requireAdmin, (req, res) => {
   });
 });
 
-
-
-app.get("/admin/db-status", requireAdmin, (req, res) => {
-  db.get("SELECT COUNT(*) AS total FROM users", [], (error, row) => {
-    if (error) {
-      return res.status(500).json({
-        success: false,
-        database: db.usingPostgres ? "neon-postgresql" : "sqlite-local",
-        hasDatabaseUrl: Boolean(process.env.DATABASE_URL),
-        message: error.message
-      });
-    }
-
-    return res.json({
-      success: true,
-      database: db.usingPostgres ? "neon-postgresql" : "sqlite-local",
-      hasDatabaseUrl: Boolean(process.env.DATABASE_URL),
-      users: Number(row && row.total ? row.total : 0)
-    });
-  });
-});
 
 app.listen(PORT, () => {
   console.log(`Servidor rodando em http://localhost:${PORT}`);
