@@ -2364,6 +2364,106 @@ app.get("/admin/neon-ranking", requireAdmin, async (req, res) => {
 });
 
 
+
+app.get("/leaderboard-neon", requireLogin, async (req, res) => {
+  try {
+    const neon = require("./neon-db");
+    const pool = neon.getNeonPool();
+
+    if (!pool) {
+      return res.status(500).json({
+        success: false,
+        message: "Neon não configurado."
+      });
+    }
+
+    const result = await pool.query(`
+      SELECT
+        u.id AS user_id,
+        u.username,
+        u.first_name,
+        u.last_name,
+        u.phone,
+        u.activation_origin,
+        p.match_id,
+        p.home_team,
+        p.away_team,
+        p.home_score AS pred_home_score,
+        p.away_score AS pred_away_score,
+        r.home_score AS result_home_score,
+        r.away_score AS result_away_score
+      FROM users u
+      LEFT JOIN predictions p ON p.user_id = u.id
+      LEFT JOIN match_results r ON r.match_id = p.match_id
+      ORDER BY u.created_at ASC, p.updated_at DESC
+    `);
+
+    const usersMap = new Map();
+
+    result.rows.forEach((row) => {
+      if (!usersMap.has(row.user_id)) {
+        usersMap.set(row.user_id, {
+          id: row.user_id,
+          name: row.username || [row.first_name, row.last_name].filter(Boolean).join(" "),
+          username: row.username,
+          firstName: row.first_name,
+          lastName: row.last_name,
+          phone: row.phone,
+          activationOrigin: row.activation_origin || "Público Instagram",
+          predictionsCount: 0,
+          scoredPredictions: 0,
+          points: 0
+        });
+      }
+
+      const user = usersMap.get(row.user_id);
+
+      if (!row.match_id) return;
+
+      user.predictionsCount += 1;
+
+      if (
+        row.result_home_score !== null &&
+        row.result_away_score !== null &&
+        row.result_home_score !== undefined &&
+        row.result_away_score !== undefined
+      ) {
+        user.scoredPredictions += 1;
+      }
+
+      if (typeof calculatePredictionPoints === "function") {
+        user.points += calculatePredictionPoints(row);
+      }
+    });
+
+    const ranking = Array.from(usersMap.values())
+      .sort((a, b) => {
+        if (b.points !== a.points) return b.points - a.points;
+        if (b.predictionsCount !== a.predictionsCount) return b.predictionsCount - a.predictionsCount;
+        return String(a.name || "").localeCompare(String(b.name || ""), "pt-BR");
+      })
+      .map((user, index) => ({
+        position: index + 1,
+        ...user
+      }));
+
+    return res.json({
+      success: true,
+      leaderboard: ranking,
+      ranking
+    });
+  } catch (error) {
+    console.error("Erro ao carregar classificação pública Neon:", error.message);
+
+    return res.status(500).json({
+      success: false,
+      message: "Erro ao carregar classificação pública Neon.",
+      error: error.message
+    });
+  }
+});
+
+
 app.listen(PORT, () => {
   console.log(`Servidor rodando em http://localhost:${PORT}`);
 });
