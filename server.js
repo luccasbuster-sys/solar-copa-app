@@ -6,7 +6,7 @@ const SQLiteStore = require("connect-sqlite3")(session);
 const path = require("path");
 const helmet = require("helmet");
 const rateLimit = require("express-rate-limit");
-const db = require("./database");
+const db = require("./db-adapter");
 const ExcelJS = require("exceljs");
 
 const app = express();
@@ -120,6 +120,51 @@ function splitFullName(fullName) {
     firstName: parts[0] || "",
     lastName: parts.slice(1).join(" ") || ""
   };
+}
+
+
+
+function parseMatchDateTime(match) {
+  if (!match) return null;
+
+  const rawKickoff = String(match.kickoff_at || match.kickoff || "").trim();
+  const rawDate = String(match.match_date || match.date || "").trim();
+
+  if (!rawKickoff && !rawDate) {
+    return null;
+  }
+
+  const candidates = [];
+
+  if (rawKickoff.includes("T")) {
+    candidates.push(rawKickoff);
+  }
+
+  if (rawDate && /^\d{2}:\d{2}/.test(rawKickoff)) {
+    candidates.push(`${rawDate}T${rawKickoff}:00`);
+  }
+
+  if (rawDate && /^\d{2}:\d{2}:\d{2}/.test(rawKickoff)) {
+    candidates.push(`${rawDate}T${rawKickoff}`);
+  }
+
+  if (rawDate && rawKickoff) {
+    candidates.push(`${rawDate} ${rawKickoff}`);
+  }
+
+  if (rawKickoff) {
+    candidates.push(rawKickoff);
+  }
+
+  for (const candidate of candidates) {
+    const date = new Date(candidate);
+
+    if (!Number.isNaN(date.getTime())) {
+      return date;
+    }
+  }
+
+  return null;
 }
 
 

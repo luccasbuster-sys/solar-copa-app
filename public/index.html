@@ -9574,7 +9574,7 @@ function renderLoggedContent() {
         const away = String(match.away || match.away_team || "").toLowerCase();
         const id = String(match.id || "").toUpperCase();
 
-        return id === "A-01" ||
+        return id === "m01" ||
           (home.includes("méxico") && away.includes("áfrica")) ||
           (home.includes("mexico") && away.includes("africa"));
       });
@@ -9603,7 +9603,7 @@ function renderLoggedContent() {
         return;
       }
 
-      const matchId = "A-01";
+      const matchId = "m01";
       const saved = state.scores[matchId] || {};
       const hasSavedPrediction = saved.home !== undefined && saved.away !== undefined;
       const locked = typeof isMatchLocked === "function" ? isMatchLocked(match.kickoff_at || match.kickoff) : false;
@@ -9613,7 +9613,7 @@ function renderLoggedContent() {
       const awayName = openingTeamName(match, "away");
 
       container.innerHTML = `
-        <article class="match-card reveal is-visible" data-opening-match="A-01">
+        <article class="match-card reveal is-visible" data-opening-match="m01">
           <span class="opening-label">Abertura da Copa 2026</span>
 
           <div class="match-meta">
@@ -9701,7 +9701,7 @@ function renderLoggedContent() {
       if (!button) return;
 
       button.addEventListener("click", async () => {
-        const matchId = "A-01";
+        const matchId = "m01";
         const action = button.dataset.openingAction;
         const status = card.querySelector(".opening-status");
         const homeInput = card.querySelector('[data-opening-score="home"]');
@@ -9977,7 +9977,7 @@ function renderLoggedContent() {
         event.preventDefault();
         event.stopImmediatePropagation();
 
-        const matchId = "A-01";
+        const matchId = "m01";
         const homeInput = card.querySelector('[data-opening-score="home"]');
         const awayInput = card.querySelector('[data-opening-score="away"]');
         const status = card.querySelector(".opening-status");
@@ -10131,7 +10131,7 @@ function renderLoggedContent() {
       if (button.dataset.saveDaily) return button.dataset.saveDaily;
 
       const openingCard = button.closest("[data-opening-match]");
-      if (openingCard) return "A-01";
+      if (openingCard) return "m01";
 
       const dailyCard = button.closest("[data-daily-match]");
       if (dailyCard) return dailyCard.dataset.dailyMatch;
