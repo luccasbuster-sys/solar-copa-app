@@ -778,7 +778,7 @@ app.post("/predictions", requireLogin, (req, res) => {
   db.get(
     "SELECT * FROM matches WHERE id = ?",
     [matchId],
-    (matchError, match) => {
+    async (matchError, match) => {
       if (matchError) {
         console.error("Erro ao buscar jogo:", matchError.message);
 
@@ -789,9 +789,28 @@ app.post("/predictions", requireLogin, (req, res) => {
       }
 
       if (!match) {
+        const neonFallback = await savePredictionOnlyInNeonIfAvailable({
+          phone: req.session.user && req.session.user.phone,
+          matchId,
+          homeScore,
+          awayScore
+        });
+
+        if (neonFallback.success) {
+          return res.json({
+            success: true,
+            message: "Palpite salvo com sucesso.",
+            prediction: {
+              matchId: neonFallback.matchId,
+              homeScore: neonFallback.homeScore,
+              awayScore: neonFallback.awayScore
+            }
+          });
+        }
+
         return res.status(404).json({
           success: false,
-          message: "Jogo não encontrado."
+          message: neonFallback.message || "Jogo não encontrado."
         });
       }
 
@@ -1799,7 +1818,7 @@ app.post("/admin/results", requireAdmin, (req, res) => {
     });
   }
 
-  db.get("SELECT id FROM matches WHERE id = ?", [matchId], (matchError, match) => {
+  db.get("SELECT id FROM matches WHERE id = ?", [matchId], async (matchError, match) => {
     if (matchError) {
       console.error("Erro ao buscar jogo para resultado:", matchError.message);
 
@@ -1810,11 +1829,30 @@ app.post("/admin/results", requireAdmin, (req, res) => {
     }
 
     if (!match) {
-      return res.status(404).json({
-        success: false,
-        message: "Jogo não encontrado."
-      });
-    }
+        const neonFallback = await savePredictionOnlyInNeonIfAvailable({
+          phone: req.session.user && req.session.user.phone,
+          matchId,
+          homeScore,
+          awayScore
+        });
+
+        if (neonFallback.success) {
+          return res.json({
+            success: true,
+            message: "Palpite salvo com sucesso.",
+            prediction: {
+              matchId: neonFallback.matchId,
+              homeScore: neonFallback.homeScore,
+              awayScore: neonFallback.awayScore
+            }
+          });
+        }
+
+        return res.status(404).json({
+          success: false,
+          message: neonFallback.message || "Jogo não encontrado."
+        });
+      }
 
     db.run(
       `
@@ -1910,6 +1948,151 @@ app.get("/admin/summary", requireAdmin, (req, res) => {
 
 
 
+
+
+
+async function savePredictionOnlyInNeonIfAvailable(data) {
+  try {
+    const neon = require("./neon-db");
+    const pool = neon.getNeonPool();
+
+    if (!pool) {
+      return {
+        success: false,
+        message: "Neon não configurado."
+      };
+    }
+
+    const phone = String(data.phone || "").replace(/\D/g, "");
+    const rawMatchId = String(data.matchId || "").trim();
+    const homeScore = Number(data.homeScore);
+    const awayScore = Number(data.awayScore);
+
+    if (!phone) {
+      return {
+        success: false,
+        message: "Usuário inválido para salvar palpite."
+      };
+    }
+
+    if (!rawMatchId) {
+      return {
+        success: false,
+        message: "Jogo inválido para salvar palpite."
+      };
+    }
+
+    if (!Number.isInteger(homeScore) || !Number.isInteger(awayScore)) {
+      return {
+        success: false,
+        message: "Placar inválido."
+      };
+    }
+
+    if (homeScore < 0 || awayScore < 0 || homeScore > 99 || awayScore > 99) {
+      return {
+        success: false,
+        message: "O placar deve ter no máximo 2 dígitos por seleção."
+      };
+    }
+
+    const userResult = await pool.query(
+      `
+        SELECT id
+        FROM users
+        WHERE phone = $1
+        LIMIT 1
+      `,
+      [phone]
+    );
+
+    if (!userResult.rows.length) {
+      return {
+        success: false,
+        message: "Usuário não encontrado no Neon."
+      };
+    }
+
+    const possibleMatchIds = Array.from(new Set([
+      rawMatchId,
+      rawMatchId === "A-01" ? "m01" : null,
+      rawMatchId === "m01" ? "A-01" : null
+    ].filter(Boolean)));
+
+    let match = null;
+    let finalMatchId = rawMatchId;
+
+    for (const candidateId of possibleMatchIds) {
+      const matchResult = await pool.query(
+        `
+          SELECT id, home_team, away_team
+          FROM matches
+          WHERE id = $1
+          LIMIT 1
+        `,
+        [candidateId]
+      );
+
+      if (matchResult.rows.length) {
+        match = matchResult.rows[0];
+        finalMatchId = match.id;
+        break;
+      }
+    }
+
+    if (!match) {
+      return {
+        success: false,
+        message: "Jogo não encontrado no Neon."
+      };
+    }
+
+    await pool.query(
+      `
+        INSERT INTO predictions (
+          user_id,
+          match_id,
+          home_team,
+          away_team,
+          home_score,
+          away_score,
+          created_at,
+          updated_at
+        )
+        VALUES ($1, $2, $3, $4, $5, $6, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
+        ON CONFLICT (user_id, match_id)
+        DO UPDATE SET
+          home_score = EXCLUDED.home_score,
+          away_score = EXCLUDED.away_score,
+          updated_at = CURRENT_TIMESTAMP
+      `,
+      [
+        userResult.rows[0].id,
+        finalMatchId,
+        match.home_team,
+        match.away_team,
+        homeScore,
+        awayScore
+      ]
+    );
+
+    console.log("Palpite salvo diretamente no Neon:", phone, finalMatchId, homeScore, awayScore);
+
+    return {
+      success: true,
+      matchId: finalMatchId,
+      homeScore,
+      awayScore
+    };
+  } catch (error) {
+    console.error("Erro ao salvar palpite direto no Neon:", error.message);
+
+    return {
+      success: false,
+      message: error.message || "Erro ao salvar palpite no Neon."
+    };
+  }
+}
 
 
 async function savePredictionToNeonIfAvailable(data) {
