@@ -1878,6 +1878,27 @@ app.get("/admin/summary", requireAdmin, (req, res) => {
 });
 
 
+
+app.get("/admin/db-status", requireAdmin, (req, res) => {
+  db.get("SELECT COUNT(*) AS total FROM users", [], (error, row) => {
+    if (error) {
+      return res.status(500).json({
+        success: false,
+        database: db.usingPostgres ? "neon-postgresql" : "sqlite-local",
+        hasDatabaseUrl: Boolean(process.env.DATABASE_URL),
+        message: error.message
+      });
+    }
+
+    return res.json({
+      success: true,
+      database: db.usingPostgres ? "neon-postgresql" : "sqlite-local",
+      hasDatabaseUrl: Boolean(process.env.DATABASE_URL),
+      users: Number(row && row.total ? row.total : 0)
+    });
+  });
+});
+
 app.listen(PORT, () => {
   console.log(`Servidor rodando em http://localhost:${PORT}`);
 });
