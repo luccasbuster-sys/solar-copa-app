@@ -168,6 +168,19 @@ function parseMatchDateTime(match) {
 }
 
 
+
+function normalizeMatchIdForDatabase(matchId) {
+  const value = String(matchId || "").trim();
+
+  const aliases = {
+    "A-01": "m01",
+    "a-01": "m01"
+  };
+
+  return aliases[value] || value;
+}
+
+
 function normalizeScoreValue(value) {
   const text = String(value ?? "").trim();
 
@@ -830,7 +843,7 @@ app.post("/predictions", requireLogin, (req, res) => {
 
 app.delete("/predictions/:matchId", requireLogin, (req, res) => {
   const userId = req.session.user && req.session.user.id;
-  const matchId = String(req.params.matchId || "").trim();
+  const matchId = normalizeMatchIdForDatabase(req.params.matchId);
 
   if (!userId) {
     return res.status(401).json({
@@ -1731,7 +1744,7 @@ app.get("/admin/matches/day/:date", requireAdmin, (req, res) => {
 });
 
 app.post("/admin/results", requireAdmin, (req, res) => {
-  const matchId = String(req.body.matchId || "").trim();
+  const matchId = normalizeMatchIdForDatabase(req.body.matchId);
   const homeScore = Number(req.body.homeScore);
   const awayScore = Number(req.body.awayScore);
 

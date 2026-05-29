@@ -11171,6 +11171,53 @@ function renderLoggedContent() {
   })();
 </script>
 
+
+<script id="normalize-matchid-neon-final">
+  (() => {
+    function normalizeMatchIdForNeon(matchId) {
+      const value = String(matchId || "").trim();
+
+      if (value === "A-01" || value === "a-01") {
+        return "m01";
+      }
+
+      return value;
+    }
+
+    window.normalizeMatchIdForNeon = normalizeMatchIdForNeon;
+
+    if (!window.__solarFetchMatchIdPatch) {
+      window.__solarFetchMatchIdPatch = true;
+
+      const originalFetch = window.fetch;
+
+      window.fetch = function patchedFetch(input, init = {}) {
+        try {
+          const url = typeof input === "string" ? input : input && input.url;
+          const method = String(init.method || "GET").toUpperCase();
+
+          if (url && url.includes("/predictions") && method === "POST" && init.body) {
+            if (init.body instanceof URLSearchParams) {
+              const current = init.body.get("matchId");
+              init.body.set("matchId", normalizeMatchIdForNeon(current));
+            } else if (typeof init.body === "string") {
+              const params = new URLSearchParams(init.body);
+              if (params.has("matchId")) {
+                params.set("matchId", normalizeMatchIdForNeon(params.get("matchId")));
+                init.body = params;
+              }
+            }
+          }
+        } catch (error) {
+          console.warn("Não foi possível normalizar matchId:", error);
+        }
+
+        return originalFetch.apply(this, arguments);
+      };
+    }
+  })();
+</script>
+
 </body>
 </html>
 
