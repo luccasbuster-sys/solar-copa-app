@@ -324,6 +324,16 @@ app.post("/register", (req, res) => {
               activationOrigin
             };
 
+            saveUserToNeonIfAvailable({
+              username: fullName,
+              firstName,
+              lastName,
+              phone,
+              activationCode: activationCode || null,
+              activationOrigin,
+              passwordHash
+            });
+
             req.session.user = user;
 
             return res.json({
@@ -1877,6 +1887,70 @@ app.get("/admin/summary", requireAdmin, (req, res) => {
   });
 });
 
+
+
+
+async function saveUserToNeonIfAvailable(userData) {
+  try {
+    const neon = require("./neon-db");
+    const pool = neon.getNeonPool();
+
+    if (!pool) {
+      console.warn("Neon não configurado. Cadastro salvo apenas no banco principal.");
+      return;
+    }
+
+    const fullName = String(userData.username || userData.fullName || "").trim();
+    const firstName = String(userData.firstName || "").trim();
+    const lastName = String(userData.lastName || "").trim();
+    const phone = String(userData.phone || "").replace(/\D/g, "");
+    const activationCode = userData.activationCode || null;
+    const activationOrigin = userData.activationOrigin || "Público Instagram";
+    const passwordHash = userData.passwordHash;
+
+    if (!phone || !passwordHash) {
+      console.warn("Dados insuficientes para salvar usuário no Neon.");
+      return;
+    }
+
+    await pool.query(
+      `
+        INSERT INTO users (
+          username,
+          first_name,
+          last_name,
+          phone,
+          activation_code,
+          activation_origin,
+          password_hash,
+          created_at
+        )
+        VALUES ($1, $2, $3, $4, $5, $6, $7, CURRENT_TIMESTAMP)
+        ON CONFLICT (phone)
+        DO UPDATE SET
+          username = EXCLUDED.username,
+          first_name = EXCLUDED.first_name,
+          last_name = EXCLUDED.last_name,
+          activation_code = EXCLUDED.activation_code,
+          activation_origin = EXCLUDED.activation_origin,
+          password_hash = EXCLUDED.password_hash
+      `,
+      [
+        fullName,
+        firstName,
+        lastName,
+        phone,
+        activationCode,
+        activationOrigin,
+        passwordHash
+      ]
+    );
+
+    console.log("Usuário salvo/atualizado no Neon:", phone);
+  } catch (error) {
+    console.error("Erro ao salvar usuário no Neon:", error.message);
+  }
+}
 
 
 app.get("/admin/neon-status", requireAdmin, async (req, res) => {
