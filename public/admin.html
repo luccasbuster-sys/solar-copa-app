@@ -1162,5 +1162,219 @@
   })();
 </script>
 
+
+<script id="admin-neon-users-table">
+  (() => {
+    let neonUsersTimer = null;
+    let loadingNeonUsers = false;
+
+    function normalizeText(value) {
+      return String(value || "")
+        .normalize("NFD")
+        .replace(/[\u0300-\u036f]/g, "")
+        .toLowerCase()
+        .trim();
+    }
+
+    function findUsersTable() {
+      const tables = Array.from(document.querySelectorAll("table"));
+
+      return tables.find((table) => {
+        const text = normalizeText(table.textContent);
+        return text.includes("telefone") ||
+          text.includes("usuario") ||
+          text.includes("usuário") ||
+          text.includes("palpite");
+      }) || tables[0] || null;
+    }
+
+    function formatDate(value) {
+      if (!value) return "-";
+
+      try {
+        return new Date(value).toLocaleString("pt-BR", {
+          day: "2-digit",
+          month: "2-digit",
+          year: "numeric",
+          hour: "2-digit",
+          minute: "2-digit"
+        });
+      } catch (error) {
+        return "-";
+      }
+    }
+
+    function buildUserRow(user, index) {
+      const name = user.username || [user.firstName, user.lastName].filter(Boolean).join(" ") || "-";
+      const phone = user.phone || "-";
+      const origin = user.activationOrigin || "Público Instagram";
+      const code = user.activationCode || "-";
+      const predictions = Number(user.predictionsCount || 0);
+      const createdAt = formatDate(user.createdAt);
+
+      return `
+        <tr data-neon-user-id="${user.id || ""}">
+          <td>${index + 1}</td>
+          <td>
+            <strong>${name}</strong>
+            <small style="display:block;opacity:.65;font-weight:800;">${origin}</small>
+          </td>
+          <td>${phone}</td>
+          <td>${code}</td>
+          <td>${predictions}</td>
+          <td>${createdAt}</td>
+        </tr>
+      `;
+    }
+
+    function ensureNeonStatusBadge() {
+      let badge = document.querySelector("#adminNeonUsersStatus");
+
+      if (badge) return badge;
+
+      const table = findUsersTable();
+      const target = table ? table.parentElement : document.body;
+
+      badge = document.createElement("div");
+      badge.id = "adminNeonUsersStatus";
+      badge.textContent = "Carregando usuários do Neon...";
+      badge.style.cssText = [
+        "width: fit-content",
+        "margin: 12px 0",
+        "padding: 8px 12px",
+        "border: 2px solid #050505",
+        "border-radius: 999px",
+        "background: #21d3ca",
+        "box-shadow: 2px 2px 0 #050505",
+        "font-size: 10px",
+        "font-weight: 1000",
+        "text-transform: uppercase"
+      ].join(";");
+
+      if (target && table) {
+        table.insertAdjacentElement("beforebegin", badge);
+      } else {
+        document.body.prepend(badge);
+      }
+
+      return badge;
+    }
+
+    function updateSummaryCards(users) {
+      const totalUsers = users.length;
+      const totalPredictions = users.reduce((sum, user) => {
+        return sum + Number(user.predictionsCount || 0);
+      }, 0);
+
+      const average = totalUsers > 0
+        ? (totalPredictions / totalUsers).toFixed(1)
+        : "0";
+
+      function setMetric(label, value) {
+        const target = normalizeText(label);
+
+        const cards = Array.from(document.querySelectorAll("article, section, div"))
+          .filter((element) => {
+            const text = normalizeText(element.textContent);
+            return text.includes(target) && text.length < 180;
+          })
+          .sort((a, b) => a.textContent.length - b.textContent.length);
+
+        const card = cards[0];
+        if (!card) return;
+
+        const number = Array.from(card.querySelectorAll("*"))
+          .find((element) => /^\d+(?:[,.]\d+)?$/.test(element.textContent.trim()));
+
+        if (number) {
+          number.textContent = String(value);
+        }
+      }
+
+      setMetric("usuários cadastrados", totalUsers);
+      setMetric("palpites salvos", totalPredictions);
+      setMetric("média por usuário", average);
+    }
+
+    async function loadNeonUsersToAdmin() {
+      if (loadingNeonUsers) return;
+
+      const table = findUsersTable();
+      const badge = ensureNeonStatusBadge();
+
+      if (!table) {
+        if (badge) badge.textContent = "Tabela de usuários não encontrada.";
+        return;
+      }
+
+      try {
+        loadingNeonUsers = true;
+
+        const response = await fetch("/admin/neon-users", {
+          credentials: "include",
+          cache: "no-store"
+        });
+
+        const data = await response.json();
+
+        if (!response.ok || !data.success) {
+          throw new Error(data.message || "Erro ao carregar usuários do Neon.");
+        }
+
+        const users = Array.isArray(data.users) ? data.users : [];
+
+        let tbody = table.querySelector("tbody");
+
+        if (!tbody) {
+          tbody = document.createElement("tbody");
+          table.appendChild(tbody);
+        }
+
+        tbody.innerHTML = users.map(buildUserRow).join("");
+
+        updateSummaryCards(users);
+
+        if (badge) {
+          badge.textContent = "Usuários Neon atualizados às " + new Date().toLocaleTimeString("pt-BR");
+        }
+      } catch (error) {
+        console.warn("Erro ao carregar usuários do Neon no admin:", error);
+
+        if (badge) {
+          badge.textContent = "Erro ao carregar usuários do Neon.";
+        }
+      } finally {
+        loadingNeonUsers = false;
+      }
+    }
+
+    function startNeonUsersAdmin() {
+      loadNeonUsersToAdmin();
+
+      if (neonUsersTimer) {
+        clearInterval(neonUsersTimer);
+      }
+
+      neonUsersTimer = setInterval(loadNeonUsersToAdmin, 7000);
+    }
+
+    document.addEventListener("DOMContentLoaded", () => {
+      setTimeout(startNeonUsersAdmin, 800);
+    });
+
+    window.addEventListener("load", () => {
+      setTimeout(startNeonUsersAdmin, 1200);
+    });
+
+    document.addEventListener("visibilitychange", () => {
+      if (!document.hidden) {
+        loadNeonUsersToAdmin();
+      }
+    });
+
+    window.loadNeonUsersToAdmin = loadNeonUsersToAdmin;
+  })();
+</script>
+
 </body>
 </html>

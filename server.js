@@ -2168,6 +2168,62 @@ app.get("/admin/neon-status", requireAdmin, async (req, res) => {
 });
 
 
+
+app.get("/admin/neon-users", requireAdmin, async (req, res) => {
+  try {
+    const neon = require("./neon-db");
+    const pool = neon.getNeonPool();
+
+    if (!pool) {
+      return res.status(500).json({
+        success: false,
+        message: "Neon não configurado."
+      });
+    }
+
+    const result = await pool.query(`
+      SELECT
+        u.id,
+        u.username,
+        u.first_name,
+        u.last_name,
+        u.phone,
+        u.activation_code,
+        u.activation_origin,
+        u.created_at,
+        COUNT(p.id) AS predictions_count
+      FROM users u
+      LEFT JOIN predictions p ON p.user_id = u.id
+      GROUP BY u.id
+      ORDER BY u.created_at DESC
+    `);
+
+    return res.json({
+      success: true,
+      users: result.rows.map((user) => ({
+        id: user.id,
+        username: user.username,
+        firstName: user.first_name,
+        lastName: user.last_name,
+        phone: user.phone,
+        activationCode: user.activation_code,
+        activationOrigin: user.activation_origin,
+        createdAt: user.created_at,
+        predictionsCount: Number(user.predictions_count || 0)
+      }))
+    });
+  } catch (error) {
+    console.error("Erro ao listar usuários do Neon:", error.message);
+
+    return res.status(500).json({
+      success: false,
+      message: "Erro ao listar usuários do Neon.",
+      error: error.message
+    });
+  }
+});
+
+
 app.listen(PORT, () => {
   console.log(`Servidor rodando em http://localhost:${PORT}`);
 });
