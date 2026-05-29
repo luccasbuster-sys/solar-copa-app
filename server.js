@@ -1878,6 +1878,39 @@ app.get("/admin/summary", requireAdmin, (req, res) => {
 });
 
 
+
+app.get("/admin/neon-status", requireAdmin, async (req, res) => {
+  try {
+    const neon = require("./neon-db");
+
+    if (!neon.hasNeonUrl()) {
+      return res.status(500).json({
+        success: false,
+        connected: false,
+        message: "DATABASE_URL não encontrada no ambiente."
+      });
+    }
+
+    const result = await neon.testNeonConnection();
+
+    return res.json({
+      success: true,
+      connected: true,
+      database: result.database,
+      now: result.now
+    });
+  } catch (error) {
+    console.error("Erro ao testar Neon:", error.message);
+
+    return res.status(500).json({
+      success: false,
+      connected: false,
+      message: error.message
+    });
+  }
+});
+
+
 app.listen(PORT, () => {
   console.log(`Servidor rodando em http://localhost:${PORT}`);
 });
