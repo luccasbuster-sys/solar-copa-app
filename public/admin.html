@@ -1510,5 +1510,181 @@
   })();
 </script>
 
+
+<script id="admin-neon-ranking-table">
+  (() => {
+    let neonRankingTimer = null;
+    let loadingNeonRanking = false;
+
+    function normalizeText(value) {
+      return String(value || "")
+        .normalize("NFD")
+        .replace(/[\u0300-\u036f]/g, "")
+        .toLowerCase()
+        .trim();
+    }
+
+    function findRankingTable() {
+      const tables = Array.from(document.querySelectorAll("table"));
+
+      const rankingTable = tables.find((table) => {
+        const text = normalizeText(table.textContent);
+        return text.includes("pontuação") ||
+          text.includes("pontuacao") ||
+          text.includes("posição") ||
+          text.includes("posicao") ||
+          text.includes("ranking") ||
+          text.includes("classificação") ||
+          text.includes("classificacao");
+      });
+
+      return rankingTable || tables[tables.length - 1] || null;
+    }
+
+    function ensureRankingBadge() {
+      let badge = document.querySelector("#adminNeonRankingStatus");
+
+      if (badge) return badge;
+
+      const table = findRankingTable();
+
+      badge = document.createElement("div");
+      badge.id = "adminNeonRankingStatus";
+      badge.textContent = "Carregando ranking Neon...";
+      badge.style.cssText = [
+        "width: fit-content",
+        "margin: 12px 0",
+        "padding: 8px 12px",
+        "border: 2px solid #050505",
+        "border-radius: 999px",
+        "background: #d6ff00",
+        "box-shadow: 2px 2px 0 #050505",
+        "font-size: 10px",
+        "font-weight: 1000",
+        "text-transform: uppercase"
+      ].join(";");
+
+      if (table) {
+        table.insertAdjacentElement("beforebegin", badge);
+      } else {
+        document.body.prepend(badge);
+      }
+
+      return badge;
+    }
+
+    function buildRankingRow(user) {
+      const name = user.username || [user.firstName, user.lastName].filter(Boolean).join(" ") || "-";
+
+      return `
+        <tr data-neon-ranking-user="${user.id || ""}">
+          <td>${user.position || "-"}</td>
+          <td>
+            <strong>${name}</strong>
+            <small style="display:block;opacity:.65;font-weight:800;">${user.phone || "-"}</small>
+          </td>
+          <td>${user.activationOrigin || "Público Instagram"}</td>
+          <td>${Number(user.points || 0)}</td>
+          <td>${Number(user.predictionsCount || 0)}</td>
+          <td>${Number(user.scoredPredictions || 0)}</td>
+        </tr>
+      `;
+    }
+
+    async function loadNeonRankingToAdmin() {
+      if (loadingNeonRanking) return;
+
+      const table = findRankingTable();
+      const badge = ensureRankingBadge();
+
+      if (!table) {
+        if (badge) badge.textContent = "Tabela de ranking não encontrada.";
+        return;
+      }
+
+      try {
+        loadingNeonRanking = true;
+
+        const response = await fetch("/admin/neon-ranking", {
+          credentials: "include",
+          cache: "no-store"
+        });
+
+        const data = await response.json();
+
+        if (!response.ok || !data.success) {
+          throw new Error(data.message || "Erro ao carregar ranking Neon.");
+        }
+
+        const ranking = Array.isArray(data.ranking) ? data.ranking : [];
+
+        let thead = table.querySelector("thead");
+        let tbody = table.querySelector("tbody");
+
+        if (!thead) {
+          thead = document.createElement("thead");
+          table.prepend(thead);
+        }
+
+        if (!tbody) {
+          tbody = document.createElement("tbody");
+          table.appendChild(tbody);
+        }
+
+        thead.innerHTML = `
+          <tr>
+            <th>Posição</th>
+            <th>Usuário</th>
+            <th>Origem</th>
+            <th>Pontos</th>
+            <th>Palpites</th>
+            <th>Pontuados</th>
+          </tr>
+        `;
+
+        tbody.innerHTML = ranking.map(buildRankingRow).join("");
+
+        if (badge) {
+          badge.textContent = "Ranking Neon atualizado às " + new Date().toLocaleTimeString("pt-BR");
+        }
+      } catch (error) {
+        console.warn("Erro ao carregar ranking Neon no admin:", error);
+
+        if (badge) {
+          badge.textContent = "Erro ao carregar ranking Neon.";
+        }
+      } finally {
+        loadingNeonRanking = false;
+      }
+    }
+
+    function startNeonRankingAdmin() {
+      loadNeonRankingToAdmin();
+
+      if (neonRankingTimer) {
+        clearInterval(neonRankingTimer);
+      }
+
+      neonRankingTimer = setInterval(loadNeonRankingToAdmin, 7000);
+    }
+
+    document.addEventListener("DOMContentLoaded", () => {
+      setTimeout(startNeonRankingAdmin, 1000);
+    });
+
+    window.addEventListener("load", () => {
+      setTimeout(startNeonRankingAdmin, 1400);
+    });
+
+    document.addEventListener("visibilitychange", () => {
+      if (!document.hidden) {
+        loadNeonRankingToAdmin();
+      }
+    });
+
+    window.loadNeonRankingToAdmin = loadNeonRankingToAdmin;
+  })();
+</script>
+
 </body>
 </html>
