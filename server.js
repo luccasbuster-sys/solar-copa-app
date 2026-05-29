@@ -468,68 +468,88 @@ app.post("/register", authLimiter, async (req, res) => {
 });
 
 
-app.post("/login", authLimiter, (req, res) => {
-  try {
-    const phone = normalizePhone(req.body.phone);
-    const password = req.body.password ? req.body.password : "";
+app.post("/login", (req, res) => {
+  const phone = typeof normalizePhone === "function"
+    ? normalizePhone(req.body.phone)
+    : String(req.body.phone || "").replace(/\D/g, "");
 
-    if (!phone || !password) {
-      return res.status(400).json({
-        success: false,
-        message: "Informe telefone e senha."
-      });
-    }
+  const password = String(req.body.password || "").trim();
 
-    db.get(
-      "SELECT * FROM users WHERE phone = ?",
-      [phone],
-      async (error, user) => {
-        if (error) {
-          console.error("Erro SQLite no login:", error.message);
-
-          return res.status(500).json({
-            success: false,
-            message: "Erro ao buscar usuário."
-          });
-        }
-
-        if (!user) {
-          return res.status(401).json({
-            success: false,
-            message: "Telefone ou senha inválidos."
-          });
-        }
-
-        const passwordIsCorrect = await bcrypt.compare(
-          password,
-          user.password_hash
-        );
-
-        if (!passwordIsCorrect) {
-          return res.status(401).json({
-            success: false,
-            message: "Telefone ou senha inválidos."
-          });
-        }
-
-        req.session.user = publicUser(user);
-
-        return res.json({
-          success: true,
-          message: "Login realizado com sucesso.",
-          user: req.session.user
-        });
-      }
-    );
-  } catch (error) {
-    console.error("Erro interno no login:", error.message);
-
-    return res.status(500).json({
+  if (!phone || !password) {
+    return res.status(400).json({
       success: false,
-      message: "Erro interno no servidor.",
-      error: error.message
+      message: "Informe telefone e senha."
     });
   }
+
+  function finishLoginWithUser(userRow, source) {
+    bcrypt.compare(password, userRow.password_hash, (compareError, isValid) => {
+      if (compareError) {
+        console.error("Erro ao validar senha:", compareError.message);
+
+        return res.status(500).json({
+          success: false,
+          message: "Erro ao validar login."
+        });
+      }
+
+      if (!isValid) {
+        return res.status(401).json({
+          success: false,
+          message: "Telefone ou senha inválidos."
+        });
+      }
+
+      const user = {
+        id: userRow.id,
+        username: userRow.username,
+        firstName: userRow.first_name,
+        lastName: userRow.last_name,
+        phone: userRow.phone,
+        activationCode: userRow.activation_code,
+        activationOrigin: userRow.activation_origin,
+        source
+      };
+
+      req.session.user = user;
+
+      return res.json({
+        success: true,
+        message: "Login realizado com sucesso.",
+        user
+      });
+    });
+  }
+
+  db.get(
+    "SELECT id, username, first_name, last_name, phone, activation_code, activation_origin, password_hash FROM users WHERE phone = ?",
+    [phone],
+    async (error, userRow) => {
+      if (error) {
+        console.error("Erro ao buscar usuário no banco principal:", error.message);
+
+        return res.status(500).json({
+          success: false,
+          message: "Erro ao buscar usuário."
+        });
+      }
+
+      if (userRow) {
+        return finishLoginWithUser(userRow, "sqlite");
+      }
+
+      const neonUser = await findUserInNeonByPhone(phone);
+
+      if (!neonUser) {
+        return res.status(401).json({
+          success: false,
+          message: "Telefone ou senha inválidos."
+        });
+      }
+
+      return finishLoginWithUser(neonUser, "neon");
+    }
+  );
 });
 
 app.get("/me", (req, res) => {
@@ -1888,6 +1908,46 @@ app.get("/admin/summary", requireAdmin, (req, res) => {
 });
 
 
+
+
+
+async function findUserInNeonByPhone(phone) {
+  try {
+    const neon = require("./neon-db");
+    const pool = neon.getNeonPool();
+
+    if (!pool) {
+      return null;
+    }
+
+    const normalizedPhone = typeof normalizePhone === "function"
+      ? normalizePhone(phone)
+      : String(phone || "").replace(/\D/g, "");
+
+    const result = await pool.query(
+      `
+        SELECT
+          id,
+          username,
+          first_name,
+          last_name,
+          phone,
+          activation_code,
+          activation_origin,
+          password_hash
+        FROM users
+        WHERE phone = $1
+        LIMIT 1
+      `,
+      [normalizedPhone]
+    );
+
+    return result.rows[0] || null;
+  } catch (error) {
+    console.error("Erro ao buscar usuário no Neon:", error.message);
+    return null;
+  }
+}
 
 
 async function saveUserToNeonIfAvailable(userData) {
