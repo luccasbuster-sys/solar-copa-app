@@ -11218,6 +11218,243 @@ function renderLoggedContent() {
   })();
 </script>
 
+
+<script id="force-opening-prediction-from-api">
+  (() => {
+    let isLoadingOpeningPrediction = false;
+
+    function getValue(item, keys) {
+      for (const key of keys) {
+        if (item && item[key] !== undefined && item[key] !== null && item[key] !== "") {
+          return item[key];
+        }
+      }
+
+      return null;
+    }
+
+    function normalizeScore(value) {
+      const number = Number(value);
+
+      if (!Number.isInteger(number) || number < 0 || number > 99) {
+        return null;
+      }
+
+      return number;
+    }
+
+    function isOpeningMatchId(matchId) {
+      const id = String(matchId || "").trim();
+
+      return id === "A-01" || id === "m01" || id === "M01";
+    }
+
+    function findOpeningPrediction(predictions) {
+      if (!Array.isArray(predictions)) return null;
+
+      for (const item of predictions) {
+        const matchId = String(
+          getValue(item, ["matchId", "match_id", "id"]) || ""
+        ).trim();
+
+        if (!isOpeningMatchId(matchId)) continue;
+
+        const home = normalizeScore(
+          getValue(item, ["homeScore", "home_score", "home"])
+        );
+
+        const away = normalizeScore(
+          getValue(item, ["awayScore", "away_score", "away"])
+        );
+
+        if (home === null || away === null) continue;
+
+        return {
+          matchId,
+          home,
+          away,
+          savedAt: getValue(item, ["savedAt", "updatedAt", "updated_at", "created_at"]) || new Date().toISOString()
+        };
+      }
+
+      return null;
+    }
+
+    function saveOpeningPredictionInState(prediction) {
+      if (typeof state === "undefined") return;
+
+      if (!state.scores || typeof state.scores !== "object") {
+        state.scores = {};
+      }
+
+      ["A-01", "m01"].forEach((id) => {
+        state.scores[id] = {
+          home: prediction.home,
+          away: prediction.away,
+          savedAt: prediction.savedAt,
+          source: "neon"
+        };
+      });
+
+      try {
+        if (typeof saveScores === "function") {
+          saveScores();
+        } else {
+          localStorage.setItem("solarCopa2026Scores", JSON.stringify(state.scores));
+        }
+      } catch (error) {
+        console.warn("Não foi possível salvar palpite carregado localmente:", error);
+      }
+    }
+
+    function applyOpeningPredictionToCard(prediction) {
+      saveOpeningPredictionInState(prediction);
+
+      const cards = Array.from(document.querySelectorAll("[data-opening-match], .opening-prediction-section .match-card, #jogoAberturaPalpite .match-card"));
+
+      cards.forEach((card) => {
+        const homeInput =
+          card.querySelector('[data-opening-score="home"]') ||
+          card.querySelector('[data-score="home"]');
+
+        const awayInput =
+          card.querySelector('[data-opening-score="away"]') ||
+          card.querySelector('[data-score="away"]');
+
+        const status =
+          card.querySelector(".opening-status") ||
+          card.querySelector(".save-status");
+
+        const button =
+          card.querySelector("[data-opening-action]") ||
+          card.querySelector("[data-save-daily]") ||
+          card.querySelector("button");
+
+        if (homeInput) {
+          homeInput.value = String(prediction.home);
+          homeInput.setAttribute("value", String(prediction.home));
+          homeInput.disabled = true;
+        }
+
+        if (awayInput) {
+          awayInput.value = String(prediction.away);
+          awayInput.setAttribute("value", String(prediction.away));
+          awayInput.disabled = true;
+        }
+
+        if (status) {
+          status.textContent = "Palpite salvo no banco";
+        }
+
+        if (button) {
+          button.textContent = "Resetar palpite";
+          button.dataset.openingAction = "reset";
+          button.classList.add("is-reset");
+          button.disabled = false;
+        }
+
+        card.dataset.openingMatch = prediction.matchId || "A-01";
+      });
+
+      console.log("Palpite do jogo de abertura aplicado na tela:", prediction.home + " x " + prediction.away);
+    }
+
+    async function loadOpeningPredictionFromApi() {
+      if (isLoadingOpeningPrediction) return;
+
+      try {
+        isLoadingOpeningPrediction = true;
+
+        const response = await fetch("/predictions", {
+          method: "GET",
+          credentials: "include",
+          cache: "no-store"
+        });
+
+        const data = await response.json();
+
+        if (!response.ok || !data.success) {
+          throw new Error(data.message || "Erro ao carregar palpites.");
+        }
+
+        const predictions = Array.isArray(data.predictions)
+          ? data.predictions
+          : Array.isArray(data.previsões)
+            ? data.previsões
+            : [];
+
+        const openingPrediction = findOpeningPrediction(predictions);
+
+        if (!openingPrediction) {
+          console.log("Nenhum palpite salvo encontrado para o jogo de abertura.");
+          return;
+        }
+
+        applyOpeningPredictionToCard(openingPrediction);
+
+        setTimeout(() => applyOpeningPredictionToCard(openingPrediction), 500);
+        setTimeout(() => applyOpeningPredictionToCard(openingPrediction), 1200);
+      } catch (error) {
+        console.warn("Erro ao aplicar palpite salvo do jogo de abertura:", error);
+      } finally {
+        isLoadingOpeningPrediction = false;
+      }
+    }
+
+    function startOpeningPredictionSync() {
+      setTimeout(loadOpeningPredictionFromApi, 500);
+      setTimeout(loadOpeningPredictionFromApi, 1500);
+      setTimeout(loadOpeningPredictionFromApi, 3000);
+    }
+
+    window.loadOpeningPredictionFromApi = loadOpeningPredictionFromApi;
+
+    document.addEventListener("DOMContentLoaded", startOpeningPredictionSync);
+    window.addEventListener("load", startOpeningPredictionSync);
+
+    document.addEventListener("visibilitychange", () => {
+      if (!document.hidden) {
+        loadOpeningPredictionFromApi();
+      }
+    });
+
+    if (!window.__openingPredictionFetchPatch) {
+      window.__openingPredictionFetchPatch = true;
+
+      const originalFetch = window.fetch;
+
+      window.fetch = async function patchedFetch(input, init = {}) {
+        const response = await originalFetch.apply(this, arguments);
+
+        try {
+          const url = typeof input === "string" ? input : input && input.url;
+          const method = String(init.method || "GET").toUpperCase();
+
+          if (
+            url &&
+            (
+              url.includes("/login") ||
+              url.includes("/register") ||
+              url.includes("/predictions")
+            ) &&
+            ["POST", "DELETE"].includes(method)
+          ) {
+            const clone = response.clone();
+            const data = await clone.json().catch(() => null);
+
+            if (data && data.success) {
+              setTimeout(loadOpeningPredictionFromApi, 500);
+              setTimeout(loadOpeningPredictionFromApi, 1500);
+            }
+          }
+        } catch (error) {}
+
+        return response;
+      };
+    }
+  })();
+</script>
+
 </body>
 </html>
 
