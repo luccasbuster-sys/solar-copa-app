@@ -11455,6 +11455,285 @@ function renderLoggedContent() {
   })();
 </script>
 
+
+<script id="public-leaderboard-neon-final">
+  (() => {
+    let loadingPublicLeaderboard = false;
+    let publicLeaderboardTimer = null;
+
+    const prizeMap = {
+      1: "1º lugar",
+      2: "2º lugar",
+      3: "3º lugar",
+      4: "4º lugar",
+      5: "5º lugar",
+      6: "6º lugar",
+      7: "7º lugar",
+      8: "8º lugar",
+      9: "9º lugar",
+      10: "10º lugar"
+    };
+
+    function normalizeText(value) {
+      return String(value || "")
+        .normalize("NFD")
+        .replace(/[\u0300-\u036f]/g, "")
+        .toLowerCase()
+        .trim();
+    }
+
+    function findPublicRankingSection() {
+      const sections = Array.from(document.querySelectorAll("section, article, div"));
+
+      return sections.find((section) => {
+        const text = normalizeText(section.textContent);
+        return text.includes("classificacao dos usuarios") ||
+          text.includes("classificação dos usuários") ||
+          text.includes("usuarios classificados") ||
+          text.includes("usuários classificados");
+      }) || document.querySelector("#classificacao");
+    }
+
+    function findPublicRankingTable() {
+      const section = findPublicRankingSection();
+
+      if (section) {
+        const table = section.querySelector("table");
+        if (table) return table;
+      }
+
+      const tables = Array.from(document.querySelectorAll("table"));
+
+      return tables.find((table) => {
+        const text = normalizeText(table.textContent);
+        return text.includes("posicao") ||
+          text.includes("posição") ||
+          text.includes("premio") ||
+          text.includes("prêmio") ||
+          text.includes("pontos") ||
+          text.includes("palpites");
+      }) || null;
+    }
+
+    function getDisplayName(user) {
+      return user.name ||
+        user.username ||
+        [user.firstName, user.lastName].filter(Boolean).join(" ") ||
+        "Usuário";
+    }
+
+    function buildRankingRow(user) {
+      const position = Number(user.position || 0);
+      const name = getDisplayName(user);
+      const points = Number(user.points || 0);
+      const predictions = Number(user.predictionsCount || 0);
+      const prize = prizeMap[position] || "-";
+
+      return `
+        <tr>
+          <td>
+            <strong>${position || "-"}</strong>
+          </td>
+          <td>${prize}</td>
+          <td>
+            <strong>${name}</strong>
+          </td>
+          <td>${points}</td>
+          <td>${predictions}</td>
+        </tr>
+      `;
+    }
+
+    function ensurePublicRankingVisible() {
+      const section = findPublicRankingSection();
+
+      if (section) {
+        section.style.display = "";
+        section.style.visibility = "visible";
+        section.style.opacity = "1";
+      }
+
+      const classificacao = document.querySelector("#classificacao");
+
+      if (classificacao) {
+        classificacao.style.display = "";
+        classificacao.style.visibility = "visible";
+        classificacao.style.opacity = "1";
+      }
+    }
+
+    function ensureRankingStatus() {
+      const section = findPublicRankingSection();
+      if (!section) return null;
+
+      let status = section.querySelector("#publicLeaderboardNeonStatus");
+
+      if (status) return status;
+
+      status = document.createElement("div");
+      status.id = "publicLeaderboardNeonStatus";
+      status.textContent = "Atualizando classificação...";
+      status.style.cssText = [
+        "width: fit-content",
+        "margin: 10px 0 14px",
+        "padding: 8px 12px",
+        "border: 2px solid #050505",
+        "border-radius: 999px",
+        "background: #21d3ca",
+        "box-shadow: 2px 2px 0 #050505",
+        "font-size: 10px",
+        "font-weight: 1000",
+        "text-transform: uppercase"
+      ].join(";");
+
+      const title = Array.from(section.querySelectorAll("h1, h2, h3")).find((el) => {
+        return normalizeText(el.textContent).includes("classificacao");
+      });
+
+      if (title) {
+        title.insertAdjacentElement("afterend", status);
+      } else {
+        section.prepend(status);
+      }
+
+      return status;
+    }
+
+    function renderPublicLeaderboard(ranking) {
+      ensurePublicRankingVisible();
+
+      const table = findPublicRankingTable();
+      const status = ensureRankingStatus();
+
+      if (!table) {
+        if (status) status.textContent = "Tabela de classificação não encontrada.";
+        return;
+      }
+
+      let thead = table.querySelector("thead");
+      let tbody = table.querySelector("tbody");
+
+      if (!thead) {
+        thead = document.createElement("thead");
+        table.prepend(thead);
+      }
+
+      if (!tbody) {
+        tbody = document.createElement("tbody");
+        table.appendChild(tbody);
+      }
+
+      thead.innerHTML = `
+        <tr>
+          <th>Posição</th>
+          <th>Prêmio</th>
+          <th>Usuário</th>
+          <th>Pontos</th>
+          <th>Palpites</th>
+        </tr>
+      `;
+
+      const topRanking = Array.isArray(ranking)
+        ? ranking.slice(0, 10)
+        : [];
+
+      if (!topRanking.length) {
+        tbody.innerHTML = `
+          <tr>
+            <td colspan="5">Ainda não há usuários classificados.</td>
+          </tr>
+        `;
+
+        if (status) {
+          status.textContent = "Classificação sem usuários no momento.";
+        }
+
+        return;
+      }
+
+      tbody.innerHTML = topRanking.map(buildRankingRow).join("");
+
+      if (status) {
+        status.textContent = "Classificação atualizada às " + new Date().toLocaleTimeString("pt-BR");
+      }
+    }
+
+    async function loadPublicLeaderboardFromNeon() {
+      if (loadingPublicLeaderboard) return;
+
+      try {
+        loadingPublicLeaderboard = true;
+        ensurePublicRankingVisible();
+
+        const response = await fetch("/leaderboard-neon", {
+          credentials: "include",
+          cache: "no-store"
+        });
+
+        const data = await response.json();
+
+        if (!response.ok || !data.success) {
+          throw new Error(data.message || "Erro ao carregar classificação.");
+        }
+
+        const ranking = Array.isArray(data.leaderboard)
+          ? data.leaderboard
+          : Array.isArray(data.ranking)
+            ? data.ranking
+            : [];
+
+        renderPublicLeaderboard(ranking);
+      } catch (error) {
+        console.warn("Erro ao carregar classificação pública Neon:", error);
+
+        const status = ensureRankingStatus();
+        if (status) {
+          status.textContent = "Erro ao atualizar classificação.";
+        }
+      } finally {
+        loadingPublicLeaderboard = false;
+      }
+    }
+
+    function startPublicLeaderboardNeon() {
+      ensurePublicRankingVisible();
+
+      setTimeout(loadPublicLeaderboardFromNeon, 500);
+      setTimeout(loadPublicLeaderboardFromNeon, 1500);
+      setTimeout(loadPublicLeaderboardFromNeon, 3000);
+
+      if (publicLeaderboardTimer) {
+        clearInterval(publicLeaderboardTimer);
+      }
+
+      publicLeaderboardTimer = setInterval(loadPublicLeaderboardFromNeon, 10000);
+    }
+
+    document.addEventListener("DOMContentLoaded", startPublicLeaderboardNeon);
+    window.addEventListener("load", startPublicLeaderboardNeon);
+
+    document.addEventListener("visibilitychange", () => {
+      if (!document.hidden) {
+        loadPublicLeaderboardFromNeon();
+      }
+    });
+
+    document.addEventListener("click", (event) => {
+      const target = event.target;
+
+      if (!target) return;
+
+      const text = normalizeText(target.textContent);
+
+      if (text.includes("atualizar classificacao") || text.includes("atualizar classificação")) {
+        setTimeout(loadPublicLeaderboardFromNeon, 100);
+      }
+    });
+
+    window.loadPublicLeaderboardFromNeon = loadPublicLeaderboardFromNeon;
+  })();
+</script>
+
 </body>
 </html>
 
