@@ -2668,7 +2668,7 @@ app.get("/admin/neon-ranking", requireAdmin, async (req, res) => {
 
 
 
-app.get("/leaderboard-neon", requireLogin, async (req, res) => {
+app.get("/leaderboard-neon", async (req, res) => {
   try {
     const neon = require("./neon-db");
     const pool = neon.getNeonPool();
