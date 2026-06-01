@@ -11698,15 +11698,13 @@ function renderLoggedContent() {
     function startPublicLeaderboardNeon() {
       ensurePublicRankingVisible();
 
-      setTimeout(loadPublicLeaderboardFromNeon, 500);
-      setTimeout(loadPublicLeaderboardFromNeon, 1500);
-      setTimeout(loadPublicLeaderboardFromNeon, 3000);
+      setTimeout(loadPublicLeaderboardFromNeon, 800);
 
       if (publicLeaderboardTimer) {
         clearInterval(publicLeaderboardTimer);
       }
 
-      publicLeaderboardTimer = setInterval(loadPublicLeaderboardFromNeon, 10000);
+      publicLeaderboardTimer = setInterval(loadPublicLeaderboardFromNeon, 900000);
     }
 
     document.addEventListener("DOMContentLoaded", startPublicLeaderboardNeon);
