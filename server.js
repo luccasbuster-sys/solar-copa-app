@@ -704,6 +704,126 @@ app.get("/matches/:group", requireLogin, (req, res) => {
   );
 });
 
+
+/* ===== GET PREDICTIONS COM FALLBACK NEON ===== */
+app.get("/predictions", requireLogin, async (req, res) => {
+  const userId = req.session.user && req.session.user.id;
+  const phone = String(req.session.user && req.session.user.phone || "").replace(/\D/g, "");
+
+  function formatPredictions(rows) {
+    return rows.map((row) => ({
+      id: row.id,
+      matchId: row.match_id,
+      match_id: row.match_id,
+      homeTeam: row.home_team,
+      awayTeam: row.away_team,
+      homeScore: Number(row.home_score),
+      awayScore: Number(row.away_score),
+      home_score: Number(row.home_score),
+      away_score: Number(row.away_score),
+      savedAt: row.updated_at || row.created_at,
+      updatedAt: row.updated_at || row.created_at
+    }));
+  }
+
+  async function loadFromNeon() {
+    try {
+      const neon = require("./neon-db");
+      const pool = neon.getNeonPool();
+
+      if (!pool || !phone) {
+        return [];
+      }
+
+      const userResult = await pool.query(
+        `
+          SELECT id
+          FROM users
+          WHERE phone = $1
+          LIMIT 1
+        `,
+        [phone]
+      );
+
+      if (!userResult.rows.length) {
+        return [];
+      }
+
+      const predictionsResult = await pool.query(
+        `
+          SELECT
+            p.id,
+            p.match_id,
+            p.home_team,
+            p.away_team,
+            p.home_score,
+            p.away_score,
+            p.created_at,
+            p.updated_at
+          FROM predictions p
+          WHERE p.user_id = $1
+          ORDER BY p.updated_at DESC, p.created_at DESC
+        `,
+        [userResult.rows[0].id]
+      );
+
+      return predictionsResult.rows;
+    } catch (error) {
+      console.error("Erro ao carregar palpites do Neon:", error.message);
+      return [];
+    }
+  }
+
+  db.all(
+    `
+      SELECT
+        id,
+        match_id,
+        home_team,
+        away_team,
+        home_score,
+        away_score,
+        created_at,
+        updated_at
+      FROM predictions
+      WHERE user_id = ?
+      ORDER BY updated_at DESC, created_at DESC
+    `,
+    [userId],
+    async (error, rows) => {
+      if (error) {
+        console.error("Erro ao carregar palpites do banco principal:", error.message);
+
+        const neonRows = await loadFromNeon();
+
+        return res.json({
+          success: true,
+          source: "neon-fallback-after-error",
+          predictions: formatPredictions(neonRows)
+        });
+      }
+
+      if (rows && rows.length) {
+        return res.json({
+          success: true,
+          source: "primary",
+          predictions: formatPredictions(rows)
+        });
+      }
+
+      const neonRows = await loadFromNeon();
+
+      return res.json({
+        success: true,
+        source: "neon",
+        predictions: formatPredictions(neonRows)
+      });
+    }
+  );
+});
+/* ===== FIM GET PREDICTIONS COM FALLBACK NEON ===== */
+
+
 app.get("/predictions", requireLogin, (req, res) => {
   db.all(
     `
