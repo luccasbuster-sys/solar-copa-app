@@ -11732,6 +11732,253 @@ function renderLoggedContent() {
   })();
 </script>
 
+
+<style id="public-ranking-points-style-final">
+  #classificacao table {
+    width: 100% !important;
+    table-layout: fixed !important;
+    border-collapse: collapse !important;
+  }
+
+  #classificacao th,
+  #classificacao td {
+    vertical-align: middle !important;
+    text-align: left !important;
+  }
+
+  #classificacao th:nth-child(1),
+  #classificacao td:nth-child(1) {
+    width: 70px !important;
+    text-align: center !important;
+  }
+
+  #classificacao th:nth-child(2),
+  #classificacao td:nth-child(2) {
+    width: 260px !important;
+  }
+
+  #classificacao th:nth-child(3),
+  #classificacao td:nth-child(3) {
+    width: auto !important;
+  }
+
+  #classificacao th:nth-child(4),
+  #classificacao td:nth-child(4) {
+    width: 110px !important;
+    text-align: center !important;
+  }
+
+  #classificacao th:nth-child(5),
+  #classificacao td:nth-child(5) {
+    width: 110px !important;
+    text-align: center !important;
+  }
+
+  .public-ranking-points-pill {
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    min-width: 78px !important;
+    min-height: 38px !important;
+    padding: 8px 14px !important;
+    border: 3px solid #050505 !important;
+    border-radius: 999px !important;
+    background: #ff2d24 !important;
+    color: #ffffff !important;
+    box-shadow: 3px 3px 0 #050505 !important;
+    font-size: 13px !important;
+    font-weight: 1000 !important;
+    text-transform: uppercase !important;
+    white-space: nowrap !important;
+  }
+
+  .public-ranking-predictions-count {
+    display: inline-grid !important;
+    gap: 1px !important;
+    text-align: center !important;
+    font-weight: 1000 !important;
+    line-height: 1.05 !important;
+  }
+
+  .public-ranking-predictions-count strong {
+    font-size: 15px !important;
+  }
+
+  .public-ranking-predictions-count small {
+    font-size: 10px !important;
+    text-transform: lowercase !important;
+  }
+
+  @media (max-width: 760px) {
+    #classificacao table {
+      table-layout: auto !important;
+      min-width: 720px !important;
+    }
+
+    #classificacao {
+      overflow-x: auto !important;
+    }
+
+    .public-ranking-points-pill {
+      min-width: 64px !important;
+      min-height: 34px !important;
+      padding: 7px 10px !important;
+      font-size: 11px !important;
+      box-shadow: 2px 2px 0 #050505 !important;
+    }
+  }
+</style>
+
+
+<script id="public-ranking-points-render-final">
+  (() => {
+    function normalizeText(value) {
+      return String(value || "")
+        .normalize("NFD")
+        .replace(/[\u0300-\u036f]/g, "")
+        .toLowerCase()
+        .trim();
+    }
+
+    function findPublicRankingSection() {
+      return document.querySelector("#classificacao") ||
+        Array.from(document.querySelectorAll("section, article, div")).find((section) => {
+          const text = normalizeText(section.textContent);
+          return text.includes("classificacao dos usuarios") ||
+            text.includes("classificação dos usuários");
+        });
+    }
+
+    function findPublicRankingTable() {
+      const section = findPublicRankingSection();
+      return section ? section.querySelector("table") : null;
+    }
+
+    function getDisplayName(user) {
+      return user.name ||
+        user.username ||
+        [user.firstName, user.lastName].filter(Boolean).join(" ") ||
+        "Usuário";
+    }
+
+    function getPrize(position) {
+      const prizes = {
+        1: "PRÊMIO 01",
+        2: "PRÊMIO 02",
+        3: "PRÊMIO 03",
+        4: "PRÊMIO 04",
+        5: "PRÊMIO 05",
+        6: "PRÊMIO 06",
+        7: "PRÊMIO 07",
+        8: "PRÊMIO 08",
+        9: "PRÊMIO 09",
+        10: "PRÊMIO 10"
+      };
+
+      return prizes[position] || "-";
+    }
+
+    function buildPublicRankingRow(user) {
+      const position = Number(user.position || 0);
+      const name = getDisplayName(user);
+      const points = Number(user.points || 0);
+      const predictions = Number(user.predictionsCount || 0);
+
+      return `
+        <tr>
+          <td><strong>${position}º</strong></td>
+          <td><strong>${getPrize(position)}</strong></td>
+          <td><strong>${name}</strong></td>
+          <td>
+            <span class="public-ranking-points-pill">${points} pts</span>
+          </td>
+          <td>
+            <span class="public-ranking-predictions-count">
+              <strong>${predictions}</strong>
+              <small>palpite(s)</small>
+            </span>
+          </td>
+        </tr>
+      `;
+    }
+
+    async function forceRenderPublicRankingPoints() {
+      try {
+        const table = findPublicRankingTable();
+        if (!table) return;
+
+        const response = await fetch("/leaderboard-neon", {
+          credentials: "include",
+          cache: "no-store"
+        });
+
+        const data = await response.json();
+
+        if (!response.ok || !data.success) return;
+
+        const ranking = Array.isArray(data.leaderboard)
+          ? data.leaderboard
+          : Array.isArray(data.ranking)
+            ? data.ranking
+            : [];
+
+        const topRanking = ranking.slice(0, 10);
+
+        let thead = table.querySelector("thead");
+        let tbody = table.querySelector("tbody");
+
+        if (!thead) {
+          thead = document.createElement("thead");
+          table.prepend(thead);
+        }
+
+        if (!tbody) {
+          tbody = document.createElement("tbody");
+          table.appendChild(tbody);
+        }
+
+        thead.innerHTML = `
+          <tr>
+            <th>Posição</th>
+            <th>Prêmio</th>
+            <th>Usuário</th>
+            <th>Pontos</th>
+            <th>Palpites</th>
+          </tr>
+        `;
+
+        if (!topRanking.length) {
+          tbody.innerHTML = '<tr><td colspan="5">Ainda não há usuários classificados.</td></tr>';
+          return;
+        }
+
+        tbody.innerHTML = topRanking.map(buildPublicRankingRow).join("");
+      } catch (error) {
+        console.warn("Erro ao renderizar pontuação pública:", error);
+      }
+    }
+
+    window.forceRenderPublicRankingPoints = forceRenderPublicRankingPoints;
+
+    document.addEventListener("DOMContentLoaded", () => {
+      setTimeout(forceRenderPublicRankingPoints, 800);
+      setTimeout(forceRenderPublicRankingPoints, 1800);
+    });
+
+    window.addEventListener("load", () => {
+      setTimeout(forceRenderPublicRankingPoints, 1200);
+    });
+
+    document.addEventListener("click", (event) => {
+      const text = normalizeText(event.target && event.target.textContent);
+
+      if (text.includes("atualizar classificacao") || text.includes("atualizar classificação")) {
+        setTimeout(forceRenderPublicRankingPoints, 300);
+      }
+    });
+  })();
+</script>
+
 </body>
 </html>
 
