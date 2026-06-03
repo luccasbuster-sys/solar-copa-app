@@ -225,7 +225,22 @@ app.post("/register", (req, res) => {
   const password = String(req.body.password || "").trim();
   const activationCode = String(req.body.activationCode || "").trim().toUpperCase();
 
-  const codeMap = typeof ACTIVATION_CODES !== "undefined"
+  
+  // Código de ativação liberado para campanha Outlet
+  if (activationCode === "OUTLET2026") {
+    try {
+      if (typeof ACTIVATION_CODES !== "undefined") {
+        ACTIVATION_CODES.OUTLET2026 = "Outlet 2026";
+      }
+
+      if (typeof activationCodes !== "undefined") {
+        activationCodes.OUTLET2026 = "Outlet 2026";
+      }
+    } catch (error) {
+      console.warn("Não foi possível registrar OUTLET2026:", error.message);
+    }
+  }
+const codeMap = typeof ACTIVATION_CODES !== "undefined"
     ? ACTIVATION_CODES
     : typeof activationCodes !== "undefined"
       ? activationCodes
