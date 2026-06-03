@@ -197,6 +197,19 @@ function normalizeScoreValue(value) {
   return number;
 }
 
+
+function getExtraActivationCodeOrigin(activationCode) {
+  const code = String(activationCode || "").trim().toUpperCase();
+
+  const extraCodes = {
+    OUTLET2026: "Outlet 2026",
+    TRANSPORTE2026: "Transporte 2026"
+  };
+
+  return extraCodes[code] || null;
+}
+
+
 function normalizePhone(phone) {
   return String(phone || "").replace(/\D/g, "");
 }
