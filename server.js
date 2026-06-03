@@ -1124,152 +1124,210 @@ app.get("/predictions", requireLogin, (req, res) => {
   );
 });
 
-app.post("/predictions", requireLogin, (req, res) => {
-  const matchId = req.body.matchId ? String(req.body.matchId).trim() : "";
-  const homeScore = normalizeScoreValue(req.body.homeScore);
-    const awayScore = normalizeScoreValue(req.body.awayScore);
 
-    if (homeScore === null || awayScore === null) {
-      return res.status(400).json({
+async function savePredictionToNeonFinal(data) {
+  try {
+    const neon = require("./neon-db");
+    const pool = neon.getNeonPool();
+
+    if (!pool) {
+      return {
+        success: false,
+        message: "Neon não configurado."
+      };
+    }
+
+    const phone = String(data.phone || "").replace(/\D/g, "");
+    const rawMatchId = String(data.matchId || "").trim();
+    const homeScore = Number(data.homeScore);
+    const awayScore = Number(data.awayScore);
+
+    if (!phone) {
+      return {
+        success: false,
+        message: "Usuário inválido para salvar placar."
+      };
+    }
+
+    if (!rawMatchId) {
+      return {
+        success: false,
+        message: "Jogo inválido."
+      };
+    }
+
+    if (!Number.isInteger(homeScore) || !Number.isInteger(awayScore)) {
+      return {
+        success: false,
+        message: "Placar inválido."
+      };
+    }
+
+    if (homeScore < 0 || awayScore < 0 || homeScore > 99 || awayScore > 99) {
+      return {
         success: false,
         message: "O placar deve ter no máximo 2 dígitos por seleção."
-      });
+      };
     }
+
+    const userResult = await pool.query(
+      `
+        SELECT id
+        FROM users
+        WHERE phone = $1
+        LIMIT 1
+      `,
+      [phone]
+    );
+
+    if (!userResult.rows.length) {
+      return {
+        success: false,
+        message: "Usuário não encontrado no banco."
+      };
+    }
+
+    const candidates = Array.from(new Set([
+      rawMatchId,
+      rawMatchId.toUpperCase(),
+      rawMatchId.toLowerCase(),
+      rawMatchId === "A-01" ? "m01" : null,
+      rawMatchId === "m01" ? "A-01" : null,
+      rawMatchId === "M01" ? "A-01" : null
+    ].filter(Boolean)));
+
+    let match = null;
+
+    for (const candidate of candidates) {
+      const matchResult = await pool.query(
+        `
+          SELECT id, home_team, away_team
+          FROM matches
+          WHERE id = $1
+          LIMIT 1
+        `,
+        [candidate]
+      );
+
+      if (matchResult.rows.length) {
+        match = matchResult.rows[0];
+        break;
+      }
+    }
+
+    if (!match) {
+      return {
+        success: false,
+        message: "Jogo não encontrado no banco."
+      };
+    }
+
+    await pool.query(
+      `
+        INSERT INTO predictions (
+          user_id,
+          match_id,
+          home_team,
+          away_team,
+          home_score,
+          away_score,
+          created_at,
+          updated_at
+        )
+        VALUES ($1, $2, $3, $4, $5, $6, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
+        ON CONFLICT (user_id, match_id)
+        DO UPDATE SET
+          home_score = EXCLUDED.home_score,
+          away_score = EXCLUDED.away_score,
+          updated_at = CURRENT_TIMESTAMP
+      `,
+      [
+        userResult.rows[0].id,
+        match.id,
+        match.home_team,
+        match.away_team,
+        homeScore,
+        awayScore
+      ]
+    );
+
+    console.log("Palpite salvo no Neon:", phone, match.id, homeScore, awayScore);
+
+    return {
+      success: true,
+      matchId: match.id,
+      homeScore,
+      awayScore
+    };
+  } catch (error) {
+    console.error("Erro ao salvar placar no Neon:", error.message);
+
+    return {
+      success: false,
+      message: error.message || "Erro ao salvar placar."
+    };
+  }
+}
+
+
+
+app.post("/predictions", requireLogin, async (req, res) => {
+  const matchId = String(req.body.matchId || req.body.match_id || "").trim();
+
+  const homeScore = typeof normalizeScoreValue === "function"
+    ? normalizeScoreValue(req.body.homeScore)
+    : Number(req.body.homeScore);
+
+  const awayScore = typeof normalizeScoreValue === "function"
+    ? normalizeScoreValue(req.body.awayScore)
+    : Number(req.body.awayScore);
 
   if (!matchId) {
     return res.status(400).json({
       success: false,
-      message: "ID do jogo não informado."
+      message: "Jogo inválido."
     });
   }
 
-  if (!Number.isInteger(homeScore) || !Number.isInteger(awayScore)) {
+  if (homeScore === null || awayScore === null || !Number.isInteger(homeScore) || !Number.isInteger(awayScore)) {
     return res.status(400).json({
       success: false,
-      message: "Informe placares válidos."
+      message: "Informe um placar válido."
     });
   }
 
   if (homeScore < 0 || awayScore < 0 || homeScore > 99 || awayScore > 99) {
     return res.status(400).json({
       success: false,
-      message: "O placar deve estar entre 0 e 99."
+      message: "O placar deve ter no máximo 2 dígitos por seleção."
     });
   }
 
-  db.get(
-    "SELECT * FROM matches WHERE id = ?",
-    [matchId],
-    async (matchError, match) => {
-      if (matchError) {
-        console.error("Erro ao buscar jogo:", matchError.message);
+  const neonResult = await savePredictionToNeonFinal({
+    phone: req.session.user && req.session.user.phone,
+    matchId,
+    homeScore,
+    awayScore
+  });
 
-        return res.status(500).json({
-          success: false,
-          message: "Erro ao buscar jogo."
-        });
-      }
+  if (!neonResult.success) {
+    return res.status(400).json({
+      success: false,
+      message: neonResult.message || "Erro ao salvar placar."
+    });
+  }
 
-      if (!match) {
-        const neonFallback = await savePredictionOnlyInNeonIfAvailable({
-          phone: req.session.user && req.session.user.phone,
-          matchId,
-          homeScore,
-          awayScore
-        });
-
-        if (neonFallback.success) {
-          return res.json({
-            success: true,
-            message: "Palpite salvo com sucesso.",
-            prediction: {
-              matchId: neonFallback.matchId,
-              homeScore: neonFallback.homeScore,
-              awayScore: neonFallback.awayScore
-            }
-          });
-        }
-
-        return res.status(404).json({
-          success: false,
-          message: neonFallback.message || "Jogo não encontrado."
-        });
-      }
-
-      const now = new Date();
-      const kickoff = new Date(match.kickoff_at);
-
-      if (Number.isNaN(kickoff.getTime())) {
-        return res.status(500).json({
-          success: false,
-          message: "Horário do jogo inválido no banco."
-        });
-      }
-
-      if (now >= kickoff) {
-        return res.status(403).json({
-          success: false,
-          message: "O prazo para salvar esse palpite foi encerrado. O jogo já começou."
-        });
-      }
-
-      db.run(
-        `
-          INSERT INTO predictions (
-            user_id,
-            match_id,
-            home_team,
-            away_team,
-            home_score,
-            away_score,
-            updated_at
-          )
-          VALUES (?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP)
-          ON CONFLICT(user_id, match_id)
-          DO UPDATE SET
-            home_team = excluded.home_team,
-            away_team = excluded.away_team,
-            home_score = excluded.home_score,
-            away_score = excluded.away_score,
-            updated_at = CURRENT_TIMESTAMP
-        `,
-        [
-          req.session.user.id,
-          match.id,
-          match.home_team,
-          match.away_team,
-          homeScore,
-          awayScore
-        ],
-        function (error) {
-          if (error) {
-            console.error("Erro ao salvar palpite:", error.message);
-
-            return res.status(500).json({
-              success: false,
-              message: "Erro ao salvar palpite."
-            });
-          }
-
-          return res.json({
-            success: true,
-            message: "Palpite salvo com sucesso.",
-            prediction: {
-              matchId: match.id,
-              group: match.group_name,
-              homeTeam: match.home_team,
-              awayTeam: match.away_team,
-              homeScore,
-              awayScore,
-              matchDate: match.match_date,
-              kickoffAt: match.kickoff_at
-            }
-          });
-        }
-      );
+  return res.json({
+    success: true,
+    message: "Palpite salvo com sucesso.",
+    prediction: {
+      matchId: neonResult.matchId,
+      homeScore: neonResult.homeScore,
+      awayScore: neonResult.awayScore
     }
-  );
+  });
 });
+
 
 
 app.delete("/predictions/:matchId", requireLogin, async (req, res) => {
