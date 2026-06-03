@@ -1025,65 +1025,61 @@ app.post("/predictions", requireLogin, (req, res) => {
 });
 
 
-app.delete("/predictions/:matchId", requireLogin, (req, res) => {
+app.delete("/predictions/:matchId", requireLogin, async (req, res) => {
   const userId = req.session.user && req.session.user.id;
-  const matchId = normalizeMatchIdForDatabase(req.params.matchId);
-
-  if (!userId) {
-    return res.status(401).json({
-      success: false,
-      message: "Você precisa estar logado."
-    });
-  }
+  const phone = req.session.user && req.session.user.phone;
+  const matchId = String(req.params.matchId || "").trim();
 
   if (!matchId) {
     return res.status(400).json({
       success: false,
-      message: "Jogo inválido para resetar palpite."
+      message: "Jogo inválido."
     });
   }
 
-  db.get(
-    "SELECT id FROM predictions WHERE user_id = ? AND match_id = ?",
-    [userId, matchId],
-    (findError, prediction) => {
-      if (findError) {
-        console.error("Erro ao buscar palpite para reset:", findError.message);
+  const matchIds = Array.from(new Set([
+    matchId,
+    matchId === "A-01" ? "m01" : null,
+    matchId === "m01" ? "A-01" : null
+  ].filter(Boolean)));
 
-        return res.status(500).json({
-          success: false,
-          message: "Erro ao buscar palpite."
-        });
-      }
+  const neonResult = await deletePredictionFromNeonIfAvailable({
+    phone,
+    matchId
+  });
 
-      if (!prediction) {
-        return res.json({
-          success: true,
-          message: "Nenhum palpite encontrado para resetar.",
-          deleted: 0
-        });
-      }
+  db.run(
+    `
+      DELETE FROM predictions
+      WHERE user_id = ?
+        AND match_id IN (${matchIds.map(() => "?").join(",")})
+    `,
+    [userId, ...matchIds],
+    function (error) {
+      if (error) {
+        console.error("Erro ao resetar palpite no banco principal:", error.message);
 
-      db.run(
-        "DELETE FROM predictions WHERE user_id = ? AND match_id = ?",
-        [userId, matchId],
-        function (deleteError) {
-          if (deleteError) {
-            console.error("Erro ao resetar palpite:", deleteError.message);
-
-            return res.status(500).json({
-              success: false,
-              message: "Erro ao resetar palpite."
-            });
-          }
-
+        if (neonResult.success) {
           return res.json({
             success: true,
             message: "Palpite resetado com sucesso.",
-            deleted: this.changes || 0
+            deletedFromNeon: neonResult.deleted,
+            deletedFromPrimary: 0
           });
         }
-      );
+
+        return res.status(500).json({
+          success: false,
+          message: "Erro ao resetar palpite."
+        });
+      }
+
+      return res.json({
+        success: true,
+        message: "Palpite resetado com sucesso.",
+        deletedFromNeon: neonResult.deleted || 0,
+        deletedFromPrimary: this.changes || 0
+      });
     }
   );
 });
@@ -2084,6 +2080,82 @@ app.get("/admin/summary", requireAdmin, (req, res) => {
 
 
 
+
+
+
+async function deletePredictionFromNeonIfAvailable(data) {
+  try {
+    const neon = require("./neon-db");
+    const pool = neon.getNeonPool();
+
+    if (!pool) {
+      return {
+        success: false,
+        deleted: 0,
+        message: "Neon não configurado."
+      };
+    }
+
+    const phone = String(data.phone || "").replace(/\D/g, "");
+    const rawMatchId = String(data.matchId || "").trim();
+
+    if (!phone || !rawMatchId) {
+      return {
+        success: false,
+        deleted: 0,
+        message: "Dados insuficientes para resetar palpite."
+      };
+    }
+
+    const userResult = await pool.query(
+      `
+        SELECT id
+        FROM users
+        WHERE phone = $1
+        LIMIT 1
+      `,
+      [phone]
+    );
+
+    if (!userResult.rows.length) {
+      return {
+        success: false,
+        deleted: 0,
+        message: "Usuário não encontrado no Neon."
+      };
+    }
+
+    const matchIds = Array.from(new Set([
+      rawMatchId,
+      rawMatchId === "A-01" ? "m01" : null,
+      rawMatchId === "m01" ? "A-01" : null
+    ].filter(Boolean)));
+
+    const result = await pool.query(
+      `
+        DELETE FROM predictions
+        WHERE user_id = $1
+          AND match_id = ANY($2::text[])
+      `,
+      [userResult.rows[0].id, matchIds]
+    );
+
+    console.log("Palpite resetado no Neon:", phone, matchIds.join(","), result.rowCount);
+
+    return {
+      success: true,
+      deleted: result.rowCount || 0
+    };
+  } catch (error) {
+    console.error("Erro ao resetar palpite no Neon:", error.message);
+
+    return {
+      success: false,
+      deleted: 0,
+      message: error.message
+    };
+  }
+}
 
 
 async function savePredictionOnlyInNeonIfAvailable(data) {
