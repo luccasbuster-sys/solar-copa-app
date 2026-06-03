@@ -266,6 +266,150 @@ function publicUser(user) {
 
 
 /* ===== CADASTRO PÚBLICO COM CÓDIGO OPCIONAL ===== */
+
+/* ===== REGISTER OFICIAL CODIGOS SOLAR FINAL ===== */
+app.post(["/register", "/api/register"], (req, res) => {
+  const fullName = String(req.body.fullName || req.body.name || req.body.username || "").trim();
+
+  const phone = typeof normalizePhone === "function"
+    ? normalizePhone(req.body.phone)
+    : String(req.body.phone || "").replace(/\D/g, "");
+
+  const password = String(req.body.password || "").trim();
+  const activationCode = String(req.body.activationCode || "").trim().toUpperCase();
+
+  const officialCodes = {
+    OUTLET2026: "Outlet 2026",
+    TRANSPORTE2026: "Transporte 2026"
+  };
+
+  const activationOrigin = activationCode
+    ? officialCodes[activationCode]
+    : "Público Instagram";
+
+  if (!fullName || !phone || !password) {
+    return res.status(400).json({
+      success: false,
+      message: "Informe nome e sobrenome, telefone e senha."
+    });
+  }
+
+  if (activationCode && !activationOrigin) {
+    return res.status(400).json({
+      success: false,
+      message: "Código de ativação inválido."
+    });
+  }
+
+  const nameParts = fullName.split(/\s+/).filter(Boolean);
+  const firstName = nameParts.shift() || fullName;
+  const lastName = nameParts.join(" ");
+
+  db.get(
+    "SELECT id FROM users WHERE phone = ?",
+    [phone],
+    (findError, existingUser) => {
+      if (findError) {
+        console.error("Erro ao verificar telefone:", findError.message);
+
+        return res.status(500).json({
+          success: false,
+          message: "Erro ao verificar cadastro."
+        });
+      }
+
+      if (existingUser) {
+        return res.status(400).json({
+          success: false,
+          message: "Esse telefone já está cadastrado."
+        });
+      }
+
+      bcrypt.hash(password, 10, (hashError, passwordHash) => {
+        if (hashError) {
+          console.error("Erro ao gerar senha:", hashError.message);
+
+          return res.status(500).json({
+            success: false,
+            message: "Erro ao criar senha."
+          });
+        }
+
+        db.run(
+          `
+            INSERT INTO users (
+              username,
+              first_name,
+              last_name,
+              phone,
+              activation_code,
+              activation_origin,
+              password_hash,
+              created_at
+            )
+            VALUES (?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP)
+          `,
+          [
+            fullName,
+            firstName,
+            lastName,
+            phone,
+            activationCode || null,
+            activationOrigin,
+            passwordHash
+          ],
+          function (insertError) {
+            if (insertError) {
+              console.error("Erro ao criar cadastro:", insertError.message);
+
+              return res.status(500).json({
+                success: false,
+                message: "Erro ao criar cadastro."
+              });
+            }
+
+            const user = {
+              id: this.lastID,
+              username: fullName,
+              firstName,
+              lastName,
+              phone,
+              activationCode: activationCode || "",
+              activationOrigin
+            };
+
+            try {
+              if (typeof saveUserToNeonIfAvailable === "function") {
+                saveUserToNeonIfAvailable({
+                  username: fullName,
+                  firstName,
+                  lastName,
+                  phone,
+                  activationCode: activationCode || null,
+                  activationOrigin,
+                  passwordHash
+                });
+              }
+            } catch (error) {
+              console.error("Erro ao salvar usuário no Neon:", error.message);
+            }
+
+            req.session.user = user;
+
+            return res.json({
+              success: true,
+              message: "Cadastro criado com sucesso.",
+              user
+            });
+          }
+        );
+      });
+    }
+  );
+});
+/* ===== FIM REGISTER OFICIAL CODIGOS SOLAR FINAL ===== */
+
+
 app.post("/register", (req, res) => {
   const fullName = String(req.body.fullName || req.body.name || req.body.username || "").trim();
   const phone = typeof normalizePhone === "function"

@@ -12888,6 +12888,169 @@ function renderLoggedContent() {
   })();
 </script>
 
+
+<script id="official-register-codes-capture-final">
+  (() => {
+    const officialCodes = {
+      OUTLET2026: "Outlet 2026",
+      TRANSPORTE2026: "Transporte 2026"
+    };
+
+    function normalizeCode(value) {
+      return String(value || "").trim().toUpperCase();
+    }
+
+    function getInput(form, selectors) {
+      for (const selector of selectors) {
+        const input = form.querySelector(selector);
+        if (input) return input;
+      }
+
+      return null;
+    }
+
+    function showMessage(message) {
+      if (typeof showToast === "function") {
+        showToast(message);
+      } else {
+        alert(message);
+      }
+    }
+
+    function patchActivationInputs() {
+      document
+        .querySelectorAll('input[name="activationCode"], #activationCodeInput, #activationCode')
+        .forEach((input) => {
+          input.required = false;
+          input.removeAttribute("required");
+          input.removeAttribute("minlength");
+          input.removeAttribute("aria-required");
+          input.placeholder = "Opcional";
+        });
+    }
+
+    document.addEventListener("submit", async (event) => {
+      const form = event.target;
+
+      if (!form || !form.querySelector) return;
+
+      const activationInput = getInput(form, [
+        'input[name="activationCode"]',
+        "#activationCodeInput",
+        "#activationCode"
+      ]);
+
+      const phoneInput = getInput(form, [
+        'input[name="phone"]',
+        "#phoneInput",
+        "#phone"
+      ]);
+
+      const passwordInput = getInput(form, [
+        'input[name="password"]',
+        "#passwordInput",
+        "#password"
+      ]);
+
+      const nameInput = getInput(form, [
+        'input[name="fullName"]',
+        "#fullNameInput",
+        "#fullName",
+        'input[name="name"]',
+        "#nameInput",
+        "#name"
+      ]);
+
+      if (!activationInput || !phoneInput || !passwordInput || !nameInput) return;
+
+      event.preventDefault();
+      event.stopPropagation();
+      event.stopImmediatePropagation();
+
+      patchActivationInputs();
+
+      const fullName = String(nameInput.value || "").trim();
+      const phone = String(phoneInput.value || "").trim();
+      const password = String(passwordInput.value || "").trim();
+      const activationCode = normalizeCode(activationInput.value);
+
+      if (!fullName || !phone || !password) {
+        showMessage("Informe nome e sobrenome, telefone e senha.");
+        return false;
+      }
+
+      if (activationCode && !officialCodes[activationCode]) {
+        showMessage("Código de ativação inválido.");
+        return false;
+      }
+
+      activationInput.value = activationCode;
+
+      const submitButton = form.querySelector('button[type="submit"], button:not([type])');
+
+      try {
+        if (submitButton) submitButton.disabled = true;
+
+        const payload = new URLSearchParams({
+          fullName,
+          phone,
+          password,
+          activationCode
+        });
+
+        const response = await fetch("/register", {
+          method: "POST",
+          credentials: "include",
+          headers: {
+            "Content-Type": "application/x-www-form-urlencoded"
+          },
+          body: payload
+        });
+
+        const data = await response.json();
+
+        if (!response.ok || !data.success) {
+          throw new Error(data.message || "Erro ao criar cadastro.");
+        }
+
+        if (typeof state !== "undefined") {
+          state.user = data.user;
+        }
+
+        try {
+          localStorage.setItem("solarCopa2026User", JSON.stringify(data.user));
+        } catch (error) {}
+
+        if (typeof renderRegisteredState === "function") renderRegisteredState();
+        if (typeof renderGroups === "function") renderGroups();
+        if (typeof renderDailyMatches === "function") renderDailyMatches();
+        if (typeof loadSavedPredictionsFromApi === "function") loadSavedPredictionsFromApi(true);
+        if (typeof loadPublicLeaderboardFromNeon === "function") loadPublicLeaderboardFromNeon(true);
+
+        showMessage("Cadastro criado com sucesso!");
+
+        setTimeout(() => {
+          const main = document.querySelector("main");
+          if (main) main.scrollIntoView({ behavior: "smooth", block: "start" });
+        }, 300);
+      } catch (error) {
+        showMessage(error.message || "Erro ao criar cadastro.");
+      } finally {
+        if (submitButton) submitButton.disabled = false;
+      }
+
+      return false;
+    }, true);
+
+    document.addEventListener("DOMContentLoaded", () => {
+      patchActivationInputs();
+      setInterval(patchActivationInputs, 1000);
+    });
+
+    window.addEventListener("load", patchActivationInputs);
+  })();
+</script>
+
 </body>
 </html>
 
