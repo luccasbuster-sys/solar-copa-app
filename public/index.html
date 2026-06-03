@@ -12894,6 +12894,8 @@ function renderLoggedContent() {
     const officialCodes = {
       OUTLET2026: "Outlet 2026",
       TRANSPORTE2026: "Transporte 2026"
+    
+      ADM2026: "Administrativo 2026",
     };
 
     function normalizeCode(value) {
@@ -13040,6 +13042,63 @@ function renderLoggedContent() {
       }
 
       return false;
+    }, true);
+
+    document.addEventListener("DOMContentLoaded", () => {
+      patchActivationInputs();
+      setInterval(patchActivationInputs, 1000);
+    });
+
+    window.addEventListener("load", patchActivationInputs);
+  })();
+</script>
+
+
+<script id="adm2026-activation-code-final">
+  (() => {
+    const allowedCodes = {
+      OUTLET2026: "Outlet 2026",
+      TRANSPORTE2026: "Transporte 2026",
+      ADM2026: "Administrativo 2026"
+    };
+
+    function normalizeCode(value) {
+      return String(value || "").trim().toUpperCase();
+    }
+
+    function patchActivationInputs() {
+      document
+        .querySelectorAll('input[name="activationCode"], #activationCodeInput, #activationCode')
+        .forEach((input) => {
+          input.required = false;
+          input.removeAttribute("required");
+          input.removeAttribute("minlength");
+          input.removeAttribute("aria-required");
+        });
+    }
+
+    document.addEventListener("submit", (event) => {
+      const form = event.target;
+      if (!form || !form.querySelector) return;
+
+      const input =
+        form.querySelector('input[name="activationCode"]') ||
+        form.querySelector("#activationCodeInput") ||
+        form.querySelector("#activationCode");
+
+      if (!input) return;
+
+      const code = normalizeCode(input.value);
+
+      if (!code) {
+        input.value = "";
+        return;
+      }
+
+      if (allowedCodes[code]) {
+        input.value = code;
+        return;
+      }
     }, true);
 
     document.addEventListener("DOMContentLoaded", () => {

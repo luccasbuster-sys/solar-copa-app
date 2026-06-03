@@ -204,6 +204,8 @@ function getExtraActivationCodeOrigin(activationCode) {
   const extraCodes = {
     OUTLET2026: "Outlet 2026",
     TRANSPORTE2026: "Transporte 2026"
+  
+    ADM2026: "Administrativo 2026",
   };
 
   return extraCodes[code] || null;
@@ -220,6 +222,8 @@ function getActivationCodeOrigin(activationCode) {
   const extraActivationCodes = {
     OUTLET2026: "Outlet 2026",
     TRANSPORTE2026: "Transporte 2026"
+  
+    ADM2026: "Administrativo 2026",
   };
 
   if (extraActivationCodes[code]) {
@@ -281,6 +285,8 @@ app.post(["/register", "/api/register"], (req, res) => {
   const officialCodes = {
     OUTLET2026: "Outlet 2026",
     TRANSPORTE2026: "Transporte 2026"
+  
+    ADM2026: "Administrativo 2026",
   };
 
   const activationOrigin = activationCode
