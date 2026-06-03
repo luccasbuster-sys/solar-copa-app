@@ -210,6 +210,43 @@ function getExtraActivationCodeOrigin(activationCode) {
 }
 
 
+function getActivationCodeOrigin(activationCode) {
+  const code = String(activationCode || "").trim().toUpperCase();
+
+  if (!code) {
+    return "Público Instagram";
+  }
+
+  const extraActivationCodes = {
+    OUTLET2026: "Outlet 2026",
+    TRANSPORTE2026: "Transporte 2026"
+  };
+
+  if (extraActivationCodes[code]) {
+    return extraActivationCodes[code];
+  }
+
+  if (typeof ACTIVATION_CODES !== "undefined" && ACTIVATION_CODES[code]) {
+    return ACTIVATION_CODES[code];
+  }
+
+  if (typeof activationCodes !== "undefined" && activationCodes[code]) {
+    return activationCodes[code];
+  }
+
+  return null;
+}
+
+function isActivationCodeAllowed(activationCode) {
+  const code = String(activationCode || "").trim().toUpperCase();
+
+  if (!code) {
+    return true;
+  }
+
+  return Boolean(getActivationCodeOrigin(code));
+}
+
 function normalizePhone(phone) {
   return String(phone || "").replace(/\D/g, "");
 }
