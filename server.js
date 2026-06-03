@@ -87,6 +87,7 @@ function isValidDate(date) {
 
 
 const ACTIVATION_CODES = {
+  OUTLET2026: "Outlet 2026",
   CD2026: "Centro de Distribuição",
   ADM2026: "Centro Administrativo",
   TRANS2026: "Solar Transporte",
@@ -203,8 +204,7 @@ function getExtraActivationCodeOrigin(activationCode) {
 
   const extraCodes = {
     OUTLET2026: "Outlet 2026",
-    TRANSPORTE2026: "Transporte 2026"
-  
+    TRANSPORTE2026: "Transporte 2026",
     ADM2026: "Administrativo 2026",
   };
 
@@ -221,8 +221,7 @@ function getActivationCodeOrigin(activationCode) {
 
   const extraActivationCodes = {
     OUTLET2026: "Outlet 2026",
-    TRANSPORTE2026: "Transporte 2026"
-  
+    TRANSPORTE2026: "Transporte 2026",
     ADM2026: "Administrativo 2026",
   };
 
@@ -251,6 +250,54 @@ function isActivationCodeAllowed(activationCode) {
   return Boolean(getActivationCodeOrigin(code));
 }
 
+
+function getAllActivationCodes() {
+  const allCodes = {};
+
+  try {
+    if (typeof ACTIVATION_CODES !== "undefined" && ACTIVATION_CODES) {
+      Object.assign(allCodes, ACTIVATION_CODES);
+    }
+  } catch (error) {}
+
+  try {
+    if (typeof activationCodes !== "undefined" && activationCodes) {
+      Object.assign(allCodes, activationCodes);
+    }
+  } catch (error) {}
+
+  Object.assign(allCodes, {
+    OUTLET2026: "Outlet 2026",
+    TRANSPORTE2026: "Transporte 2026",
+    ADM2026: "Administrativo 2026"
+  });
+
+  return allCodes;
+}
+
+function getActivationCodeOriginFinal(activationCode) {
+  const code = String(activationCode || "").trim().toUpperCase();
+
+  if (!code) {
+    return "Público Instagram";
+  }
+
+  const allCodes = getAllActivationCodes();
+
+  return allCodes[code] || null;
+}
+
+function isActivationCodeAllowedFinal(activationCode) {
+  const code = String(activationCode || "").trim().toUpperCase();
+
+  if (!code) {
+    return true;
+  }
+
+  return Boolean(getActivationCodeOriginFinal(code));
+}
+
+
 function normalizePhone(phone) {
   return String(phone || "").replace(/\D/g, "");
 }
@@ -271,8 +318,12 @@ function publicUser(user) {
 
 /* ===== CADASTRO PÚBLICO COM CÓDIGO OPCIONAL ===== */
 
-/* ===== REGISTER OFICIAL CODIGOS SOLAR FINAL ===== */
-app.post(["/register", "/api/register"], (req, res) => {
+
+
+
+
+/* ===== REGISTER MANTENDO TODOS OS CODIGOS ATIVOS ===== */
+app.post("/register", (req, res) => {
   const fullName = String(req.body.fullName || req.body.name || req.body.username || "").trim();
 
   const phone = typeof normalizePhone === "function"
@@ -281,17 +332,9 @@ app.post(["/register", "/api/register"], (req, res) => {
 
   const password = String(req.body.password || "").trim();
   const activationCode = String(req.body.activationCode || "").trim().toUpperCase();
-
-  const officialCodes = {
-    OUTLET2026: "Outlet 2026",
-    TRANSPORTE2026: "Transporte 2026"
-  
-    ADM2026: "Administrativo 2026",
-  };
-
-  const activationOrigin = activationCode
-    ? officialCodes[activationCode]
-    : "Público Instagram";
+  const activationOrigin = activationCode === "OUTLET2026"
+    ? "Outlet 2026"
+    : getActivationCodeOriginFinal(activationCode);
 
   if (!fullName || !phone || !password) {
     return res.status(400).json({
@@ -300,7 +343,11 @@ app.post(["/register", "/api/register"], (req, res) => {
     });
   }
 
-  if (activationCode && !activationOrigin) {
+  if (
+    activationCode &&
+    activationCode !== "OUTLET2026" &&
+    !isActivationCodeAllowedFinal(activationCode)
+  ) {
     return res.status(400).json({
       success: false,
       message: "Código de ativação inválido."
@@ -413,7 +460,7 @@ app.post(["/register", "/api/register"], (req, res) => {
     }
   );
 });
-/* ===== FIM REGISTER OFICIAL CODIGOS SOLAR FINAL ===== */
+/* ===== FIM REGISTER MANTENDO TODOS OS CODIGOS ATIVOS ===== */
 
 
 app.post("/register", (req, res) => {
