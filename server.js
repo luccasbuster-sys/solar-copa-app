@@ -3161,7 +3161,12 @@ app.get("/leaderboard-neon", async (req, res) => {
 
 
 
-app.get("/admin/export-neon", requireAdmin, async (req, res) => {
+
+
+
+
+
+async function exportNeonDashboardSpreadsheet(req, res) {
   try {
     const ExcelJS = require("exceljs");
     const neon = require("./neon-db");
@@ -3242,8 +3247,7 @@ app.get("/admin/export-neon", requireAdmin, async (req, res) => {
       cyan: "FF21D3CA",
       lime: "FFD6FF00",
       red: "FFFF2D24",
-      cream: "FFFFFBEC",
-      gray: "FFF4F4F4"
+      cream: "FFFFFBEC"
     };
 
     function formatDate(value) {
@@ -3259,7 +3263,7 @@ app.get("/admin/export-neon", requireAdmin, async (req, res) => {
     function styleSheet(sheet, color = colors.black) {
       sheet.views = [{ state: "frozen", ySplit: 1 }];
 
-      sheet.getRow(1).height = 28;
+      sheet.getRow(1).height = 30;
       sheet.getRow(1).font = {
         bold: true,
         color: { argb: colors.white },
@@ -3312,7 +3316,7 @@ app.get("/admin/export-neon", requireAdmin, async (req, res) => {
           maxLength = Math.max(maxLength, value.length + 2);
         });
 
-        column.width = Math.min(Math.max(maxLength, 14), 42);
+        column.width = Math.min(Math.max(maxLength, 14), 46);
       });
     }
 
@@ -3404,13 +3408,17 @@ app.get("/admin/export-neon", requireAdmin, async (req, res) => {
     ];
 
     resumoSheet.addRows([
+      { indicador: "FONTE DOS DADOS", valor: "NEON POSTGRESQL" },
       { indicador: "Usuários cadastrados", valor: users.length },
       { indicador: "Palpites salvos", valor: predictions.length },
       {
         indicador: "Média de palpites por usuário",
         valor: users.length > 0 ? Number((predictions.length / users.length).toFixed(2)) : 0
       },
-      { indicador: "Exportado em", valor: new Date().toLocaleString("pt-BR") }
+      { indicador: "Exportado em", valor: new Date().toLocaleString("pt-BR") },
+      { indicador: "Regra: placar exato", valor: "35 pontos" },
+      { indicador: "Regra: vencedor ou empate correto", valor: "15 pontos" },
+      { indicador: "Regra: gols corretos por time", valor: "5 pontos por time" }
     ]);
 
     styleSheet(resumoSheet, colors.black);
@@ -3519,7 +3527,7 @@ app.get("/admin/export-neon", requireAdmin, async (req, res) => {
     autoWidth(rankingSheet);
     rankingSheet.autoFilter = { from: "A1", to: "H1" };
 
-    const fileName = "relatorio-solar-copa-2026.xlsx";
+    const fileName = "relatorio-solar-copa-neon.xlsx";
 
     res.setHeader(
       "Content-Type",
@@ -3542,8 +3550,11 @@ app.get("/admin/export-neon", requireAdmin, async (req, res) => {
       error: error.message
     });
   }
-});
+}
 
+app.get("/admin/export-neon", requireAdmin, exportNeonDashboardSpreadsheet);
+app.get("/admin/export", requireAdmin, exportNeonDashboardSpreadsheet);
+app.get("/admin/export-dashboard", requireAdmin, exportNeonDashboardSpreadsheet);
 
 
 app.listen(PORT, () => {
