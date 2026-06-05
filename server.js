@@ -3160,6 +3160,7 @@ app.get("/leaderboard-neon", async (req, res) => {
 
 
 
+
 app.get("/admin/export-neon", requireAdmin, async (req, res) => {
   try {
     const ExcelJS = require("exceljs");
@@ -3191,6 +3192,8 @@ app.get("/admin/export-neon", requireAdmin, async (req, res) => {
       SELECT
         p.id,
         u.username,
+        u.first_name,
+        u.last_name,
         u.phone,
         u.activation_code,
         u.activation_origin,
@@ -3206,65 +3209,243 @@ app.get("/admin/export-neon", requireAdmin, async (req, res) => {
       ORDER BY p.updated_at DESC, p.created_at DESC
     `);
 
+    const rankingResult = await pool.query(`
+      SELECT
+        u.id AS user_id,
+        u.username,
+        u.first_name,
+        u.last_name,
+        u.phone,
+        u.activation_code,
+        u.activation_origin,
+        p.match_id,
+        p.home_team,
+        p.away_team,
+        p.home_score AS pred_home_score,
+        p.away_score AS pred_away_score,
+        r.home_score AS result_home_score,
+        r.away_score AS result_away_score
+      FROM users u
+      LEFT JOIN predictions p ON p.user_id = u.id
+      LEFT JOIN match_results r ON r.match_id = p.match_id
+      ORDER BY u.created_at ASC, p.updated_at DESC
+    `);
+
     const workbook = new ExcelJS.Workbook();
+
     workbook.creator = "Solar Copa 2026";
     workbook.created = new Date();
 
-    function styleSheet(sheet) {
+    const colors = {
+      black: "FF050505",
+      white: "FFFFFFFF",
+      cyan: "FF21D3CA",
+      lime: "FFD6FF00",
+      red: "FFFF2D24",
+      cream: "FFFFFBEC",
+      gray: "FFF4F4F4"
+    };
+
+    function formatDate(value) {
+      if (!value) return "";
+
+      try {
+        return new Date(value).toLocaleString("pt-BR");
+      } catch (error) {
+        return "";
+      }
+    }
+
+    function styleSheet(sheet, color = colors.black) {
+      sheet.views = [{ state: "frozen", ySplit: 1 }];
+
+      sheet.getRow(1).height = 28;
       sheet.getRow(1).font = {
         bold: true,
-        color: { argb: "FFFFFFFF" }
+        color: { argb: colors.white },
+        size: 11
       };
 
       sheet.getRow(1).fill = {
         type: "pattern",
         pattern: "solid",
-        fgColor: { argb: "FF050505" }
+        fgColor: { argb: color }
       };
 
       sheet.getRow(1).alignment = {
         vertical: "middle",
-        horizontal: "center"
+        horizontal: "center",
+        wrapText: true
       };
 
-      sheet.views = [{ state: "frozen", ySplit: 1 }];
+      sheet.eachRow((row, rowNumber) => {
+        row.eachCell((cell) => {
+          cell.border = {
+            top: { style: "thin", color: { argb: "FFE0E0E0" } },
+            left: { style: "thin", color: { argb: "FFE0E0E0" } },
+            bottom: { style: "thin", color: { argb: "FFE0E0E0" } },
+            right: { style: "thin", color: { argb: "FFE0E0E0" } }
+          };
+
+          cell.alignment = {
+            vertical: "middle",
+            wrapText: true
+          };
+
+          if (rowNumber > 1) {
+            cell.fill = {
+              type: "pattern",
+              pattern: "solid",
+              fgColor: { argb: rowNumber % 2 === 0 ? colors.cream : colors.white }
+            };
+          }
+        });
+      });
     }
+
+    function autoWidth(sheet) {
+      sheet.columns.forEach((column) => {
+        let maxLength = 12;
+
+        column.eachCell({ includeEmpty: true }, (cell) => {
+          const value = cell.value ? String(cell.value) : "";
+          maxLength = Math.max(maxLength, value.length + 2);
+        });
+
+        column.width = Math.min(Math.max(maxLength, 14), 42);
+      });
+    }
+
+    const users = usersResult.rows;
+    const predictions = predictionsResult.rows;
+
+    const rankingMap = new Map();
+
+    rankingResult.rows.forEach((row) => {
+      if (!rankingMap.has(row.user_id)) {
+        rankingMap.set(row.user_id, {
+          id: row.user_id,
+          nome: row.username || [row.first_name, row.last_name].filter(Boolean).join(" "),
+          telefone: row.phone,
+          codigo: row.activation_code || "",
+          origem: row.activation_origin || "Público Instagram",
+          pontos: 0,
+          palpites: 0,
+          palpitesPontuados: 0
+        });
+      }
+
+      const user = rankingMap.get(row.user_id);
+
+      if (!row.match_id) return;
+
+      user.palpites += 1;
+
+      if (
+        row.result_home_score !== null &&
+        row.result_away_score !== null &&
+        row.result_home_score !== undefined &&
+        row.result_away_score !== undefined
+      ) {
+        user.palpitesPontuados += 1;
+      }
+
+      if (typeof calculatePredictionPoints === "function") {
+        user.pontos += calculatePredictionPoints(row);
+      }
+    });
+
+    const ranking = Array.from(rankingMap.values())
+      .sort((a, b) => {
+        if (b.pontos !== a.pontos) return b.pontos - a.pontos;
+        if (b.palpites !== a.palpites) return b.palpites - a.palpites;
+        return String(a.nome || "").localeCompare(String(b.nome || ""), "pt-BR");
+      })
+      .map((user, index) => ({
+        posicao: index + 1,
+        ...user
+      }));
+
+    const origemMap = new Map();
+
+    users.forEach((user) => {
+      const origem = user.activation_origin || "Público Instagram";
+
+      if (!origemMap.has(origem)) {
+        origemMap.set(origem, {
+          origem,
+          usuarios: 0,
+          palpites: 0
+        });
+      }
+
+      origemMap.get(origem).usuarios += 1;
+    });
+
+    predictions.forEach((prediction) => {
+      const origem = prediction.activation_origin || "Público Instagram";
+
+      if (!origemMap.has(origem)) {
+        origemMap.set(origem, {
+          origem,
+          usuarios: 0,
+          palpites: 0
+        });
+      }
+
+      origemMap.get(origem).palpites += 1;
+    });
 
     const resumoSheet = workbook.addWorksheet("Resumo");
 
     resumoSheet.columns = [
-      { header: "Indicador", key: "indicador", width: 34 },
-      { header: "Valor", key: "valor", width: 24 }
+      { header: "Indicador", key: "indicador" },
+      { header: "Valor", key: "valor" }
     ];
 
     resumoSheet.addRows([
-      { indicador: "Usuários cadastrados", valor: usersResult.rows.length },
-      { indicador: "Palpites salvos", valor: predictionsResult.rows.length },
+      { indicador: "Usuários cadastrados", valor: users.length },
+      { indicador: "Palpites salvos", valor: predictions.length },
       {
         indicador: "Média de palpites por usuário",
-        valor: usersResult.rows.length > 0
-          ? Number((predictionsResult.rows.length / usersResult.rows.length).toFixed(2))
-          : 0
+        valor: users.length > 0 ? Number((predictions.length / users.length).toFixed(2)) : 0
       },
       { indicador: "Exportado em", valor: new Date().toLocaleString("pt-BR") }
     ]);
 
-    styleSheet(resumoSheet);
+    styleSheet(resumoSheet, colors.black);
+    autoWidth(resumoSheet);
+
+    const origemSheet = workbook.addWorksheet("Por origem");
+
+    origemSheet.columns = [
+      { header: "Origem / Código", key: "origem" },
+      { header: "Usuários", key: "usuarios" },
+      { header: "Palpites", key: "palpites" }
+    ];
+
+    Array.from(origemMap.values())
+      .sort((a, b) => b.usuarios - a.usuarios)
+      .forEach((item) => origemSheet.addRow(item));
+
+    styleSheet(origemSheet, colors.cyan);
+    autoWidth(origemSheet);
+    origemSheet.autoFilter = { from: "A1", to: "C1" };
 
     const usersSheet = workbook.addWorksheet("Usuários");
 
     usersSheet.columns = [
-      { header: "ID", key: "id", width: 10 },
-      { header: "Nome", key: "nome", width: 32 },
-      { header: "Primeiro nome", key: "firstName", width: 20 },
-      { header: "Sobrenome", key: "lastName", width: 24 },
-      { header: "Telefone", key: "phone", width: 20 },
-      { header: "Código de ativação", key: "activationCode", width: 24 },
-      { header: "Origem", key: "activationOrigin", width: 28 },
-      { header: "Data de cadastro", key: "createdAt", width: 24 }
+      { header: "ID", key: "id" },
+      { header: "Nome completo", key: "nome" },
+      { header: "Primeiro nome", key: "firstName" },
+      { header: "Sobrenome", key: "lastName" },
+      { header: "Telefone", key: "phone" },
+      { header: "Código de ativação", key: "activationCode" },
+      { header: "Origem", key: "activationOrigin" },
+      { header: "Data de cadastro", key: "createdAt" }
     ];
 
-    usersResult.rows.forEach((user) => {
+    users.forEach((user) => {
       usersSheet.addRow({
         id: user.id,
         nome: user.username,
@@ -3273,33 +3454,32 @@ app.get("/admin/export-neon", requireAdmin, async (req, res) => {
         phone: user.phone,
         activationCode: user.activation_code || "",
         activationOrigin: user.activation_origin || "Público Instagram",
-        createdAt: user.created_at
-          ? new Date(user.created_at).toLocaleString("pt-BR")
-          : ""
+        createdAt: formatDate(user.created_at)
       });
     });
 
-    styleSheet(usersSheet);
+    styleSheet(usersSheet, colors.lime);
+    autoWidth(usersSheet);
     usersSheet.autoFilter = { from: "A1", to: "H1" };
 
     const predictionsSheet = workbook.addWorksheet("Palpites");
 
     predictionsSheet.columns = [
-      { header: "ID", key: "id", width: 10 },
-      { header: "Usuário", key: "user", width: 32 },
-      { header: "Telefone", key: "phone", width: 20 },
-      { header: "Código", key: "code", width: 20 },
-      { header: "Origem", key: "origin", width: 24 },
-      { header: "Jogo", key: "matchId", width: 14 },
-      { header: "Mandante", key: "homeTeam", width: 22 },
-      { header: "Visitante", key: "awayTeam", width: 22 },
-      { header: "Placar mandante", key: "homeScore", width: 18 },
-      { header: "Placar visitante", key: "awayScore", width: 18 },
-      { header: "Criado em", key: "createdAt", width: 24 },
-      { header: "Atualizado em", key: "updatedAt", width: 24 }
+      { header: "ID", key: "id" },
+      { header: "Usuário", key: "user" },
+      { header: "Telefone", key: "phone" },
+      { header: "Código", key: "code" },
+      { header: "Origem", key: "origin" },
+      { header: "Jogo", key: "matchId" },
+      { header: "Mandante", key: "homeTeam" },
+      { header: "Visitante", key: "awayTeam" },
+      { header: "Placar mandante", key: "homeScore" },
+      { header: "Placar visitante", key: "awayScore" },
+      { header: "Criado em", key: "createdAt" },
+      { header: "Atualizado em", key: "updatedAt" }
     ];
 
-    predictionsResult.rows.forEach((prediction) => {
+    predictions.forEach((prediction) => {
       predictionsSheet.addRow({
         id: prediction.id,
         user: prediction.username,
@@ -3311,19 +3491,35 @@ app.get("/admin/export-neon", requireAdmin, async (req, res) => {
         awayTeam: prediction.away_team,
         homeScore: prediction.home_score,
         awayScore: prediction.away_score,
-        createdAt: prediction.created_at
-          ? new Date(prediction.created_at).toLocaleString("pt-BR")
-          : "",
-        updatedAt: prediction.updated_at
-          ? new Date(prediction.updated_at).toLocaleString("pt-BR")
-          : ""
+        createdAt: formatDate(prediction.created_at),
+        updatedAt: formatDate(prediction.updated_at)
       });
     });
 
-    styleSheet(predictionsSheet);
+    styleSheet(predictionsSheet, colors.red);
+    autoWidth(predictionsSheet);
     predictionsSheet.autoFilter = { from: "A1", to: "L1" };
 
-    const fileName = "solar-copa-dashboard-neon.xlsx";
+    const rankingSheet = workbook.addWorksheet("Ranking");
+
+    rankingSheet.columns = [
+      { header: "Posição", key: "posicao" },
+      { header: "Nome", key: "nome" },
+      { header: "Telefone", key: "telefone" },
+      { header: "Código", key: "codigo" },
+      { header: "Origem", key: "origem" },
+      { header: "Pontos", key: "pontos" },
+      { header: "Palpites", key: "palpites" },
+      { header: "Palpites pontuados", key: "palpitesPontuados" }
+    ];
+
+    ranking.forEach((user) => rankingSheet.addRow(user));
+
+    styleSheet(rankingSheet, colors.black);
+    autoWidth(rankingSheet);
+    rankingSheet.autoFilter = { from: "A1", to: "H1" };
+
+    const fileName = "relatorio-solar-copa-2026.xlsx";
 
     res.setHeader(
       "Content-Type",
@@ -3347,6 +3543,7 @@ app.get("/admin/export-neon", requireAdmin, async (req, res) => {
     });
   }
 });
+
 
 
 app.listen(PORT, () => {
