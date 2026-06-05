@@ -1499,11 +1499,13 @@ function getPredictionWinner(home, away) {
 
 function calculatePredictionPoints(prediction) {
   /*
-    Regra de pontuação:
-    - Todo palpite salvo vale 1 ponto de participação.
-    - Placar exato vale +35 pontos.
-    - Acertou vencedor ou empate vale +15 pontos.
-    - Acertou gols de cada time vale +5 pontos por time.
+    Regra oficial do Bolão Solar:
+
+    +1 ponto por palpite realizado
+    +3 pontos se acertar o vencedor ou empate
+    +2 pontos de bônus se acertar o placar exato
+
+    Máximo por jogo: 6 pontos.
   */
 
   let points = 1;
@@ -1522,23 +1524,18 @@ function calculatePredictionPoints(prediction) {
   const realHome = Number(prediction.result_home_score);
   const realAway = Number(prediction.result_away_score);
 
-  if (predictedHome === realHome && predictedAway === realAway) {
-    return points + 35;
+  const predictedResult = Math.sign(predictedHome - predictedAway);
+  const realResult = Math.sign(realHome - realAway);
+
+  const exactScore = predictedHome === realHome && predictedAway === realAway;
+  const correctWinnerOrDraw = predictedResult === realResult;
+
+  if (correctWinnerOrDraw) {
+    points += 3;
   }
 
-  const predictedWinner = getPredictionWinner(predictedHome, predictedAway);
-  const realWinner = getPredictionWinner(realHome, realAway);
-
-  if (predictedWinner === realWinner) {
-    points += 15;
-  }
-
-  if (predictedHome === realHome) {
-    points += 5;
-  }
-
-  if (predictedAway === realAway) {
-    points += 5;
+  if (exactScore) {
+    points += 2;
   }
 
   return points;
@@ -1935,9 +1932,9 @@ app.get("/admin/export-users", requireAdmin, (req, res) => {
             { label: "Total de jogos cadastrados", value: totalMatches },
             { label: "Jogos com resultado lançado", value: totalResults },
             { label: "Média de palpites por usuário", value: totalUsers > 0 ? Number((totalPredictions / totalUsers).toFixed(2)) : 0 },
-            { label: "Regra: placar exato", value: "35 pontos" },
-            { label: "Regra: vencedor ou empate correto", value: "15 pontos" },
-            { label: "Regra: gols corretos por time", value: "5 pontos por time" }
+            { label: "Regra: placar exato", value: "2 pontos de bônus" },
+            { label: "Regra: vencedor ou empate correto", value: "3 pontos" },
+            { label: "Regra: gols corretos por time", value: "pontuação máxima 6 pontos" }
           ]);
 
           styleSheet(summarySheet);
@@ -3416,9 +3413,9 @@ async function exportNeonDashboardSpreadsheet(req, res) {
         valor: users.length > 0 ? Number((predictions.length / users.length).toFixed(2)) : 0
       },
       { indicador: "Exportado em", valor: new Date().toLocaleString("pt-BR") },
-      { indicador: "Regra: placar exato", valor: "35 pontos" },
-      { indicador: "Regra: vencedor ou empate correto", valor: "15 pontos" },
-      { indicador: "Regra: gols corretos por time", valor: "5 pontos por time" }
+      { indicador: "Regra: placar exato", valor: "2 pontos de bônus" },
+      { indicador: "Regra: vencedor ou empate correto", valor: "3 pontos" },
+      { indicador: "Regra: gols corretos por time", valor: "pontuação máxima 6 pontos" }
     ]);
 
     styleSheet(resumoSheet, colors.black);

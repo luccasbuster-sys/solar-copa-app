@@ -496,7 +496,7 @@
           <div class="card" style="margin-bottom: 18px;">
             <h2>Classificação completa</h2>
             <p>
-              A pontuação considera: placar exato 35 pontos, vencedor ou empate correto 15 pontos e gols corretos de cada time 5 pontos.
+              A pontuação considera: placar exato +2 pontos de bônus, vencedor ou empate correto +3 pontos e pontuação máxima 6 pontos.
             </p>
           </div>
 
@@ -1683,6 +1683,95 @@
     });
 
     window.loadNeonRankingToAdmin = loadNeonRankingToAdmin;
+  })();
+</script>
+
+
+<script id="admin-export-neon-button">
+  (() => {
+    function normalizeText(value) {
+      return String(value || "")
+        .normalize("NFD")
+        .replace(/[\u0300-\u036f]/g, "")
+        .toLowerCase()
+        .trim();
+    }
+
+    function createExportButton() {
+      if (document.querySelector("#exportNeonSpreadsheetButton")) return;
+
+      const button = document.createElement("a");
+
+      button.id = "exportNeonSpreadsheetButton";
+      button.href = "/admin/export-neon";
+      button.textContent = "Baixar planilha completa";
+      button.setAttribute("download", "");
+      button.style.cssText = [
+        "display:inline-flex",
+        "align-items:center",
+        "justify-content:center",
+        "gap:8px",
+        "margin:12px 8px 12px 0",
+        "padding:12px 16px",
+        "border:3px solid #050505",
+        "border-radius:999px",
+        "background:#d6ff00",
+        "color:#050505",
+        "box-shadow:3px 3px 0 #050505",
+        "font-size:12px",
+        "font-weight:1000",
+        "text-transform:uppercase",
+        "text-decoration:none",
+        "cursor:pointer"
+      ].join(";");
+
+      const dashboardTitle = Array.from(document.querySelectorAll("h1, h2, h3"))
+        .find((title) => {
+          const text = normalizeText(title.textContent);
+          return text.includes("dashboard") || text.includes("admin");
+        });
+
+      if (dashboardTitle) {
+        dashboardTitle.insertAdjacentElement("afterend", button);
+      } else {
+        document.body.prepend(button);
+      }
+    }
+
+    function patchOldExportButtons() {
+      Array.from(document.querySelectorAll("a, button")).forEach((element) => {
+        const text = normalizeText(element.textContent);
+
+        if (
+          text.includes("baixar planilha") ||
+          text.includes("exportar") ||
+          text.includes("excel")
+        ) {
+          if (element.id === "exportNeonSpreadsheetButton") return;
+
+          if (element.tagName === "A") {
+            element.href = "/admin/export-neon";
+          } else {
+            element.addEventListener("click", (event) => {
+              event.preventDefault();
+              window.location.href = "/admin/export-neon";
+            });
+          }
+        }
+      });
+    }
+
+    function start() {
+      createExportButton();
+      patchOldExportButtons();
+    }
+
+    document.addEventListener("DOMContentLoaded", () => {
+      setTimeout(start, 500);
+      setTimeout(start, 1500);
+    });
+
+    window.addEventListener("load", start);
   })();
 </script>
 
