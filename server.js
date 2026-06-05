@@ -3159,6 +3159,196 @@ app.get("/leaderboard-neon", async (req, res) => {
 });
 
 
+
+app.get("/admin/export-neon", requireAdmin, async (req, res) => {
+  try {
+    const ExcelJS = require("exceljs");
+    const neon = require("./neon-db");
+    const pool = neon.getNeonPool();
+
+    if (!pool) {
+      return res.status(500).json({
+        success: false,
+        message: "Neon não configurado."
+      });
+    }
+
+    const usersResult = await pool.query(`
+      SELECT
+        id,
+        username,
+        first_name,
+        last_name,
+        phone,
+        activation_code,
+        activation_origin,
+        created_at
+      FROM users
+      ORDER BY created_at DESC
+    `);
+
+    const predictionsResult = await pool.query(`
+      SELECT
+        p.id,
+        u.username,
+        u.phone,
+        u.activation_code,
+        u.activation_origin,
+        p.match_id,
+        p.home_team,
+        p.away_team,
+        p.home_score,
+        p.away_score,
+        p.created_at,
+        p.updated_at
+      FROM predictions p
+      JOIN users u ON u.id = p.user_id
+      ORDER BY p.updated_at DESC, p.created_at DESC
+    `);
+
+    const workbook = new ExcelJS.Workbook();
+    workbook.creator = "Solar Copa 2026";
+    workbook.created = new Date();
+
+    function styleSheet(sheet) {
+      sheet.getRow(1).font = {
+        bold: true,
+        color: { argb: "FFFFFFFF" }
+      };
+
+      sheet.getRow(1).fill = {
+        type: "pattern",
+        pattern: "solid",
+        fgColor: { argb: "FF050505" }
+      };
+
+      sheet.getRow(1).alignment = {
+        vertical: "middle",
+        horizontal: "center"
+      };
+
+      sheet.views = [{ state: "frozen", ySplit: 1 }];
+    }
+
+    const resumoSheet = workbook.addWorksheet("Resumo");
+
+    resumoSheet.columns = [
+      { header: "Indicador", key: "indicador", width: 34 },
+      { header: "Valor", key: "valor", width: 24 }
+    ];
+
+    resumoSheet.addRows([
+      { indicador: "Usuários cadastrados", valor: usersResult.rows.length },
+      { indicador: "Palpites salvos", valor: predictionsResult.rows.length },
+      {
+        indicador: "Média de palpites por usuário",
+        valor: usersResult.rows.length > 0
+          ? Number((predictionsResult.rows.length / usersResult.rows.length).toFixed(2))
+          : 0
+      },
+      { indicador: "Exportado em", valor: new Date().toLocaleString("pt-BR") }
+    ]);
+
+    styleSheet(resumoSheet);
+
+    const usersSheet = workbook.addWorksheet("Usuários");
+
+    usersSheet.columns = [
+      { header: "ID", key: "id", width: 10 },
+      { header: "Nome", key: "nome", width: 32 },
+      { header: "Primeiro nome", key: "firstName", width: 20 },
+      { header: "Sobrenome", key: "lastName", width: 24 },
+      { header: "Telefone", key: "phone", width: 20 },
+      { header: "Código de ativação", key: "activationCode", width: 24 },
+      { header: "Origem", key: "activationOrigin", width: 28 },
+      { header: "Data de cadastro", key: "createdAt", width: 24 }
+    ];
+
+    usersResult.rows.forEach((user) => {
+      usersSheet.addRow({
+        id: user.id,
+        nome: user.username,
+        firstName: user.first_name,
+        lastName: user.last_name,
+        phone: user.phone,
+        activationCode: user.activation_code || "",
+        activationOrigin: user.activation_origin || "Público Instagram",
+        createdAt: user.created_at
+          ? new Date(user.created_at).toLocaleString("pt-BR")
+          : ""
+      });
+    });
+
+    styleSheet(usersSheet);
+    usersSheet.autoFilter = { from: "A1", to: "H1" };
+
+    const predictionsSheet = workbook.addWorksheet("Palpites");
+
+    predictionsSheet.columns = [
+      { header: "ID", key: "id", width: 10 },
+      { header: "Usuário", key: "user", width: 32 },
+      { header: "Telefone", key: "phone", width: 20 },
+      { header: "Código", key: "code", width: 20 },
+      { header: "Origem", key: "origin", width: 24 },
+      { header: "Jogo", key: "matchId", width: 14 },
+      { header: "Mandante", key: "homeTeam", width: 22 },
+      { header: "Visitante", key: "awayTeam", width: 22 },
+      { header: "Placar mandante", key: "homeScore", width: 18 },
+      { header: "Placar visitante", key: "awayScore", width: 18 },
+      { header: "Criado em", key: "createdAt", width: 24 },
+      { header: "Atualizado em", key: "updatedAt", width: 24 }
+    ];
+
+    predictionsResult.rows.forEach((prediction) => {
+      predictionsSheet.addRow({
+        id: prediction.id,
+        user: prediction.username,
+        phone: prediction.phone,
+        code: prediction.activation_code || "",
+        origin: prediction.activation_origin || "Público Instagram",
+        matchId: prediction.match_id,
+        homeTeam: prediction.home_team,
+        awayTeam: prediction.away_team,
+        homeScore: prediction.home_score,
+        awayScore: prediction.away_score,
+        createdAt: prediction.created_at
+          ? new Date(prediction.created_at).toLocaleString("pt-BR")
+          : "",
+        updatedAt: prediction.updated_at
+          ? new Date(prediction.updated_at).toLocaleString("pt-BR")
+          : ""
+      });
+    });
+
+    styleSheet(predictionsSheet);
+    predictionsSheet.autoFilter = { from: "A1", to: "L1" };
+
+    const fileName = "solar-copa-dashboard-neon.xlsx";
+
+    res.setHeader(
+      "Content-Type",
+      "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+    );
+
+    res.setHeader(
+      "Content-Disposition",
+      `attachment; filename="${fileName}"`
+    );
+
+    await workbook.xlsx.write(res);
+    res.end();
+  } catch (error) {
+    console.error("Erro ao exportar planilha Neon:", error.message);
+
+    return res.status(500).json({
+      success: false,
+      message: "Erro ao exportar planilha Neon.",
+      error: error.message
+    });
+  }
+});
+
+
 app.listen(PORT, () => {
   console.log(`Servidor rodando em http://localhost:${PORT}`);
 });
