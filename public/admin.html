@@ -2257,8 +2257,8 @@
       if (!confirmed) return;
 
       try {
-        const response = await fetch("/admin/neon-users/" + encodeURIComponent(userId), {
-          method: "DELETE",
+        const response = await fetch("/admin/neon-users/" + encodeURIComponent(userId) + "/delete", {
+          method: "POST",
           credentials: "include"
         });
 
