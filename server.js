@@ -3554,6 +3554,60 @@ app.get("/admin/export", requireAdmin, exportNeonDashboardSpreadsheet);
 app.get("/admin/export-dashboard", requireAdmin, exportNeonDashboardSpreadsheet);
 
 
+
+app.delete("/admin/neon-users/:id", requireAdmin, async (req, res) => {
+  try {
+    const neon = require("./neon-db");
+    const pool = neon.getNeonPool();
+
+    if (!pool) {
+      return res.status(500).json({
+        success: false,
+        message: "Neon não configurado."
+      });
+    }
+
+    const userId = Number(req.params.id);
+
+    if (!Number.isInteger(userId) || userId <= 0) {
+      return res.status(400).json({
+        success: false,
+        message: "Usuário inválido."
+      });
+    }
+
+    const userResult = await pool.query(
+      "SELECT id, username, phone FROM users WHERE id = $1 LIMIT 1",
+      [userId]
+    );
+
+    if (!userResult.rows.length) {
+      return res.status(404).json({
+        success: false,
+        message: "Usuário não encontrado."
+      });
+    }
+
+    await pool.query("DELETE FROM predictions WHERE user_id = $1", [userId]);
+    await pool.query("DELETE FROM users WHERE id = $1", [userId]);
+
+    return res.json({
+      success: true,
+      message: "Usuário excluído com sucesso.",
+      user: userResult.rows[0]
+    });
+  } catch (error) {
+    console.error("Erro ao excluir usuário do Neon:", error.message);
+
+    return res.status(500).json({
+      success: false,
+      message: "Erro ao excluir usuário.",
+      error: error.message
+    });
+  }
+});
+
+
 app.listen(PORT, () => {
   console.log(`Servidor rodando em http://localhost:${PORT}`);
 });

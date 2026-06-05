@@ -1775,5 +1775,556 @@
   })();
 </script>
 
+
+<style id="fix-delete-user-button-admin-style">
+  /*
+    Ajuste visual apenas no dashboard:
+    mantém a coluna/botão de excluir usuário fixo na lateral direita da tabela.
+    Não altera banco, usuários, Neon, cadastro, login ou palpites.
+  */
+
+  .admin-users-table-wrap,
+  .users-table-wrap,
+  .admin-table-wrap,
+  .table-wrapper,
+  .dashboard-table-wrapper {
+    overflow-x: auto !important;
+    position: relative !important;
+  }
+
+  table th:last-child,
+  table td:last-child {
+    position: sticky !important;
+    right: 0 !important;
+    z-index: 4 !important;
+    background: #fffdf2 !important;
+    box-shadow: -4px 0 0 rgba(5, 5, 5, .12) !important;
+  }
+
+  table th:last-child {
+    z-index: 6 !important;
+    background: #050505 !important;
+    color: #ffffff !important;
+  }
+
+  table td:last-child button,
+  table td:last-child a,
+  .delete-user-button,
+  [data-delete-user],
+  [data-action="delete-user"] {
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    min-width: 112px !important;
+    min-height: 36px !important;
+    padding: 9px 12px !important;
+    border: 3px solid #050505 !important;
+    border-radius: 999px !important;
+    background: #ff2d24 !important;
+    color: #ffffff !important;
+    box-shadow: 3px 3px 0 #050505 !important;
+    font-size: 10px !important;
+    font-weight: 1000 !important;
+    text-transform: uppercase !important;
+    white-space: nowrap !important;
+    cursor: pointer !important;
+  }
+
+  table td:last-child button:hover,
+  table td:last-child a:hover,
+  .delete-user-button:hover,
+  [data-delete-user]:hover,
+  [data-action="delete-user"]:hover {
+    transform: translate(-1px, -1px) !important;
+    box-shadow: 4px 4px 0 #050505 !important;
+  }
+
+  @media (max-width: 760px) {
+    table th:last-child,
+    table td:last-child {
+      min-width: 128px !important;
+      width: 128px !important;
+    }
+
+    table td:last-child button,
+    table td:last-child a,
+    .delete-user-button,
+    [data-delete-user],
+    [data-action="delete-user"] {
+      min-width: 96px !important;
+      min-height: 34px !important;
+      padding: 8px 10px !important;
+      font-size: 9px !important;
+      box-shadow: 2px 2px 0 #050505 !important;
+    }
+  }
+</style>
+
+
+<script id="fix-delete-user-button-admin-script">
+  (() => {
+    function normalizeText(value) {
+      return String(value || "")
+        .normalize("NFD")
+        .replace(/[\u0300-\u036f]/g, "")
+        .toLowerCase()
+        .trim();
+    }
+
+    function markDeleteButtons() {
+      const buttons = Array.from(document.querySelectorAll("button, a"));
+
+      buttons.forEach((button) => {
+        const text = normalizeText(button.textContent);
+
+        if (
+          text.includes("excluir") ||
+          text.includes("remover") ||
+          text.includes("deletar")
+        ) {
+          button.classList.add("delete-user-button");
+
+          const cell = button.closest("td");
+          if (cell) {
+            cell.dataset.fixedDeleteCell = "1";
+          }
+        }
+      });
+    }
+
+    function ensureActionsHeader() {
+      const tables = Array.from(document.querySelectorAll("table"));
+
+      tables.forEach((table) => {
+        const headerCells = table.querySelectorAll("thead th");
+
+        if (!headerCells.length) return;
+
+        const lastHeader = headerCells[headerCells.length - 1];
+        const text = normalizeText(lastHeader.textContent);
+
+        if (
+          text.includes("acao") ||
+          text.includes("ação") ||
+          text.includes("excluir") ||
+          text.includes("remover") ||
+          text.includes("deletar")
+        ) {
+          lastHeader.textContent = "Ações";
+          lastHeader.dataset.fixedDeleteHeader = "1";
+        }
+      });
+    }
+
+    function wrapTablesIfNeeded() {
+      const tables = Array.from(document.querySelectorAll("table"));
+
+      tables.forEach((table) => {
+        if (table.closest(".admin-fixed-delete-table-wrap")) return;
+
+        const tableText = normalizeText(table.textContent);
+
+        if (
+          !tableText.includes("excluir") &&
+          !tableText.includes("remover") &&
+          !tableText.includes("deletar")
+        ) {
+          return;
+        }
+
+        const wrapper = document.createElement("div");
+        wrapper.className = "admin-fixed-delete-table-wrap";
+        wrapper.style.cssText = [
+          "width:100%",
+          "overflow-x:auto",
+          "position:relative",
+          "padding-bottom:6px"
+        ].join(";");
+
+        table.parentNode.insertBefore(wrapper, table);
+        wrapper.appendChild(table);
+      });
+    }
+
+    function applyFixedDeleteButton() {
+      markDeleteButtons();
+      ensureActionsHeader();
+      wrapTablesIfNeeded();
+    }
+
+    document.addEventListener("DOMContentLoaded", () => {
+      applyFixedDeleteButton();
+      setInterval(applyFixedDeleteButton, 1500);
+    });
+
+    window.addEventListener("load", applyFixedDeleteButton);
+
+    window.applyFixedDeleteButton = applyFixedDeleteButton;
+  })();
+</script>
+
+
+<style id="admin-fixed-user-manager-style">
+  #adminFixedUserManagerButton {
+    position: fixed !important;
+    right: 18px !important;
+    bottom: 22px !important;
+    z-index: 9998 !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    min-height: 46px !important;
+    padding: 12px 18px !important;
+    border: 3px solid #050505 !important;
+    border-radius: 999px !important;
+    background: #ff2d24 !important;
+    color: #ffffff !important;
+    box-shadow: 4px 4px 0 #050505 !important;
+    font-size: 11px !important;
+    font-weight: 1000 !important;
+    text-transform: uppercase !important;
+    cursor: pointer !important;
+  }
+
+  #adminFixedUserManagerOverlay {
+    position: fixed !important;
+    inset: 0 !important;
+    z-index: 99999 !important;
+    display: none !important;
+    align-items: center !important;
+    justify-content: center !important;
+    padding: 18px !important;
+    background: rgba(5, 5, 5, .72) !important;
+    backdrop-filter: blur(8px) !important;
+  }
+
+  #adminFixedUserManagerOverlay.is-open {
+    display: flex !important;
+  }
+
+  .admin-fixed-user-manager-modal {
+    width: min(980px, 100%) !important;
+    max-height: 86vh !important;
+    overflow: hidden !important;
+    border: 4px solid #050505 !important;
+    border-radius: 26px !important;
+    background: #fffdf2 !important;
+    box-shadow: 8px 8px 0 #050505 !important;
+  }
+
+  .admin-fixed-user-manager-header {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    gap: 12px !important;
+    padding: 16px !important;
+    border-bottom: 3px solid #050505 !important;
+    background: #21d3ca !important;
+  }
+
+  .admin-fixed-user-manager-header h2 {
+    margin: 0 !important;
+    font-size: clamp(22px, 4vw, 38px) !important;
+    font-weight: 1000 !important;
+    line-height: .9 !important;
+    text-transform: uppercase !important;
+  }
+
+  #adminFixedUserManagerClose {
+    width: 40px !important;
+    height: 40px !important;
+    border: 3px solid #050505 !important;
+    border-radius: 999px !important;
+    background: #ff2d24 !important;
+    color: #ffffff !important;
+    box-shadow: 3px 3px 0 #050505 !important;
+    font-size: 18px !important;
+    font-weight: 1000 !important;
+    cursor: pointer !important;
+  }
+
+  .admin-fixed-user-manager-body {
+    padding: 16px !important;
+    max-height: calc(86vh - 86px) !important;
+    overflow: auto !important;
+  }
+
+  #adminFixedUserSearch {
+    width: 100% !important;
+    min-height: 44px !important;
+    margin-bottom: 12px !important;
+    padding: 10px 14px !important;
+    border: 3px solid #050505 !important;
+    border-radius: 999px !important;
+    font-size: 13px !important;
+    font-weight: 900 !important;
+    outline: none !important;
+  }
+
+  .admin-fixed-user-row {
+    display: grid !important;
+    grid-template-columns: 1fr auto !important;
+    align-items: center !important;
+    gap: 12px !important;
+    padding: 12px !important;
+    margin-bottom: 10px !important;
+    border: 3px solid #050505 !important;
+    border-radius: 18px !important;
+    background: #ffffff !important;
+    box-shadow: 3px 3px 0 #050505 !important;
+  }
+
+  .admin-fixed-user-row strong {
+    display: block !important;
+    font-size: 13px !important;
+    font-weight: 1000 !important;
+    text-transform: uppercase !important;
+  }
+
+  .admin-fixed-user-row small {
+    display: block !important;
+    margin-top: 3px !important;
+    font-size: 10px !important;
+    font-weight: 800 !important;
+    opacity: .72 !important;
+  }
+
+  .admin-fixed-delete-user-button {
+    min-width: 104px !important;
+    min-height: 38px !important;
+    border: 3px solid #050505 !important;
+    border-radius: 999px !important;
+    background: #ff2d24 !important;
+    color: #ffffff !important;
+    box-shadow: 3px 3px 0 #050505 !important;
+    font-size: 10px !important;
+    font-weight: 1000 !important;
+    text-transform: uppercase !important;
+    cursor: pointer !important;
+  }
+
+  @media (max-width: 760px) {
+    #adminFixedUserManagerButton {
+      right: 12px !important;
+      bottom: 14px !important;
+      min-height: 42px !important;
+      padding: 10px 14px !important;
+      font-size: 10px !important;
+    }
+
+    #adminFixedUserManagerOverlay {
+      padding: 10px !important;
+    }
+
+    .admin-fixed-user-row {
+      grid-template-columns: 1fr !important;
+    }
+
+    .admin-fixed-delete-user-button {
+      width: 100% !important;
+    }
+  }
+</style>
+
+
+<button id="adminFixedUserManagerButton" type="button">
+  Excluir usuário
+</button>
+
+<div id="adminFixedUserManagerOverlay" aria-hidden="true">
+  <div class="admin-fixed-user-manager-modal" role="dialog" aria-modal="true">
+    <div class="admin-fixed-user-manager-header">
+      <h2>Gerenciar usuários</h2>
+      <button id="adminFixedUserManagerClose" type="button">×</button>
+    </div>
+
+    <div class="admin-fixed-user-manager-body">
+      <input id="adminFixedUserSearch" type="search" placeholder="Buscar por nome ou telefone..." />
+      <div id="adminFixedUserList">Carregando usuários...</div>
+    </div>
+  </div>
+</div>
+
+
+<script id="admin-fixed-user-manager-script">
+  (() => {
+    let cachedUsers = [];
+
+    function normalizeText(value) {
+      return String(value || "")
+        .normalize("NFD")
+        .replace(/[\u0300-\u036f]/g, "")
+        .toLowerCase()
+        .trim();
+    }
+
+    function openUserManager() {
+      const overlay = document.querySelector("#adminFixedUserManagerOverlay");
+      if (!overlay) return;
+
+      overlay.classList.add("is-open");
+      overlay.setAttribute("aria-hidden", "false");
+      loadUsers();
+    }
+
+    function closeUserManager() {
+      const overlay = document.querySelector("#adminFixedUserManagerOverlay");
+      if (!overlay) return;
+
+      overlay.classList.remove("is-open");
+      overlay.setAttribute("aria-hidden", "true");
+    }
+
+    function renderUsers() {
+      const list = document.querySelector("#adminFixedUserList");
+      const search = document.querySelector("#adminFixedUserSearch");
+
+      if (!list) return;
+
+      const query = normalizeText(search && search.value);
+      const users = cachedUsers.filter((user) => {
+        const text = normalizeText([
+          user.username,
+          user.firstName,
+          user.lastName,
+          user.phone,
+          user.activationCode,
+          user.activationOrigin
+        ].join(" "));
+
+        return !query || text.includes(query);
+      });
+
+      if (!users.length) {
+        list.innerHTML = "<strong>Nenhum usuário encontrado.</strong>";
+        return;
+      }
+
+      list.innerHTML = users.map((user) => {
+        const name = user.username || [user.firstName, user.lastName].filter(Boolean).join(" ") || "Usuário";
+        const phone = user.phone || "-";
+        const origin = user.activationOrigin || "Público Instagram";
+
+        return `
+          <div class="admin-fixed-user-row" data-user-row="${user.id}">
+            <div>
+              <strong>${name}</strong>
+              <small>Telefone: ${phone} · Origem: ${origin} · Palpites: ${Number(user.predictionsCount || 0)}</small>
+            </div>
+            <button class="admin-fixed-delete-user-button" type="button" data-delete-user-id="${user.id}" data-delete-user-name="${name}">
+              Excluir
+            </button>
+          </div>
+        `;
+      }).join("");
+    }
+
+    async function loadUsers() {
+      const list = document.querySelector("#adminFixedUserList");
+
+      if (list) {
+        list.innerHTML = "Carregando usuários...";
+      }
+
+      try {
+        const response = await fetch("/admin/neon-users", {
+          credentials: "include",
+          cache: "no-store"
+        });
+
+        const data = await response.json();
+
+        if (!response.ok || !data.success) {
+          throw new Error(data.message || "Erro ao carregar usuários.");
+        }
+
+        cachedUsers = Array.isArray(data.users) ? data.users : [];
+        renderUsers();
+      } catch (error) {
+        if (list) {
+          list.innerHTML = "Erro ao carregar usuários.";
+        }
+
+        console.warn("Erro ao carregar usuários:", error);
+      }
+    }
+
+    async function deleteUser(userId, userName) {
+      const confirmed = confirm(
+        "Tem certeza que deseja excluir o usuário: " + userName + "?\n\nEssa ação também remove os palpites desse usuário."
+      );
+
+      if (!confirmed) return;
+
+      try {
+        const response = await fetch("/admin/neon-users/" + encodeURIComponent(userId), {
+          method: "DELETE",
+          credentials: "include"
+        });
+
+        const data = await response.json();
+
+        if (!response.ok || !data.success) {
+          throw new Error(data.message || "Erro ao excluir usuário.");
+        }
+
+        cachedUsers = cachedUsers.filter((user) => String(user.id) !== String(userId));
+        renderUsers();
+
+        if (typeof loadNeonUsersToAdmin === "function") loadNeonUsersToAdmin();
+        if (typeof loadNeonSummaryCards === "function") loadNeonSummaryCards();
+        if (typeof loadNeonRankingToAdmin === "function") loadNeonRankingToAdmin();
+
+        alert("Usuário excluído com sucesso.");
+      } catch (error) {
+        alert(error.message || "Erro ao excluir usuário.");
+      }
+    }
+
+    function bind() {
+      const openButton = document.querySelector("#adminFixedUserManagerButton");
+      const closeButton = document.querySelector("#adminFixedUserManagerClose");
+      const overlay = document.querySelector("#adminFixedUserManagerOverlay");
+      const search = document.querySelector("#adminFixedUserSearch");
+
+      if (openButton && !openButton.dataset.bound) {
+        openButton.dataset.bound = "1";
+        openButton.addEventListener("click", openUserManager);
+      }
+
+      if (closeButton && !closeButton.dataset.bound) {
+        closeButton.dataset.bound = "1";
+        closeButton.addEventListener("click", closeUserManager);
+      }
+
+      if (overlay && !overlay.dataset.bound) {
+        overlay.dataset.bound = "1";
+        overlay.addEventListener("click", (event) => {
+          if (event.target === overlay) closeUserManager();
+        });
+      }
+
+      if (search && !search.dataset.bound) {
+        search.dataset.bound = "1";
+        search.addEventListener("input", renderUsers);
+      }
+    }
+
+    document.addEventListener("click", (event) => {
+      const button = event.target.closest("[data-delete-user-id]");
+      if (!button) return;
+
+      deleteUser(button.dataset.deleteUserId, button.dataset.deleteUserName || "Usuário");
+    });
+
+    document.addEventListener("keydown", (event) => {
+      if (event.key === "Escape") closeUserManager();
+    });
+
+    document.addEventListener("DOMContentLoaded", bind);
+    window.addEventListener("load", bind);
+  })();
+</script>
+
 </body>
 </html>
