@@ -13153,6 +13153,491 @@ function renderLoggedContent() {
   })();
 </script>
 
+
+<style id="regulamento-bolao-solar-oficial-style">
+  .regulamento-floating-button {
+    position: fixed !important;
+    right: 16px !important;
+    bottom: 92px !important;
+    z-index: 9998 !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    gap: 8px !important;
+    min-height: 46px !important;
+    padding: 12px 16px !important;
+    border: 3px solid #050505 !important;
+    border-radius: 999px !important;
+    background: #d6ff00 !important;
+    color: #050505 !important;
+    box-shadow: 4px 4px 0 #050505 !important;
+    font-size: 11px !important;
+    font-weight: 1000 !important;
+    text-transform: uppercase !important;
+    cursor: pointer !important;
+  }
+
+  .regulamento-modal-overlay {
+    position: fixed !important;
+    inset: 0 !important;
+    z-index: 99999 !important;
+    display: none !important;
+    align-items: center !important;
+    justify-content: center !important;
+    padding: 18px !important;
+    background: rgba(5, 5, 5, .72) !important;
+    backdrop-filter: blur(8px) !important;
+  }
+
+  .regulamento-modal-overlay.is-open {
+    display: flex !important;
+  }
+
+  .regulamento-modal {
+    width: min(980px, 100%) !important;
+    max-height: min(88vh, 860px) !important;
+    overflow: auto !important;
+    border: 4px solid #050505 !important;
+    border-radius: 28px !important;
+    background: linear-gradient(135deg, #fffdf2 0%, #ffffff 100%) !important;
+    box-shadow: 8px 8px 0 #050505 !important;
+  }
+
+  .regulamento-modal-header {
+    position: sticky !important;
+    top: 0 !important;
+    z-index: 2 !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    gap: 14px !important;
+    padding: 18px 20px !important;
+    border-bottom: 3px solid #050505 !important;
+    background: #21d3ca !important;
+  }
+
+  .regulamento-modal-header h2 {
+    margin: 0 !important;
+    color: #050505 !important;
+    font-size: clamp(22px, 4vw, 42px) !important;
+    font-weight: 1000 !important;
+    line-height: .9 !important;
+    text-transform: uppercase !important;
+  }
+
+  .regulamento-close-button {
+    display: inline-grid !important;
+    place-items: center !important;
+    width: 42px !important;
+    height: 42px !important;
+    flex: 0 0 auto !important;
+    border: 3px solid #050505 !important;
+    border-radius: 999px !important;
+    background: #ff2d24 !important;
+    color: #ffffff !important;
+    box-shadow: 3px 3px 0 #050505 !important;
+    font-size: 18px !important;
+    font-weight: 1000 !important;
+    cursor: pointer !important;
+  }
+
+  .regulamento-modal-body {
+    padding: 20px !important;
+    color: #050505 !important;
+  }
+
+  .regulamento-alerta {
+    margin-bottom: 18px !important;
+    padding: 14px !important;
+    border: 3px solid #050505 !important;
+    border-radius: 18px !important;
+    background: #d6ff00 !important;
+    box-shadow: 3px 3px 0 #050505 !important;
+    font-size: 12px !important;
+    font-weight: 900 !important;
+    line-height: 1.35 !important;
+  }
+
+  .regulamento-highlight-grid {
+    display: grid !important;
+    grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
+    gap: 12px !important;
+    margin: 0 0 18px !important;
+  }
+
+  .regulamento-highlight-card {
+    padding: 14px !important;
+    border: 3px solid #050505 !important;
+    border-radius: 20px !important;
+    background: #ffffff !important;
+    box-shadow: 3px 3px 0 #050505 !important;
+  }
+
+  .regulamento-highlight-card strong {
+    display: block !important;
+    margin-bottom: 6px !important;
+    font-size: 24px !important;
+    font-weight: 1000 !important;
+    line-height: 1 !important;
+  }
+
+  .regulamento-highlight-card span {
+    font-size: 12px !important;
+    font-weight: 900 !important;
+    line-height: 1.2 !important;
+  }
+
+  .regulamento-section {
+    margin-top: 14px !important;
+    padding: 16px !important;
+    border: 3px solid #050505 !important;
+    border-radius: 22px !important;
+    background: #fff !important;
+  }
+
+  .regulamento-section h3 {
+    margin: 0 0 10px !important;
+    font-size: 16px !important;
+    font-weight: 1000 !important;
+    text-transform: uppercase !important;
+  }
+
+  .regulamento-section p,
+  .regulamento-section li {
+    font-size: 13px !important;
+    font-weight: 800 !important;
+    line-height: 1.45 !important;
+  }
+
+  .regulamento-section ul,
+  .regulamento-section ol {
+    margin: 0 !important;
+    padding-left: 20px !important;
+  }
+
+  .regulamento-points-table {
+    width: 100% !important;
+    border-collapse: separate !important;
+    border-spacing: 0 !important;
+    overflow: hidden !important;
+    border: 3px solid #050505 !important;
+    border-radius: 18px !important;
+  }
+
+  .regulamento-points-table th,
+  .regulamento-points-table td {
+    padding: 12px !important;
+    border-bottom: 2px solid #050505 !important;
+    font-size: 12px !important;
+    font-weight: 900 !important;
+    text-align: left !important;
+  }
+
+  .regulamento-points-table th {
+    background: #050505 !important;
+    color: #ffffff !important;
+    text-transform: uppercase !important;
+  }
+
+  .regulamento-points-table tr:last-child td {
+    border-bottom: 0 !important;
+  }
+
+  .regulamento-points-table td:last-child {
+    width: 140px !important;
+    text-align: center !important;
+    font-weight: 1000 !important;
+  }
+
+  @media (max-width: 760px) {
+    .regulamento-floating-button {
+      right: 12px !important;
+      bottom: 82px !important;
+      min-height: 42px !important;
+      padding: 10px 13px !important;
+      font-size: 10px !important;
+    }
+
+    .regulamento-modal-overlay {
+      padding: 10px !important;
+    }
+
+    .regulamento-modal {
+      max-height: 88vh !important;
+      border-radius: 22px !important;
+      box-shadow: 5px 5px 0 #050505 !important;
+    }
+
+    .regulamento-modal-header,
+    .regulamento-modal-body {
+      padding: 14px !important;
+    }
+
+    .regulamento-highlight-grid {
+      grid-template-columns: 1fr 1fr !important;
+    }
+
+    .regulamento-section {
+      padding: 13px !important;
+      border-radius: 18px !important;
+    }
+
+    .regulamento-points-table th,
+    .regulamento-points-table td {
+      padding: 10px 8px !important;
+      font-size: 11px !important;
+    }
+  }
+</style>
+
+
+<button class="regulamento-floating-button" id="openRegulamentoBolao" type="button">
+  📋 Regulamento
+</button>
+
+<div class="regulamento-modal-overlay" id="regulamentoBolaoModal" aria-hidden="true">
+  <div class="regulamento-modal" role="dialog" aria-modal="true" aria-labelledby="regulamentoBolaoTitle">
+    <div class="regulamento-modal-header">
+      <h2 id="regulamentoBolaoTitle">Regulamento Oficial</h2>
+      <button class="regulamento-close-button" id="closeRegulamentoBolao" type="button" aria-label="Fechar regulamento">×</button>
+    </div>
+
+    <div class="regulamento-modal-body">
+      <div class="regulamento-alerta">
+        Regulamento oficial da Campanha Bolão Solar. Documento sujeito à validação jurídica e ao preenchimento dos dados formais da Organizadora, como razão social, CNPJ, endereço, canal de atendimento, site oficial, política de privacidade, relação de prêmios e certificado de autorização quando aplicável.
+      </div>
+
+      <div class="regulamento-highlight-grid">
+        <div class="regulamento-highlight-card">
+          <strong>Grátis</strong>
+          <span>Participação gratuita, voluntária e sem compra obrigatória.</span>
+        </div>
+        <div class="regulamento-highlight-card">
+          <strong>+1</strong>
+          <span>Ponto por palpite válido registrado dentro do prazo.</span>
+        </div>
+        <div class="regulamento-highlight-card">
+          <strong>+3</strong>
+          <span>Pontos por acerto do vencedor ou empate.</span>
+        </div>
+        <div class="regulamento-highlight-card">
+          <strong>+2</strong>
+          <span>Bônus por acerto do placar exato.</span>
+        </div>
+      </div>
+
+      <div class="regulamento-section">
+        <h3>1. Da campanha</h3>
+        <p>A campanha Bolão Solar é uma ação promocional de entretenimento e engajamento realizada pela Organizadora. A participação é gratuita, voluntária e não condicionada à compra, pagamento, contratação de serviço, aquisição de produto, uso de crédito, aposta ou qualquer desembolso financeiro.</p>
+        <p>A campanha não constitui aposta esportiva, jogo de azar, rifa, loteria, operação financeira, mercado preditivo ou modalidade de aposta com quota fixa. Também não é patrocinada, administrada, autorizada, apoiada, endossada ou associada à FIFA, à Copa do Mundo FIFA 2026, à CBF ou a qualquer entidade esportiva oficial.</p>
+      </div>
+
+      <div class="regulamento-section">
+        <h3>2. Período da campanha</h3>
+        <p>A campanha terá início na data da partida de abertura da Copa do Mundo 2026, prevista para 11 de junho de 2026, e será encerrada na data da final da competição, prevista para 19 de julho de 2026.</p>
+        <p>A divulgação oficial dos ganhadores ocorrerá em até 48 horas após a final, após conferência dos resultados, validação dos cadastros, revisão da pontuação e aplicação dos critérios de desempate.</p>
+      </div>
+
+      <div class="regulamento-section">
+        <h3>3. Participantes</h3>
+        <p>Poderão participar pessoas físicas, maiores de 18 anos, residentes e domiciliadas no Brasil, que realizarem cadastro válido no site oficial da campanha e aceitarem integralmente este regulamento.</p>
+        <p>Cada participante poderá realizar apenas um cadastro. Serão considerados inválidos cadastros com dados falsos, incompletos, incorretos, duplicados, de terceiros ou inconsistentes.</p>
+      </div>
+
+      <div class="regulamento-section">
+        <h3>4. Como participar</h3>
+        <ul>
+          <li>O usuário deverá acessar o site oficial do Bolão Solar, realizar cadastro e registrar seus palpites de placar.</li>
+          <li>Cada palpite deverá conter o placar previsto para a partida, informando a quantidade de gols de cada seleção/time na ordem exibida no site.</li>
+          <li>O prazo para registro do palpite será encerrado automaticamente 1 minuto antes do horário oficial de início da respectiva partida, considerando o horário de Brasília.</li>
+          <li>Após o encerramento do prazo, não será permitida alteração, substituição, exclusão ou cancelamento do palpite registrado.</li>
+          <li>O participante é responsável por conferir seus palpites antes do envio definitivo.</li>
+        </ul>
+      </div>
+
+      <div class="regulamento-section">
+        <h3>5. Auditoria dos registros</h3>
+        <p>Para fins de segurança, transparência e auditoria, o sistema poderá armazenar identificação do participante, data e horário de cadastro, data e horário de cada palpite, jogo correspondente, placar informado, IP de acesso, dispositivo utilizado, histórico de interações relevantes e logs técnicos necessários para prevenção de fraude.</p>
+        <p>Para todos os efeitos, prevalecerão os registros constantes no banco de dados oficial da campanha.</p>
+      </div>
+
+      <div class="regulamento-section">
+        <h3>6. Pontuação</h3>
+        <table class="regulamento-points-table">
+          <thead>
+            <tr>
+              <th>Situação do palpite</th>
+              <th>Pontuação</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>Palpite válido registrado dentro do prazo</td>
+              <td>1 ponto</td>
+            </tr>
+            <tr>
+              <td>Acerto do vencedor da partida ou empate</td>
+              <td>3 pontos</td>
+            </tr>
+            <tr>
+              <td>Bônus por acerto do placar exato</td>
+              <td>2 pontos adicionais</td>
+            </tr>
+            <tr>
+              <td>Pontuação máxima por partida</td>
+              <td>6 pontos</td>
+            </tr>
+          </tbody>
+        </table>
+        <p>Não haverá pontuação por acerto isolado da quantidade de gols de apenas uma seleção/time, salvo quando o participante acertar o placar exato da partida.</p>
+      </div>
+
+      <div class="regulamento-section">
+        <h3>7. Exemplos de pontuação</h3>
+        <ol>
+          <li>Fez o palpite, mas errou o resultado: 1 ponto.</li>
+          <li>Acertou o vencedor, mas errou o placar: 1 ponto pelo palpite válido + 3 pontos pelo acerto do vencedor. Total: 4 pontos.</li>
+          <li>Acertou o placar exato: 1 ponto pelo palpite válido + 3 pontos pelo acerto do vencedor/empate + 2 pontos de bônus. Total: 6 pontos.</li>
+          <li>Acertou empate, mas errou o placar: 4 pontos.</li>
+        </ol>
+      </div>
+
+      <div class="regulamento-section">
+        <h3>8. Resultado considerado para apuração</h3>
+        <p>Será considerado o resultado oficial da partida ao final do tempo regulamentar, incluindo acréscimos. Em jogos eliminatórios com prorrogação ou disputa de pênaltis, será considerado apenas o placar do tempo regulamentar, incluindo acréscimos.</p>
+      </div>
+
+      <div class="regulamento-section">
+        <h3>9. Jogos adiados, suspensos ou cancelados</h3>
+        <p>Em caso de jogo adiado, suspenso, cancelado, interrompido ou remarcado, a Organização poderá manter os palpites, reabrir o prazo, cancelar os palpites da partida ou excluir a partida da pontuação da campanha.</p>
+      </div>
+
+      <div class="regulamento-section">
+        <h3>10. Ranking e classificação</h3>
+        <p>O ranking será formado com base na pontuação acumulada por cada participante ao longo dos jogos válidos da campanha. O ranking exibido durante a campanha terá caráter parcial e estará sujeito à conferência final da Organização.</p>
+      </div>
+
+      <div class="regulamento-section">
+        <h3>11. Critérios de desempate</h3>
+        <ol>
+          <li>Maior número de acertos de placar exato em jogos do Brasil.</li>
+          <li>Maior número total de acertos de placar exato em toda a campanha.</li>
+          <li>Maior número de acertos de vencedor ou empate.</li>
+          <li>Maior número de palpites válidos registrados.</li>
+          <li>Maior antecedência média no registro dos palpites válidos.</li>
+          <li>Maior antecedência no palpite da final.</li>
+          <li>Cadastro mais antigo na campanha.</li>
+        </ol>
+      </div>
+
+      <div class="regulamento-section">
+        <h3>12. Prêmios</h3>
+        <p>A campanha contará com 10 prêmios, destinados exclusivamente aos participantes classificados do 1º ao 10º lugar no ranking geral final. A relação oficial dos prêmios deverá ser divulgada antes do início da campanha.</p>
+        <p>Os prêmios são pessoais, intransferíveis e não poderão ser convertidos em dinheiro, crédito, vale-compras, desconto, abatimento, transferência bancária, PIX ou benefício diferente do oficialmente divulgado.</p>
+      </div>
+
+      <div class="regulamento-section">
+        <h3>13. Divulgação e contato com ganhadores</h3>
+        <p>Os ganhadores serão divulgados em até 48 horas após a final da Copa do Mundo 2026. A Organização entrará em contato pelos dados informados no cadastro e poderá solicitar documento oficial com foto e CPF para validação.</p>
+      </div>
+
+      <div class="regulamento-section">
+        <h3>14. Entrega dos prêmios</h3>
+        <p>Ganhadores residentes em Goiânia-GO ou Trindade-GO poderão receber seus prêmios presencialmente. Ganhadores de outras localidades receberão por transportadora, Correios ou serviço de entrega definido pela Organização.</p>
+      </div>
+
+      <div class="regulamento-section">
+        <h3>15. Desclassificação</h3>
+        <p>Serão desclassificados participantes que utilizarem dados falsos, realizarem mais de um cadastro, tentarem fraudar ou manipular o sistema, utilizarem robôs, automações, scripts, bots ou violarem qualquer regra do regulamento.</p>
+      </div>
+
+      <div class="regulamento-section">
+        <h3>16. Instabilidades técnicas</h3>
+        <p>A Organização poderá suspender temporariamente o acesso ao site em caso de manutenção, falha técnica, instabilidade, ataque cibernético, tentativa de fraude ou situação que comprometa a segurança e a integridade da campanha.</p>
+      </div>
+
+      <div class="regulamento-section">
+        <h3>17. Proteção de dados pessoais</h3>
+        <p>Os dados pessoais serão tratados para cadastro, validação, registro de palpites, apuração, ranking, prevenção a fraudes, contato com ganhadores, entrega dos prêmios e cumprimento de obrigações legais.</p>
+      </div>
+
+      <div class="regulamento-section">
+        <h3>18. Uso de imagem e divulgação institucional</h3>
+        <p>Caso seja contemplado, o participante declara estar ciente de que seu nome, cidade, estado, classificação e prêmio poderão ser divulgados para transparência do resultado. Uso de foto, vídeo, voz ou imagem pessoal dependerá de autorização específica.</p>
+      </div>
+
+      <div class="regulamento-section">
+        <h3>19. Responsabilidades do participante</h3>
+        <p>O participante é responsável por ler e aceitar o regulamento, informar dados verdadeiros, manter seus dados atualizados, registrar palpites dentro do prazo, conferir palpites antes do envio e acompanhar comunicados oficiais.</p>
+      </div>
+
+      <div class="regulamento-section">
+        <h3>20. Alterações, disposições legais e atendimento</h3>
+        <p>A Organização poderá alterar datas, prazos, mecânica operacional, forma de divulgação ou regras complementares quando houver necessidade técnica, operacional, legal, regulatória, caso fortuito ou força maior.</p>
+        <p>Este regulamento deverá ser previamente avaliado juridicamente antes da publicação oficial e ficará disponível no site oficial do Bolão Solar durante todo o período da campanha.</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<script id="regulamento-bolao-solar-oficial-script">
+  (() => {
+    function openRegulamento() {
+      const modal = document.querySelector("#regulamentoBolaoModal");
+      if (!modal) return;
+
+      modal.classList.add("is-open");
+      modal.setAttribute("aria-hidden", "false");
+      document.body.style.overflow = "hidden";
+    }
+
+    function closeRegulamento() {
+      const modal = document.querySelector("#regulamentoBolaoModal");
+      if (!modal) return;
+
+      modal.classList.remove("is-open");
+      modal.setAttribute("aria-hidden", "true");
+      document.body.style.overflow = "";
+    }
+
+    function bindRegulamento() {
+      const openButton = document.querySelector("#openRegulamentoBolao");
+      const closeButton = document.querySelector("#closeRegulamentoBolao");
+      const modal = document.querySelector("#regulamentoBolaoModal");
+
+      if (openButton && !openButton.dataset.boundRegulamento) {
+        openButton.dataset.boundRegulamento = "1";
+        openButton.addEventListener("click", openRegulamento);
+      }
+
+      if (closeButton && !closeButton.dataset.boundRegulamento) {
+        closeButton.dataset.boundRegulamento = "1";
+        closeButton.addEventListener("click", closeRegulamento);
+      }
+
+      if (modal && !modal.dataset.boundRegulamento) {
+        modal.dataset.boundRegulamento = "1";
+
+        modal.addEventListener("click", (event) => {
+          if (event.target === modal) {
+            closeRegulamento();
+          }
+        });
+      }
+    }
+
+    document.addEventListener("keydown", (event) => {
+      if (event.key === "Escape") {
+        closeRegulamento();
+      }
+    });
+
+    document.addEventListener("DOMContentLoaded", bindRegulamento);
+    window.addEventListener("load", bindRegulamento);
+  })();
+</script>
+
 </body>
 </html>
 
