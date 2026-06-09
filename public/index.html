@@ -14516,9 +14516,9 @@ function renderLoggedContent() {
             </div>
 
             <div class="primeira-rodada-placar">
-              <input type="number" min="0" max="99" inputmode="numeric" id="nativa-home-${jogo.id}">
+              <input type="text" inputmode="numeric" pattern="[0-9]*" maxlength="2" id="nativa-home-${jogo.id}">
               <span>x</span>
-              <input type="number" min="0" max="99" inputmode="numeric" id="nativa-away-${jogo.id}">
+              <input type="text" inputmode="numeric" pattern="[0-9]*" maxlength="2" id="nativa-away-${jogo.id}">
             </div>
 
             <div class="primeira-rodada-time-info primeira-rodada-away">
@@ -14918,8 +14918,43 @@ function renderLoggedContent() {
     color: #050505 !important;
   }
 </style>
+
+<style id="primeira-rodada-input-visivel-final">
+  #secaoPrimeiraRodadaNativa .primeira-rodada-placar input {
+    background: #fffdf2 !important;
+    color: #050505 !important;
+    -webkit-text-fill-color: #050505 !important;
+    opacity: 1 !important;
+    caret-color: #050505 !important;
+    font-size: 18px !important;
+    font-weight: 1000 !important;
+    text-align: center !important;
+    appearance: textfield !important;
+  }
+
+  #secaoPrimeiraRodadaNativa .primeira-rodada-placar input:focus {
+    background: #d6ff00 !important;
+    color: #050505 !important;
+    -webkit-text-fill-color: #050505 !important;
+  }
+</style>
+
+<style id="primeira-rodada-input-text-final">
+  #secaoPrimeiraRodadaNativa .primeira-rodada-placar input {
+    color: #050505 !important;
+    -webkit-text-fill-color: #050505 !important;
+    background: #fffdf2 !important;
+    font-size: 20px !important;
+    font-weight: 1000 !important;
+    text-align: center !important;
+    line-height: 1 !important;
+  }
+</style>
 </body>
 </html>
+
+
+
 
 
 
