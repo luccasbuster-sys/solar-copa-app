@@ -14475,6 +14475,7 @@ function renderLoggedContent() {
   (() => {
     let jogosPrimeiraRodada = [];
     let grupoPrimeiraRodada = "TODOS";
+    let palpitesPrimeiraRodada = {};
 
     function formatarDataPrimeiraRodada(data) {
       const partes = String(data || "").split("-");
@@ -14516,9 +14517,9 @@ function renderLoggedContent() {
             </div>
 
             <div class="primeira-rodada-placar">
-              <input type="text" inputmode="numeric" pattern="[0-9]*" maxlength="2" id="nativa-home-${jogo.id}">
+              <input type="text" inputmode="numeric" pattern="[0-9]*" maxlength="2" id="nativa-home-${jogo.id}" value="${palpitesPrimeiraRodada[jogo.id]?.home ?? ""}">
               <span>x</span>
-              <input type="text" inputmode="numeric" pattern="[0-9]*" maxlength="2" id="nativa-away-${jogo.id}">
+              <input type="text" inputmode="numeric" pattern="[0-9]*" maxlength="2" id="nativa-away-${jogo.id}" value="${palpitesPrimeiraRodada[jogo.id]?.away ?? ""}">
             </div>
 
             <div class="primeira-rodada-time-info primeira-rodada-away">
@@ -14531,13 +14532,45 @@ function renderLoggedContent() {
           </div>
 
           <div class="primeira-rodada-acoes">
-            <button data-primeira-save="${jogo.id}">Salvar palpite</button>
+            <button
+              data-primeira-save="${jogo.id}"
+              class="${palpitesPrimeiraRodada[jogo.id] ? "salvo" : ""}"
+              ${palpitesPrimeiraRodada[jogo.id] ? "disabled" : ""}
+            >
+              ${palpitesPrimeiraRodada[jogo.id] ? "Palpite salvo" : "Salvar palpite"}
+            </button>
             <button class="primeira-rodada-reset-btn" data-primeira-reset="${jogo.id}">Resetar</button>
           </div>
         </article>
       `).join("");
     }
 
+    async function carregarPalpitesPrimeiraRodadaNativa() {
+      try {
+        const response = await fetch("/predictions", {
+          method: "GET",
+          credentials: "include",
+          cache: "no-store"
+        });
+
+        const data = await response.json();
+        const predictions = Array.isArray(data.predictions) ? data.predictions : [];
+
+        palpitesPrimeiraRodada = {};
+
+        predictions.forEach(prediction => {
+          const id = String(prediction.matchId || prediction.match_id || "");
+          if (!id) return;
+
+          palpitesPrimeiraRodada[id] = {
+            home: prediction.homeScore ?? prediction.home_score,
+            away: prediction.awayScore ?? prediction.away_score
+          };
+        });
+      } catch (error) {
+        palpitesPrimeiraRodada = {};
+      }
+    }
     async function carregarPrimeiraRodadaNativa() {
       const lista = document.getElementById("listaPrimeiraRodadaNativa");
       try {
@@ -14548,6 +14581,8 @@ function renderLoggedContent() {
 
         const data = await response.json();
         if (!response.ok || !data.success) throw new Error(data.message || "Erro ao carregar jogos.");
+
+        await carregarPalpitesPrimeiraRodadaNativa();
 
         jogosPrimeiraRodada = (Array.isArray(data.matches) ? data.matches : []).filter(jogo => {
           const home = String(jogo.homeTeam || "").toLowerCase();
@@ -14605,6 +14640,11 @@ function renderLoggedContent() {
       }
     }
     async function salvarPrimeiraRodadaNativa(matchId, botao) {
+      if (!document.body.classList.contains("is-registered")) {
+        alert("Faça login para salvar seu palpite.");
+        return;
+      }
+
       const home = Number(document.getElementById("nativa-home-" + matchId).value);
       const away = Number(document.getElementById("nativa-away-" + matchId).value);
 
@@ -15029,6 +15069,9 @@ function renderLoggedContent() {
 </style>
 </body>
 </html>
+
+
+
 
 
 
