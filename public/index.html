@@ -5452,22 +5452,18 @@
 
 
 
-<style id="primeira-rodada-secao-app-style">
-  .solar-primeira-rodada-cta-wrap {
+
+
+
+<style id="primeira-rodada-abaixo-abertura-style">
+  .primeira-rodada-abaixo-abertura-wrap {
     width: min(1120px, calc(100% - 24px)) !important;
-    margin: 12px auto 18px !important;
-    display: flex !important;
-    justify-content: flex-start !important;
-    position: relative !important;
-    z-index: 50 !important;
+    margin: 14px auto 22px !important;
   }
 
-  #solarPrimeiraRodadaCta {
-    display: inline-flex !important;
-    align-items: center !important;
-    justify-content: center !important;
+  #btnPrimeiraRodadaAbaixoAbertura {
+    width: 100% !important;
     min-height: 48px !important;
-    padding: 12px 18px !important;
     border: 4px solid #050505 !important;
     border-radius: 999px !important;
     background: #d6ff00 !important;
@@ -5475,102 +5471,47 @@
     box-shadow: 5px 5px 0 #050505 !important;
     font-size: 11px !important;
     font-weight: 1000 !important;
-    line-height: 1 !important;
     text-transform: uppercase !important;
-    text-decoration: none !important;
     cursor: pointer !important;
-    pointer-events: auto !important;
   }
 
-  #solarPrimeiraRodadaCta.is-open {
+  #btnPrimeiraRodadaAbaixoAbertura.is-open {
     background: #ff2d24 !important;
-    color: #ffffff !important;
+    color: #fff !important;
   }
 
-  #solarPrimeiraRodadaCta:hover {
-    transform: translate(-1px, -1px) !important;
-    box-shadow: 6px 6px 0 #050505 !important;
-  }
-
-  #solarPrimeiraRodadaSecao {
-    width: min(1120px, calc(100% - 24px)) !important;
-    margin: 12px auto 28px !important;
+  #secaoPrimeiraRodadaAbaixoAbertura {
     display: none !important;
+    width: min(1120px, calc(100% - 24px)) !important;
+    margin: 0 auto 28px !important;
     border: 4px solid #050505 !important;
-    border-radius: 28px !important;
-    background: #fffdf2 !important;
-    box-shadow: 7px 7px 0 #050505 !important;
+    border-radius: 26px !important;
     overflow: hidden !important;
+    box-shadow: 7px 7px 0 #050505 !important;
+    background: #fffdf2 !important;
   }
 
-  #solarPrimeiraRodadaSecao.is-open {
+  #secaoPrimeiraRodadaAbaixoAbertura.is-open {
     display: block !important;
   }
 
-  .solar-primeira-rodada-secao-head {
-    display: flex !important;
-    align-items: center !important;
-    justify-content: space-between !important;
-    gap: 12px !important;
-    padding: 12px 14px !important;
-    border-bottom: 4px solid #050505 !important;
-    background: #21d3ca !important;
-  }
-
-  .solar-primeira-rodada-secao-head strong {
-    font-size: 14px !important;
-    font-weight: 1000 !important;
-    text-transform: uppercase !important;
-  }
-
-  #solarFecharPrimeiraRodadaSecao {
-    min-height: 36px !important;
-    padding: 8px 12px !important;
-    border: 3px solid #050505 !important;
-    border-radius: 999px !important;
-    background: #ff2d24 !important;
-    color: #ffffff !important;
-    box-shadow: 3px 3px 0 #050505 !important;
-    font-size: 10px !important;
-    font-weight: 1000 !important;
-    text-transform: uppercase !important;
-    cursor: pointer !important;
-  }
-
-  #solarPrimeiraRodadaIframe {
+  #iframePrimeiraRodadaAbaixoAbertura {
     width: 100% !important;
     height: 82vh !important;
     min-height: 720px !important;
     border: 0 !important;
     display: block !important;
-    background: #fffdf2 !important;
   }
 
   @media (max-width: 760px) {
-    .solar-primeira-rodada-cta-wrap,
-    #solarPrimeiraRodadaSecao {
+    .primeira-rodada-abaixo-abertura-wrap,
+    #secaoPrimeiraRodadaAbaixoAbertura {
       width: calc(100% - 20px) !important;
     }
 
-    #solarPrimeiraRodadaCta {
-      width: 100% !important;
-      min-height: 48px !important;
-      font-size: 10px !important;
-      text-align: center !important;
-    }
-
-    #solarPrimeiraRodadaIframe {
+    #iframePrimeiraRodadaAbaixoAbertura {
       height: 82vh !important;
       min-height: 680px !important;
-    }
-
-    .solar-primeira-rodada-secao-head {
-      align-items: flex-start !important;
-      flex-direction: column !important;
-    }
-
-    #solarFecharPrimeiraRodadaSecao {
-      width: 100% !important;
     }
   }
 </style>
@@ -14295,7 +14236,10 @@ function renderLoggedContent() {
 
 
 
-<script id="primeira-rodada-secao-app-script">
+
+
+
+<script id="primeira-rodada-abaixo-abertura-script">
   (() => {
     function normalizar(texto) {
       return String(texto || "")
@@ -14306,224 +14250,99 @@ function renderLoggedContent() {
         .trim();
     }
 
-    function estaVisivel(el) {
+    function visivel(el) {
       if (!el) return false;
-
-      const style = window.getComputedStyle(el);
-      const rect = el.getBoundingClientRect();
-
-      return (
-        style.display !== "none" &&
-        style.visibility !== "hidden" &&
-        style.opacity !== "0" &&
-        rect.width > 0 &&
-        rect.height > 0
-      );
+      const st = getComputedStyle(el);
+      const r = el.getBoundingClientRect();
+      return st.display !== "none" && st.visibility !== "hidden" && r.width > 0 && r.height > 0;
     }
 
-    function encontrarJogoAberturaVisivel() {
-      const candidatos = Array.from(document.querySelectorAll("section, article, div"));
-
-      const encontrados = candidatos
-        .filter((el) => {
-          if (!estaVisivel(el)) return false;
-
-          const texto = normalizar(el.textContent);
-
-          return texto.includes("jogo de abertura");
-        })
-        .map((el) => {
-          const rect = el.getBoundingClientRect();
-
-          return {
-            el,
-            area: Math.max(1, rect.width) * Math.max(1, rect.height),
-            texto: String(el.textContent || "").length
-          };
-        })
-        .sort((a, b) => {
-          if (a.area !== b.area) return a.area - b.area;
-          return a.texto - b.texto;
-        });
-
-      return encontrados.length ? encontrados[0].el : null;
+    function estaNaTelaLogin() {
+      const texto = normalizar(document.body.textContent);
+      return texto.includes("cadastro rapido") || texto.includes("cadastro rápido") || texto.includes("começar cadastro") || texto.includes("comecar cadastro");
     }
 
-    function criarSecaoPrimeiraRodadaDepoisDoAlvo(alvo) {
-      let secao = document.getElementById("solarPrimeiraRodadaSecao");
-
-      if (secao) return secao;
-
-      secao = document.createElement("section");
-      secao.id = "solarPrimeiraRodadaSecao";
-      secao.innerHTML = `
-        <div class="solar-primeira-rodada-secao-head">
-          <strong>Jogos da 1ª Rodada</strong>
-          <button type="button" id="solarFecharPrimeiraRodadaSecao">Fechar 1ª rodada</button>
-        </div>
-
-        <iframe
-          id="solarPrimeiraRodadaIframe"
-          title="Jogos da primeira rodada"
-          src="about:blank"
-          loading="lazy"
-        ></iframe>
-      `;
-
-      alvo.insertAdjacentElement("afterend", secao);
-
-      const fechar = secao.querySelector("#solarFecharPrimeiraRodadaSecao");
-
-      if (fechar) {
-        fechar.onclick = () => {
-          fecharSecaoPrimeiraRodada();
-        };
-      }
-
-      return secao;
+    function acharJogoAbertura() {
+      const section = document.getElementById("jogoAberturaPalpite");
+      return section && visivel(section) ? section : null;
     }
 
-    function abrirSecaoPrimeiraRodada() {
-      const alvo = encontrarJogoAberturaVisivel();
-
-      if (!alvo) return;
-
-      const secao = criarSecaoPrimeiraRodadaDepoisDoAlvo(alvo);
-      const iframe = secao.querySelector("#solarPrimeiraRodadaIframe");
-      const botao = document.getElementById("solarPrimeiraRodadaCta");
-
-      if (iframe && iframe.getAttribute("src") !== "/primeira-rodada.html") {
-        iframe.setAttribute("src", "/primeira-rodada.html");
-      }
-
-      secao.classList.add("is-open");
-
-      if (botao) {
-        botao.classList.add("is-open");
-        botao.textContent = "Fechar jogos da 1ª rodada";
-      }
-
-      setTimeout(() => {
-        secao.scrollIntoView({
-          behavior: "smooth",
-          block: "start"
-        });
-      }, 100);
+    function removerSeExistir() {
+      document.querySelectorAll(".primeira-rodada-abaixo-abertura-wrap, #secaoPrimeiraRodadaAbaixoAbertura").forEach(el => el.remove());
     }
 
-    function fecharSecaoPrimeiraRodada() {
-      const secao = document.getElementById("solarPrimeiraRodadaSecao");
-      const botao = document.getElementById("solarPrimeiraRodadaCta");
+    function instalar() {
+      if (!document.body) return;
 
-      if (secao) {
-        secao.classList.remove("is-open");
-      }
-
-      if (botao) {
-        botao.classList.remove("is-open");
-        botao.textContent = "Ver jogos da 1ª rodada";
-      }
-    }
-
-    function alternarSecaoPrimeiraRodada(event) {
-      if (event) {
-        event.preventDefault();
-        event.stopPropagation();
-      }
-
-      const secao = document.getElementById("solarPrimeiraRodadaSecao");
-
-      if (secao && secao.classList.contains("is-open")) {
-        fecharSecaoPrimeiraRodada();
-      } else {
-        abrirSecaoPrimeiraRodada();
-      }
-
-      return false;
-    }
-
-    function inserirBotaoPrimeiraRodada() {
-      const alvo = encontrarJogoAberturaVisivel();
-
-      const existente = document.querySelector(".solar-primeira-rodada-cta-wrap");
-
-      if (!alvo) {
-        if (existente) existente.remove();
-
-        const secao = document.getElementById("solarPrimeiraRodadaSecao");
-        if (secao) secao.remove();
-
+      if (estaNaTelaLogin()) {
+        removerSeExistir();
         return;
       }
 
-      if (existente) {
-        const botaoExistente = document.getElementById("solarPrimeiraRodadaCta");
+      if (document.getElementById("btnPrimeiraRodadaAbaixoAbertura")) return;
 
-        if (botaoExistente) {
-          botaoExistente.onclick = alternarSecaoPrimeiraRodada;
-          botaoExistente.removeAttribute("href");
-          botaoExistente.setAttribute("role", "button");
-          botaoExistente.setAttribute("type", "button");
-        }
-
-        return;
-      }
+      const abertura = acharJogoAbertura();
+      if (!abertura) return;
 
       const wrap = document.createElement("div");
-      wrap.className = "solar-primeira-rodada-cta-wrap";
+      wrap.className = "primeira-rodada-abaixo-abertura-wrap";
 
-      const botao = document.createElement("button");
-      botao.type = "button";
-      botao.id = "solarPrimeiraRodadaCta";
-      botao.textContent = "Ver jogos da 1ª rodada";
-      botao.onclick = alternarSecaoPrimeiraRodada;
+      const btn = document.createElement("button");
+      btn.id = "btnPrimeiraRodadaAbaixoAbertura";
+      btn.type = "button";
+      btn.textContent = "Ver jogos da 1ª rodada";
 
-      wrap.appendChild(botao);
+      const secao = document.createElement("section");
+      secao.id = "secaoPrimeiraRodadaAbaixoAbertura";
+      secao.innerHTML = '<iframe id="iframePrimeiraRodadaAbaixoAbertura" title="Jogos da 1ª rodada" src="about:blank"></iframe>';
 
-      alvo.insertAdjacentElement("beforebegin", wrap);
-    }
+      btn.onclick = () => {
+        const aberto = secao.classList.contains("is-open");
+        const iframe = secao.querySelector("iframe");
 
-    function iniciarPrimeiraRodadaComoSecao() {
-      inserirBotaoPrimeiraRodada();
-
-      let tentativas = 0;
-
-      const intervalo = setInterval(() => {
-        inserirBotaoPrimeiraRodada();
-        tentativas++;
-
-        if (tentativas >= 40) {
-          clearInterval(intervalo);
+        if (aberto) {
+          secao.classList.remove("is-open");
+          btn.classList.remove("is-open");
+          btn.textContent = "Ver jogos da 1ª rodada";
+          return;
         }
-      }, 300);
+
+        if (iframe && iframe.getAttribute("src") !== "/primeira-rodada.html") {
+          iframe.setAttribute("src", "/primeira-rodada.html");
+        }
+
+        secao.classList.add("is-open");
+        btn.classList.add("is-open");
+        btn.textContent = "Fechar jogos da 1ª rodada";
+
+        setTimeout(() => secao.scrollIntoView({ behavior: "smooth", block: "start" }), 100);
+      };
+
+      wrap.appendChild(btn);
+      abertura.insertAdjacentElement("afterend", wrap);
+      wrap.insertAdjacentElement("afterend", secao);
     }
 
-    if (document.readyState === "loading") {
-      document.addEventListener("DOMContentLoaded", iniciarPrimeiraRodadaComoSecao);
-    } else {
-      iniciarPrimeiraRodadaComoSecao();
+    function iniciar() {
+      instalar();
+      setTimeout(instalar, 500);
+      setTimeout(instalar, 1500);
+      setTimeout(instalar, 3000);
     }
 
-    window.addEventListener("load", iniciarPrimeiraRodadaComoSecao);
+    document.addEventListener("DOMContentLoaded", iniciar);
+    window.addEventListener("load", iniciar);
 
-    const observer = new MutationObserver(() => {
-      inserirBotaoPrimeiraRodada();
-    });
-
-    observer.observe(document.documentElement, {
+    new MutationObserver(instalar).observe(document.documentElement, {
       childList: true,
-      subtree: true,
-      characterData: true
+      subtree: true
     });
-
-    window.abrirSecaoPrimeiraRodada = abrirSecaoPrimeiraRodada;
-    window.fecharSecaoPrimeiraRodada = fecharSecaoPrimeiraRodada;
-    window.inserirBotaoPrimeiraRodada = inserirBotaoPrimeiraRodada;
   })();
 </script>
 
 </body>
 </html>
+
 
 
 
