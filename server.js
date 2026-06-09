@@ -3662,6 +3662,335 @@ app.post("/admin/neon-users/:id/delete", requireAdmin, async (req, res) => {
 });
 
 
+
+
+
+
+
+
+
+app.get("/matches/day", async (req, res) => {
+  try {
+    const neon = require("./neon-db");
+    const pool = neon.getNeonPool();
+
+    if (!pool) {
+      return res.status(500).json({
+        success: false,
+        sucesso: false,
+        message: "Neon não configurado."
+      });
+    }
+
+    const date = String(req.query.date || "").trim();
+
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) {
+      return res.status(400).json({
+        success: false,
+        sucesso: false,
+        message: "Data inválida. Use ?date=YYYY-MM-DD"
+      });
+    }
+
+    const result = await pool.query(
+      `
+        SELECT
+          id,
+          group_name,
+          home_team,
+          away_team,
+          TO_CHAR(match_date::date, 'YYYY-MM-DD') AS match_date_br,
+          TO_CHAR(kickoff_at::timestamp, 'HH24:MI') AS kickoff_time_br,
+          kickoff_at
+        FROM matches
+        WHERE match_date::date = $1::date
+        ORDER BY kickoff_at ASC, id ASC
+      `,
+      [date]
+    );
+
+    const seen = new Set();
+
+    const matches = result.rows
+      .filter((match) => {
+        const id = String(match.id || "").trim();
+
+        // Abertura já fica fixa no app. Não duplica em Jogos do Dia.
+        if (id === "A-01" || id === "m01" || id === "M01") {
+          return false;
+        }
+
+        const key = [
+          String(match.home_team || "").toLowerCase(),
+          String(match.away_team || "").toLowerCase(),
+          String(match.match_date_br || ""),
+          String(match.kickoff_time_br || "")
+        ].join("|");
+
+        if (seen.has(key)) return false;
+
+        seen.add(key);
+        return true;
+      })
+      .map((match) => ({
+        id: match.id,
+        groupName: match.group_name,
+        homeTeam: match.home_team,
+        awayTeam: match.away_team,
+        matchDate: match.match_date_br,
+        kickoffTimeBR: match.kickoff_time_br,
+        kickoffAt: match.kickoff_at,
+        timezone: "America/Sao_Paulo"
+      }));
+
+    return res.json({
+      success: true,
+      sucesso: true,
+      date,
+      data: date,
+      timezone: "America/Sao_Paulo",
+      matches,
+      partidas: matches
+    });
+  } catch (error) {
+    console.error("Erro ao carregar jogos do dia:", error.message);
+
+    return res.status(500).json({
+      success: false,
+      sucesso: false,
+      message: "Erro ao carregar jogos do dia.",
+      error: error.message
+    });
+  }
+});
+
+
+
+app.get("/matches/first-round", async (req, res) => {
+  try {
+    const neon = require("./neon-db");
+    const pool = neon.getNeonPool();
+
+    if (!pool) {
+      return res.status(500).json({
+        success: false,
+        message: "Neon não configurado."
+      });
+    }
+
+    const result = await pool.query(`
+      SELECT
+        id,
+        group_name,
+        home_team,
+        away_team,
+        TO_CHAR(match_date::date, 'YYYY-MM-DD') AS match_date,
+        TO_CHAR(kickoff_at::timestamp, 'HH24:MI') AS kickoff_time_br,
+        kickoff_at
+      FROM matches
+      ORDER BY group_name ASC, kickoff_at ASC, id ASC
+    `);
+
+    const seen = new Set();
+    const uniqueMatches = [];
+
+    for (const match of result.rows) {
+      const key = [
+        String(match.group_name || "").toUpperCase(),
+        String(match.home_team || "").toLowerCase(),
+        String(match.away_team || "").toLowerCase(),
+        String(match.match_date || ""),
+        String(match.kickoff_time_br || "")
+      ].join("|");
+
+      if (seen.has(key)) {
+        continue;
+      }
+
+      seen.add(key);
+      uniqueMatches.push(match);
+    }
+
+    const byGroup = new Map();
+
+    for (const match of uniqueMatches) {
+      const group = String(match.group_name || "SEM GRUPO").toUpperCase();
+
+      if (!byGroup.has(group)) {
+        byGroup.set(group, []);
+      }
+
+      byGroup.get(group).push(match);
+    }
+
+    const firstRound = [];
+
+    for (const [group, matches] of byGroup.entries()) {
+      const ordered = matches.sort((a, b) => {
+        const dateA = new Date(a.kickoff_at).getTime();
+        const dateB = new Date(b.kickoff_at).getTime();
+
+        if (dateA !== dateB) return dateA - dateB;
+
+        return String(a.id).localeCompare(String(b.id));
+      });
+
+      ordered.slice(0, 2).forEach((match) => {
+        firstRound.push(match);
+      });
+    }
+
+    firstRound.sort((a, b) => {
+      const dateA = new Date(a.kickoff_at).getTime();
+      const dateB = new Date(b.kickoff_at).getTime();
+
+      if (dateA !== dateB) return dateA - dateB;
+
+      return String(a.id).localeCompare(String(b.id));
+    });
+
+    const matches = firstRound.map((match) => ({
+      id: match.id,
+      groupName: match.group_name,
+      homeTeam: match.home_team,
+      awayTeam: match.away_team,
+      matchDate: match.match_date,
+      kickoffTimeBR: match.kickoff_time_br,
+      kickoffAt: match.kickoff_at,
+      timezone: "America/Sao_Paulo"
+    }));
+
+    return res.json({
+      success: true,
+      timezone: "America/Sao_Paulo",
+      total: matches.length,
+      matches
+    });
+  } catch (error) {
+    console.error("Erro ao carregar primeira rodada:", error.message);
+
+    return res.status(500).json({
+      success: false,
+      message: "Erro ao carregar primeira rodada.",
+      error: error.message
+    });
+  }
+});
+
+
+
+app.get("/api/first-round-matches", async (req, res) => {
+  try {
+    const neon = require("./neon-db");
+    const pool = neon.getNeonPool();
+
+    if (!pool) {
+      return res.status(500).json({
+        success: false,
+        message: "Neon não configurado."
+      });
+    }
+
+    const result = await pool.query(`
+      SELECT
+        id,
+        group_name,
+        home_team,
+        away_team,
+        TO_CHAR(match_date::date, 'YYYY-MM-DD') AS match_date,
+        TO_CHAR(kickoff_at::timestamp, 'HH24:MI') AS kickoff_time_br,
+        kickoff_at
+      FROM matches
+      ORDER BY group_name ASC, kickoff_at ASC, id ASC
+    `);
+
+    const seen = new Set();
+    const uniqueMatches = [];
+
+    for (const match of result.rows) {
+      const key = [
+        String(match.group_name || "").toUpperCase(),
+        String(match.home_team || "").toLowerCase(),
+        String(match.away_team || "").toLowerCase(),
+        String(match.match_date || ""),
+        String(match.kickoff_time_br || "")
+      ].join("|");
+
+      if (seen.has(key)) continue;
+
+      seen.add(key);
+      uniqueMatches.push(match);
+    }
+
+    const byGroup = new Map();
+
+    for (const match of uniqueMatches) {
+      const group = String(match.group_name || "SEM GRUPO").toUpperCase();
+
+      if (!byGroup.has(group)) {
+        byGroup.set(group, []);
+      }
+
+      byGroup.get(group).push(match);
+    }
+
+    const firstRound = [];
+
+    for (const [group, matches] of byGroup.entries()) {
+      const ordered = matches.sort((a, b) => {
+        const dateA = new Date(a.kickoff_at).getTime();
+        const dateB = new Date(b.kickoff_at).getTime();
+
+        if (dateA !== dateB) return dateA - dateB;
+
+        return String(a.id).localeCompare(String(b.id));
+      });
+
+      ordered.slice(0, 2).forEach((match) => {
+        firstRound.push(match);
+      });
+    }
+
+    firstRound.sort((a, b) => {
+      const dateA = new Date(a.kickoff_at).getTime();
+      const dateB = new Date(b.kickoff_at).getTime();
+
+      if (dateA !== dateB) return dateA - dateB;
+
+      return String(a.id).localeCompare(String(b.id));
+    });
+
+    const matches = firstRound.map((match) => ({
+      id: match.id,
+      groupName: match.group_name,
+      homeTeam: match.home_team,
+      awayTeam: match.away_team,
+      matchDate: match.match_date,
+      kickoffTimeBR: match.kickoff_time_br,
+      kickoffAt: match.kickoff_at,
+      timezone: "America/Sao_Paulo"
+    }));
+
+    return res.json({
+      success: true,
+      source: "neon",
+      round: "first-round",
+      timezone: "America/Sao_Paulo",
+      total: matches.length,
+      matches
+    });
+  } catch (error) {
+    console.error("Erro ao carregar primeira rodada:", error.message);
+
+    return res.status(500).json({
+      success: false,
+      message: "Erro ao carregar primeira rodada.",
+      error: error.message
+    });
+  }
+});
+
+
 app.listen(PORT, () => {
   console.log(`Servidor rodando em http://localhost:${PORT}`);
 });
