@@ -7530,84 +7530,20 @@ const rankingPrizes = [
 ];
 
 async function loadLeaderboard() {
-  const body = $("#leaderboardTableBody");
-
-  if (!body) return;
-
-  try {
-    body.innerHTML = `
-      <tr>
-        <td colspan="5">Carregando classificação...</td>
-      </tr>
-    `;
-
-    const response = await fetch("/leaderboard", {
-      credentials: "include"
-    });
-
-    const data = await response.json();
-
-    if (!response.ok || !data.success) {
-      throw new Error(data.message || "Erro ao carregar classificação.");
-    }
-
-    if (!data.leaderboard.length) {
-      body.innerHTML = `
-        <tr>
-          <td colspan="5">Ainda não há usuários classificados.</td>
-        </tr>
-      `;
-      return;
-    }
-
-    body.innerHTML = data.leaderboard.map(user => {
-      const position = Number(user.position);
-      const prize = rankingPrizes[position - 1] || "Sem premiação";
-      const hasPrize = position >= 1 && position <= 11;
-
-      return `
-        <tr class="${hasPrize ? "is-prize-row" : ""} ${position === 1 ? "is-top-1" : ""} ${position === 2 ? "is-top-2" : ""} ${position === 3 ? "is-top-3" : ""}">
-          <td>
-            <span class="ranking-position">${position}º</span>
-          </td>
-
-          <td>
-            <span class="ranking-prize ${hasPrize ? "" : "no-prize"}">
-              ${hasPrize ? "Prêmio " + String(position).padStart(2, "0") + " - " + prize : prize}
-            </span>
-          </td>
-
-          <td>
-            <div class="ranking-user">${user.username}</div>
-          </td>
-
-          <td>
-            <span class="ranking-points">${user.points} pts</span>
-          </td>
-
-          <td>
-            ${user.predictionsCount} palpite(s)
-          </td>
-        </tr>
-      `;
-    }).join("");
-  } catch (error) {
-    body.innerHTML = `
-      <tr>
-        <td colspan="5">${error.message || "Não foi possível carregar a classificação."}</td>
-      </tr>
-    `;
+  if (typeof window.loadPublicLeaderboardFromNeon === "function") {
+    return window.loadPublicLeaderboardFromNeon(true);
   }
 }
 
 function setupLeaderboard() {
   const button = $("#refreshLeaderboardBtn");
-
   if (button) {
-    button.addEventListener("click", loadLeaderboard);
+    button.addEventListener("click", function () {
+      if (typeof window.loadPublicLeaderboardFromNeon === "function") {
+        window.loadPublicLeaderboardFromNeon(true);
+      }
+    });
   }
-
-  loadLeaderboard();
 }
 
 
@@ -11564,281 +11500,7 @@ function renderLoggedContent() {
 </script>
 
 
-<script id="public-leaderboard-neon-final">
-  (() => {
-    let loadingPublicLeaderboard = false;
-    let publicLeaderboardTimer = null;
-
-    const prizeMap = {
-      1: "1º lugar",
-      2: "2º lugar",
-      3: "3º lugar",
-      4: "4º lugar",
-      5: "5º lugar",
-      6: "6º lugar",
-      7: "7º lugar",
-      8: "8º lugar",
-      9: "9º lugar",
-      10: "10º lugar"
-    };
-
-    function normalizeText(value) {
-      return String(value || "")
-        .normalize("NFD")
-        .replace(/[\u0300-\u036f]/g, "")
-        .toLowerCase()
-        .trim();
-    }
-
-    function findPublicRankingSection() {
-      const sections = Array.from(document.querySelectorAll("section, article, div"));
-
-      return sections.find((section) => {
-        const text = normalizeText(section.textContent);
-        return text.includes("classificacao dos usuarios") ||
-          text.includes("classificação dos usuários") ||
-          text.includes("usuarios classificados") ||
-          text.includes("usuários classificados");
-      }) || document.querySelector("#classificacao");
-    }
-
-    function findPublicRankingTable() {
-      const section = findPublicRankingSection();
-
-      if (section) {
-        const table = section.querySelector("table");
-        if (table) return table;
-      }
-
-      const tables = Array.from(document.querySelectorAll("table"));
-
-      return tables.find((table) => {
-        const text = normalizeText(table.textContent);
-        return text.includes("posicao") ||
-          text.includes("posição") ||
-          text.includes("premio") ||
-          text.includes("prêmio") ||
-          text.includes("pontos") ||
-          text.includes("palpites");
-      }) || null;
-    }
-
-    function getDisplayName(user) {
-      return user.name ||
-        user.username ||
-        [user.firstName, user.lastName].filter(Boolean).join(" ") ||
-        "Usuário";
-    }
-
-    function buildRankingRow(user) {
-      const position = Number(user.position || 0);
-      const name = getDisplayName(user);
-      const points = Number(user.points || 0);
-      const predictions = Number(user.predictionsCount || 0);
-      const prize = prizeMap[position] || "-";
-
-      return `
-        <tr>
-          <td>
-            <strong>${position || "-"}</strong>
-          </td>
-          <td>${prize}</td>
-          <td>
-            <strong>${name}</strong>
-          </td>
-          <td>${points}</td>
-          <td>${predictions}</td>
-        </tr>
-      `;
-    }
-
-    function ensurePublicRankingVisible() {
-      const section = findPublicRankingSection();
-
-      if (section) {
-        section.style.display = "";
-        section.style.visibility = "visible";
-        section.style.opacity = "1";
-      }
-
-      const classificacao = document.querySelector("#classificacao");
-
-      if (classificacao) {
-        classificacao.style.display = "";
-        classificacao.style.visibility = "visible";
-        classificacao.style.opacity = "1";
-      }
-    }
-
-    function ensureRankingStatus() {
-      const section = findPublicRankingSection();
-      if (!section) return null;
-
-      let status = section.querySelector("#publicLeaderboardNeonStatus");
-
-      if (status) return status;
-
-      status = document.createElement("div");
-      status.id = "publicLeaderboardNeonStatus";
-      status.textContent = "Atualizando classificação...";
-      status.style.cssText = [
-        "width: fit-content",
-        "margin: 10px 0 14px",
-        "padding: 8px 12px",
-        "border: 2px solid #050505",
-        "border-radius: 999px",
-        "background: #21d3ca",
-        "box-shadow: 2px 2px 0 #050505",
-        "font-size: 10px",
-        "font-weight: 1000",
-        "text-transform: uppercase"
-      ].join(";");
-
-      const title = Array.from(section.querySelectorAll("h1, h2, h3")).find((el) => {
-        return normalizeText(el.textContent).includes("classificacao");
-      });
-
-      if (title) {
-        title.insertAdjacentElement("afterend", status);
-      } else {
-        section.prepend(status);
-      }
-
-      return status;
-    }
-
-    function renderPublicLeaderboard(ranking) {
-      ensurePublicRankingVisible();
-
-      const table = findPublicRankingTable();
-      const status = ensureRankingStatus();
-
-      if (!table) {
-        if (status) status.textContent = "Tabela de classificação não encontrada.";
-        return;
-      }
-
-      let thead = table.querySelector("thead");
-      let tbody = table.querySelector("tbody");
-
-      if (!thead) {
-        thead = document.createElement("thead");
-        table.prepend(thead);
-      }
-
-      if (!tbody) {
-        tbody = document.createElement("tbody");
-        table.appendChild(tbody);
-      }
-
-      thead.innerHTML = `
-        <tr>
-          <th>Posição</th>
-          <th>Prêmio</th>
-          <th>Usuário</th>
-          <th>Pontos</th>
-          <th>Palpites</th>
-        </tr>
-      `;
-
-      const topRanking = Array.isArray(ranking)
-        ? ranking.slice(0, 10)
-        : [];
-
-      if (!topRanking.length) {
-        tbody.innerHTML = `
-          <tr>
-            <td colspan="5">Ainda não há usuários classificados.</td>
-          </tr>
-        `;
-
-        if (status) {
-          status.textContent = "Classificação sem usuários no momento.";
-        }
-
-        return;
-      }
-
-      tbody.innerHTML = topRanking.map(buildRankingRow).join("");
-
-      if (status) {
-        status.textContent = "Classificação atualizada às " + new Date().toLocaleTimeString("pt-BR");
-      }
-    }
-
-    async function loadPublicLeaderboardFromNeon() {
-      if (loadingPublicLeaderboard) return;
-
-      try {
-        loadingPublicLeaderboard = true;
-        ensurePublicRankingVisible();
-
-        const response = await fetch("/leaderboard-neon", {
-          credentials: "include",
-          cache: "no-store"
-        });
-
-        const data = await response.json();
-
-        if (!response.ok || !data.success) {
-          throw new Error(data.message || "Erro ao carregar classificação.");
-        }
-
-        const ranking = Array.isArray(data.leaderboard)
-          ? data.leaderboard
-          : Array.isArray(data.ranking)
-            ? data.ranking
-            : [];
-
-        renderPublicLeaderboard(ranking);
-      } catch (error) {
-        console.warn("Erro ao carregar classificação pública Neon:", error);
-
-        const status = ensureRankingStatus();
-        if (status) {
-          status.textContent = "Erro ao atualizar classificação.";
-        }
-      } finally {
-        loadingPublicLeaderboard = false;
-      }
-    }
-
-    function startPublicLeaderboardNeon() {
-      ensurePublicRankingVisible();
-
-      setTimeout(loadPublicLeaderboardFromNeon, 800);
-
-      if (publicLeaderboardTimer) {
-        clearInterval(publicLeaderboardTimer);
-      }
-
-      publicLeaderboardTimer = setInterval(loadPublicLeaderboardFromNeon, 900000);
-    }
-
-    document.addEventListener("DOMContentLoaded", startPublicLeaderboardNeon);
-    window.addEventListener("load", startPublicLeaderboardNeon);
-
-    document.addEventListener("visibilitychange", () => {
-      if (!document.hidden) {
-        loadPublicLeaderboardFromNeon();
-      }
-    });
-
-    document.addEventListener("click", (event) => {
-      const target = event.target;
-
-      if (!target) return;
-
-      const text = normalizeText(target.textContent);
-
-      if (text.includes("atualizar classificacao") || text.includes("atualizar classificação")) {
-        setTimeout(loadPublicLeaderboardFromNeon, 100);
-      }
-    });
-
-    window.loadPublicLeaderboardFromNeon = loadPublicLeaderboardFromNeon;
-  })();
-</script>
+<script id="public-leaderboard-neon-final" type="text/plain" data-disabled="ranking-duplicado"></script>
 
 
 <style id="public-ranking-points-style-final">
@@ -11938,154 +11600,7 @@ function renderLoggedContent() {
 </style>
 
 
-<script id="public-ranking-points-render-final">
-  (() => {
-    function normalizeText(value) {
-      return String(value || "")
-        .normalize("NFD")
-        .replace(/[\u0300-\u036f]/g, "")
-        .toLowerCase()
-        .trim();
-    }
-
-    function findPublicRankingSection() {
-      return document.querySelector("#classificacao") ||
-        Array.from(document.querySelectorAll("section, article, div")).find((section) => {
-          const text = normalizeText(section.textContent);
-          return text.includes("classificacao dos usuarios") ||
-            text.includes("classificação dos usuários");
-        });
-    }
-
-    function findPublicRankingTable() {
-      const section = findPublicRankingSection();
-      return section ? section.querySelector("table") : null;
-    }
-
-    function getDisplayName(user) {
-      return user.name ||
-        user.username ||
-        [user.firstName, user.lastName].filter(Boolean).join(" ") ||
-        "Usuário";
-    }
-
-    function getPrize(position) {
-      const prizes = {
-        1: "PRÊMIO 01",
-        2: "PRÊMIO 02",
-        3: "PRÊMIO 03",
-        4: "PRÊMIO 04",
-        5: "PRÊMIO 05",
-        6: "PRÊMIO 06",
-        7: "PRÊMIO 07",
-        8: "PRÊMIO 08",
-        9: "PRÊMIO 09",
-        10: "PRÊMIO 10"
-      };
-
-      return prizes[position] || "-";
-    }
-
-    function buildPublicRankingRow(user) {
-      const position = Number(user.position || 0);
-      const name = getDisplayName(user);
-      const points = Number(user.points || 0);
-      const predictions = Number(user.predictionsCount || 0);
-
-      return `
-        <tr>
-          <td><strong>${position}º</strong></td>
-          <td><strong>${getPrize(position)}</strong></td>
-          <td><strong>${name}</strong></td>
-          <td>
-            <span class="public-ranking-points-pill">${points} pts</span>
-          </td>
-          <td>
-            <span class="public-ranking-predictions-count">
-              <strong>${predictions}</strong>
-              <small>palpite(s)</small>
-            </span>
-          </td>
-        </tr>
-      `;
-    }
-
-    async function forceRenderPublicRankingPoints() {
-      try {
-        const table = findPublicRankingTable();
-        if (!table) return;
-
-        const response = await fetch("/leaderboard-neon", {
-          credentials: "include",
-          cache: "no-store"
-        });
-
-        const data = await response.json();
-
-        if (!response.ok || !data.success) return;
-
-        const ranking = Array.isArray(data.leaderboard)
-          ? data.leaderboard
-          : Array.isArray(data.ranking)
-            ? data.ranking
-            : [];
-
-        const topRanking = ranking.slice(0, 10);
-
-        let thead = table.querySelector("thead");
-        let tbody = table.querySelector("tbody");
-
-        if (!thead) {
-          thead = document.createElement("thead");
-          table.prepend(thead);
-        }
-
-        if (!tbody) {
-          tbody = document.createElement("tbody");
-          table.appendChild(tbody);
-        }
-
-        thead.innerHTML = `
-          <tr>
-            <th>Posição</th>
-            <th>Prêmio</th>
-            <th>Usuário</th>
-            <th>Pontos</th>
-            <th>Palpites</th>
-          </tr>
-        `;
-
-        if (!topRanking.length) {
-          tbody.innerHTML = '<tr><td colspan="5">Ainda não há usuários classificados.</td></tr>';
-          return;
-        }
-
-        tbody.innerHTML = topRanking.map(buildPublicRankingRow).join("");
-      } catch (error) {
-        console.warn("Erro ao renderizar pontuação pública:", error);
-      }
-    }
-
-    window.forceRenderPublicRankingPoints = forceRenderPublicRankingPoints;
-
-    document.addEventListener("DOMContentLoaded", () => {
-      setTimeout(forceRenderPublicRankingPoints, 800);
-      setTimeout(forceRenderPublicRankingPoints, 1800);
-    });
-
-    window.addEventListener("load", () => {
-      setTimeout(forceRenderPublicRankingPoints, 1200);
-    });
-
-    document.addEventListener("click", (event) => {
-      const text = normalizeText(event.target && event.target.textContent);
-
-      if (text.includes("atualizar classificacao") || text.includes("atualizar classificação")) {
-        setTimeout(forceRenderPublicRankingPoints, 300);
-      }
-    });
-  })();
-</script>
+<script id="public-ranking-points-render-final" type="text/plain" data-disabled="ranking-duplicado"></script>
 
 
 <style id="classificacao-publica-final-style">
@@ -12850,151 +12365,7 @@ function renderLoggedContent() {
 </style>
 
 
-<script id="ranking-publico-visual-final-render">
-  (() => {
-    const prizeNames = {
-      1: "Prêmio 01",
-      2: "Prêmio 02",
-      3: "Prêmio 03",
-      4: "Prêmio 04",
-      5: "Prêmio 05",
-      6: "Prêmio 06",
-      7: "Prêmio 07",
-      8: "Prêmio 08",
-      9: "Prêmio 09",
-      10: "Prêmio 10"
-    };
-
-    function normalizeText(value) {
-      return String(value || "")
-        .normalize("NFD")
-        .replace(/[\u0300-\u036f]/g, "")
-        .toLowerCase()
-        .trim();
-    }
-
-    function getSection() {
-      return document.querySelector("#classificacao");
-    }
-
-    function getTable() {
-      const section = getSection();
-      if (!section) return null;
-
-      let table = section.querySelector("table");
-
-      if (!table) {
-        table = document.createElement("table");
-        section.appendChild(table);
-      }
-
-      return table;
-    }
-
-    function getUserName(user) {
-      return user.name ||
-        user.username ||
-        [user.firstName, user.lastName].filter(Boolean).join(" ") ||
-        "Usuário";
-    }
-
-    function renderRow(user) {
-      const position = Number(user.position || 0);
-      const points = Number(user.points || 0);
-      const predictions = Number(user.predictionsCount || 0);
-      const name = getUserName(user);
-
-      return `
-        <tr>
-          <td><span class="public-rank-position-pill">${position}º</span></td>
-          <td><span class="public-rank-prize-pill">${prizeNames[position] || "-"}</span></td>
-          <td><span class="public-rank-user-name">${name}</span></td>
-          <td><span class="public-rank-points-pill">${points} pts</span></td>
-          <td>
-            <span class="public-rank-predictions">
-              <strong>${predictions}</strong>
-              <small>palpite(s)</small>
-            </span>
-          </td>
-        </tr>
-      `;
-    }
-
-    async function renderBeautifulPublicRanking() {
-      try {
-        const table = getTable();
-        if (!table) return;
-
-        const response = await fetch("/leaderboard-neon", {
-          credentials: "include",
-          cache: "no-store"
-        });
-
-        const data = await response.json();
-
-        if (!response.ok || !data.success) return;
-
-        const ranking = Array.isArray(data.leaderboard)
-          ? data.leaderboard
-          : Array.isArray(data.ranking)
-            ? data.ranking
-            : [];
-
-        const topRanking = ranking.slice(0, 10);
-
-        let thead = table.querySelector("thead");
-        let tbody = table.querySelector("tbody");
-
-        if (!thead) {
-          thead = document.createElement("thead");
-          table.prepend(thead);
-        }
-
-        if (!tbody) {
-          tbody = document.createElement("tbody");
-          table.appendChild(tbody);
-        }
-
-        thead.innerHTML = "";
-
-        if (!topRanking.length) {
-          tbody.innerHTML = "";
-          return;
-        }
-
-        tbody.innerHTML = topRanking.map(renderRow).join("");
-
-        const section = getSection();
-        const status = section && section.querySelector("#publicLeaderboardNeonStatus");
-
-        if (status) {
-          status.textContent = "Classificação atualizada às " + new Date().toLocaleTimeString("pt-BR");
-        }
-      } catch (error) {
-        console.warn("Erro ao renderizar ranking bonito:", error);
-      }
-    }
-
-    window.renderBeautifulPublicRanking = renderBeautifulPublicRanking;
-
-    document.addEventListener("DOMContentLoaded", () => {
-      setTimeout(renderBeautifulPublicRanking, 800);
-      setTimeout(renderBeautifulPublicRanking, 2000);
-    });
-
-    window.addEventListener("load", () => {
-      setTimeout(renderBeautifulPublicRanking, 1200);
-    });
-
-    document.addEventListener("click", (event) => {
-      const text = normalizeText(event.target && event.target.textContent);
-
-      if (text.includes("atualizar classificacao") || text.includes("atualizar classificação")) {
-        setTimeout(renderBeautifulPublicRanking, 300);
-      }
-    });
-  })();
-</script>
+<script id="ranking-publico-visual-final-render" type="text/plain" data-disabled="ranking-duplicado"></script>
 
 
 <script id="official-register-codes-capture-final">
@@ -15067,8 +14438,152 @@ function renderLoggedContent() {
     }
   }
 </style>
+
+
+
+<style id="ranking-mobile-padrao-horizontal-final">
+@media (max-width: 640px) {
+  #classificacao tbody tr[data-public-ranking-row] {
+    display: grid !important;
+    grid-template-columns: 44px 78px 1fr 82px 70px !important;
+    align-items: center !important;
+    min-height: 64px !important;
+    padding: 10px 12px !important;
+    gap: 8px !important;
+  }
+
+  #classificacao tbody tr[data-public-ranking-row]::before,
+  #classificacao tbody tr[data-public-ranking-row]::after {
+    display: none !important;
+    content: none !important;
+  }
+
+  #classificacao tbody tr[data-public-ranking-row] td {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    border: 0 !important;
+    padding: 0 !important;
+    width: auto !important;
+    min-width: 0 !important;
+  }
+
+  #classificacao .public-rank-prize-pill {
+    writing-mode: horizontal-tb !important;
+    transform: none !important;
+    rotate: 0deg !important;
+    width: 70px !important;
+    max-width: 70px !important;
+    min-height: 34px !important;
+    border-radius: 999px !important;
+    padding: 6px 8px !important;
+    font-size: 8px !important;
+    line-height: 1.05 !important;
+    text-align: center !important;
+    white-space: normal !important;
+    overflow: hidden !important;
+  }
+
+  #classificacao .public-rank-user-name {
+    font-size: 12px !important;
+    line-height: 1.1 !important;
+    text-align: center !important;
+    white-space: normal !important;
+    overflow-wrap: anywhere !important;
+  }
+
+  #classificacao .public-rank-points-pill {
+    min-width: 58px !important;
+    font-size: 9px !important;
+    padding: 7px 10px !important;
+  }
+
+  #classificacao .public-rank-predictions,
+  #classificacao .public-rank-predictions strong,
+  #classificacao .public-rank-predictions small {
+    font-size: 8px !important;
+    line-height: 1.05 !important;
+    text-align: center !important;
+  }
+}
+</style>
+<style id="ranking-mobile-final-card-fixo">
+@media (max-width: 640px) {
+  #classificacao tbody tr[data-public-ranking-row] {
+    display: grid !important;
+    grid-template-columns: 42px 1fr 64px !important;
+    grid-template-areas:
+      "pos user points"
+      "prize prize tips" !important;
+    gap: 8px 10px !important;
+    min-height: 92px !important;
+    padding: 14px !important;
+    align-items: center !important;
+  }
+
+  #classificacao tbody tr[data-public-ranking-row] td {
+    display: flex !important;
+    align-items: center !important;
+    border: 0 !important;
+    padding: 0 !important;
+    width: auto !important;
+    min-width: 0 !important;
+  }
+
+  #classificacao tbody tr[data-public-ranking-row] td:nth-child(1) { grid-area: pos !important; justify-content: center !important; }
+  #classificacao tbody tr[data-public-ranking-row] td:nth-child(2) { grid-area: prize !important; justify-content: flex-start !important; }
+  #classificacao tbody tr[data-public-ranking-row] td:nth-child(3) { grid-area: user !important; justify-content: center !important; }
+  #classificacao tbody tr[data-public-ranking-row] td:nth-child(4) { grid-area: points !important; justify-content: flex-end !important; }
+  #classificacao tbody tr[data-public-ranking-row] td:nth-child(5) { grid-area: tips !important; justify-content: flex-end !important; }
+
+  #classificacao .public-rank-user-name {
+    font-size: 13px !important;
+    line-height: 1.1 !important;
+    text-align: center !important;
+    white-space: normal !important;
+    overflow-wrap: anywhere !important;
+    max-width: 170px !important;
+  }
+
+  #classificacao .public-rank-prize-pill {
+    writing-mode: horizontal-tb !important;
+    transform: none !important;
+    width: auto !important;
+    max-width: 110px !important;
+    min-height: 28px !important;
+    padding: 7px 12px !important;
+    border-radius: 999px !important;
+    font-size: 8px !important;
+    line-height: 1 !important;
+    white-space: normal !important;
+  }
+
+  #classificacao .public-rank-points-pill {
+    min-width: 54px !important;
+    padding: 7px 9px !important;
+    font-size: 9px !important;
+    white-space: nowrap !important;
+  }
+
+  #classificacao .public-rank-predictions,
+  #classificacao .public-rank-predictions strong,
+  #classificacao .public-rank-predictions small {
+    font-size: 8px !important;
+    line-height: 1.05 !important;
+    text-align: right !important;
+  }
+}
+</style>
 </body>
 </html>
+
+
+
+
+
+
+
+
 
 
 
