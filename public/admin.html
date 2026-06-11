@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="pt-BR">
 <head>
   <meta charset="UTF-8" />
@@ -427,7 +427,7 @@
     <header class="topbar">
       <div class="brand">
         <strong>Admin Solar Copa</strong>
-        <span>Dashboard interno de pontuação e resultados</span>
+        <span>Dashboard interno de pontuaÃ§Ã£o e resultados</span>
       </div>
 
       <div class="actions">
@@ -441,7 +441,7 @@
       <section class="hero">
         <h1>Dashboard Administrativo</h1>
         <p>
-          Acesso exclusivo para atualizar resultados dos jogos e acompanhar a classificação completa dos usuários.
+          Acesso exclusivo para atualizar resultados dos jogos e acompanhar a classificaÃ§Ã£o completa dos usuÃ¡rios.
         </p>
       </section>
 
@@ -449,7 +449,7 @@
         <h2>Entrar como admin</h2>
 
         <label>
-          Usuário
+          UsuÃ¡rio
           <input id="adminUserInput" type="text" autocomplete="username" placeholder="admin" />
         </label>
 
@@ -467,7 +467,7 @@
         <section class="summary-admin-grid" id="adminSummaryGrid">
           <article class="summary-admin-card">
             <strong id="summaryUsers">0</strong>
-            <span>usuários cadastrados</span>
+            <span>usuÃ¡rios cadastrados</span>
           </article>
 
           <article class="summary-admin-card">
@@ -477,26 +477,26 @@
 
           <article class="summary-admin-card">
             <strong id="summaryResults">0</strong>
-            <span>resultados lançados</span>
+            <span>resultados lanÃ§ados</span>
           </article>
 
           <article class="summary-admin-card">
             <strong id="summaryAverage">0</strong>
-            <span>média por usuário</span>
+            <span>mÃ©dia por usuÃ¡rio</span>
           </article>
         </section>
 
 
         <div class="tabs">
-          <button class="tab-btn is-active" type="button" data-tab="ranking">Classificação completa</button>
+          <button class="tab-btn is-active" type="button" data-tab="ranking">ClassificaÃ§Ã£o completa</button>
           <button class="tab-btn" type="button" data-tab="jogos">Atualizar jogos do dia</button>
         </div>
 
         <section class="admin-section is-active" id="tab-ranking">
           <div class="card" style="margin-bottom: 18px;">
-            <h2>Classificação completa</h2>
+            <h2>ClassificaÃ§Ã£o completa</h2>
             <p>
-              A pontuação considera: placar exato +2 pontos de bônus, vencedor ou empate correto +3 pontos e pontuação máxima 6 pontos.
+              A pontuaÃ§Ã£o considera: placar exato +2 pontos de bÃ´nus, vencedor ou empate correto +3 pontos e pontuaÃ§Ã£o mÃ¡xima 6 pontos.
             </p>
           </div>
 
@@ -504,19 +504,19 @@
             <table>
               <thead>
                 <tr>
-                  <th>Posição</th>
-                  <th>Usuário</th>
+                  <th>PosiÃ§Ã£o</th>
+                  <th>UsuÃ¡rio</th>
                   <th>Telefone</th>
                   <th>Pontos</th>
                   <th>Palpites</th>
                   <th>Palpites pontuados</th>
-                  <th>Último palpite</th>
-                  <th>Ações</th>
+                  <th>Ãšltimo palpite</th>
+                  <th>AÃ§Ãµes</th>
                 </tr>
               </thead>
               <tbody id="leaderboardBody">
                 <tr>
-                  <td colspan="8">Carregando classificação...</td>
+                  <td colspan="8">Carregando classificaÃ§Ã£o...</td>
                 </tr>
               </tbody>
             </table>
@@ -527,7 +527,7 @@
           <div class="card" style="margin-bottom: 18px;">
             <h2>Jogos do dia</h2>
             <p>
-              Escolha uma data da primeira fase para atualizar os resultados. Ao salvar o resultado, a pontuação dos usuários será recalculada automaticamente no ranking.
+              Escolha uma data da primeira fase para atualizar os resultados. Ao salvar o resultado, a pontuaÃ§Ã£o dos usuÃ¡rios serÃ¡ recalculada automaticamente no ranking.
             </p>
 
             <div class="date-row">
@@ -553,7 +553,7 @@
     const $$ = (selector) => Array.from(document.querySelectorAll(selector));
 
     function normalizeMessage(error) {
-      return error && error.message ? error.message : "Não foi possível concluir a operação.";
+      return error && error.message ? error.message : "NÃ£o foi possÃ­vel concluir a operaÃ§Ã£o.";
     }
 
     async function api(url, options = {}) {
@@ -569,7 +569,7 @@
       const data = await response.json();
 
       if (!response.ok || !data.success) {
-        throw new Error(data.message || "Erro na requisição.");
+        throw new Error(data.message || "Erro na requisiÃ§Ã£o.");
       }
 
       return data;
@@ -620,7 +620,7 @@
     
     async function deleteUserFromAdmin(userId, username) {
       const confirmed = window.confirm(
-        `Tem certeza que deseja excluir o usuário "${username}"? Essa ação também apagará todos os palpites dele e não poderá ser desfeita.`
+        `Tem certeza que deseja excluir o usuÃ¡rio "${username}"? Essa aÃ§Ã£o tambÃ©m apagarÃ¡ todos os palpites dele e nÃ£o poderÃ¡ ser desfeita.`
       );
 
       if (!confirmed) return;
@@ -654,7 +654,7 @@
       if (!users.length) {
         body.innerHTML = `
           <tr>
-            <td colspan="8">Nenhum usuário cadastrado.</td>
+            <td colspan="8">Nenhum usuÃ¡rio cadastrado.</td>
           </tr>
         `;
         return;
@@ -723,7 +723,7 @@
               <span class="tag">Grupo ${match.group_name}</span>
               <span class="tag">${formatDateTime(match.kickoff_at)}</span>
             </div>
-            <div class="muted">${match.venue || "Estádio não informado"}</div>
+            <div class="muted">${match.venue || "EstÃ¡dio nÃ£o informado"}</div>
           </div>
 
           <div class="score-form">
@@ -786,7 +786,9 @@
             });
 
             message.textContent = "Resultado atualizado com sucesso.";
-            await loadSummary();
+            if (typeof window.loadDashboardSummary === "function") {
+              await window.loadDashboardSummary();
+            }
       await loadLeaderboard();
           } catch (error) {
             message.textContent = normalizeMessage(error);
@@ -905,7 +907,7 @@
       try {
         isLoadingSummary = true;
 
-        const response = await fetch("/admin/summary", {
+        const response = await fetch("/admin/neon-summary", {
           credentials: "include",
           cache: "no-store"
         });
@@ -918,16 +920,16 @@
 
         const summary = data.summary || {};
 
-        updateMetric("USUÁRIOS CADASTRADOS", summary.users || 0);
+        updateMetric("USUÃRIOS CADASTRADOS", summary.users || 0);
         updateMetric("PALPITES SALVOS", summary.predictions || 0);
-        updateMetric("RESULTADOS LANÇADOS", summary.results || 0);
-        updateMetric("MÉDIA POR USUÁRIO", summary.averagePerUser || 0);
+        updateMetric("RESULTADOS LANÃ‡ADOS", summary.results || 0);
+        updateMetric("MÃ‰DIA POR USUÃRIO", summary.averagePerUser || 0);
 
         const status = document.querySelector("#dashboardRealtimeStatus");
 
         if (status) {
           const now = new Date();
-          status.textContent = "Atualizado às " + now.toLocaleTimeString("pt-BR", {
+          status.textContent = "Atualizado Ã s " + now.toLocaleTimeString("pt-BR", {
             hour: "2-digit",
             minute: "2-digit",
             second: "2-digit"
@@ -943,7 +945,7 @@
     function createRealtimeStatus() {
       if (document.querySelector("#dashboardRealtimeStatus")) return;
 
-      const firstMetric = findMetricCard("USUÁRIOS CADASTRADOS");
+      const firstMetric = findMetricCard("USUÃRIOS CADASTRADOS");
 
       if (!firstMetric || !firstMetric.parentElement) return;
 
@@ -1066,7 +1068,7 @@
       const tableUsers = countUsersFromTable();
 
       if (tableUsers > 0) {
-        setCardValue("USUÁRIOS CADASTRADOS", tableUsers);
+        setCardValue("USUÃRIOS CADASTRADOS", tableUsers);
       }
     }
 
@@ -1078,7 +1080,7 @@
 
         applyFallbackFromTable();
 
-        const response = await fetch("/admin/summary", {
+        const response = await fetch("/admin/neon-summary", {
           credentials: "include",
           cache: "no-store"
         });
@@ -1091,15 +1093,15 @@
 
         const summary = data.summary || {};
 
-        setCardValue("USUÁRIOS CADASTRADOS", summary.users || 0);
+        setCardValue("USUÃRIOS CADASTRADOS", summary.users || 0);
         setCardValue("PALPITES SALVOS", summary.predictions || 0);
-        setCardValue("RESULTADOS LANÇADOS", summary.results || 0);
-        setCardValue("MÉDIA POR USUÁRIO", summary.averagePerUser || 0);
+        setCardValue("RESULTADOS LANÃ‡ADOS", summary.results || 0);
+        setCardValue("MÃ‰DIA POR USUÃRIO", summary.averagePerUser || 0);
 
         let status = document.querySelector("#dashboardSummaryStatus");
 
         if (!status) {
-          const cardsRow = findCardByLabel("USUÁRIOS CADASTRADOS")?.parentElement;
+          const cardsRow = findCardByLabel("USUÃRIOS CADASTRADOS")?.parentElement;
 
           if (cardsRow) {
             status = document.createElement("div");
@@ -1122,10 +1124,10 @@
         }
 
         if (status) {
-          status.textContent = "Dashboard atualizado às " + new Date().toLocaleTimeString("pt-BR");
+          status.textContent = "Dashboard atualizado Ã s " + new Date().toLocaleTimeString("pt-BR");
         }
       } catch (error) {
-        console.warn("Resumo do dashboard: usando dados visíveis da tabela.", error);
+        console.warn("Resumo do dashboard: usando dados visÃ­veis da tabela.", error);
         applyFallbackFromTable();
       } finally {
         loading = false;
@@ -1183,7 +1185,7 @@
         const text = normalizeText(table.textContent);
         return text.includes("telefone") ||
           text.includes("usuario") ||
-          text.includes("usuário") ||
+          text.includes("usuÃ¡rio") ||
           text.includes("palpite");
       }) || tables[0] || null;
     }
@@ -1207,7 +1209,7 @@
     function buildUserRow(user, index) {
       const name = user.username || [user.firstName, user.lastName].filter(Boolean).join(" ") || "-";
       const phone = user.phone || "-";
-      const origin = user.activationOrigin || "Público Instagram";
+      const origin = user.activationOrigin || "PÃºblico Instagram";
       const code = user.activationCode || "-";
       const predictions = Number(user.predictionsCount || 0);
       const createdAt = formatDate(user.createdAt);
@@ -1237,7 +1239,7 @@
 
       badge = document.createElement("div");
       badge.id = "adminNeonUsersStatus";
-      badge.textContent = "Carregando usuários do Neon...";
+      badge.textContent = "Carregando usuÃ¡rios do Neon...";
       badge.style.cssText = [
         "width: fit-content",
         "margin: 12px 0",
@@ -1291,9 +1293,9 @@
         }
       }
 
-      setMetric("usuários cadastrados", totalUsers);
+      setMetric("usuÃ¡rios cadastrados", totalUsers);
       setMetric("palpites salvos", totalPredictions);
-      setMetric("média por usuário", average);
+      setMetric("mÃ©dia por usuÃ¡rio", average);
     }
 
     async function loadNeonUsersToAdmin() {
@@ -1303,7 +1305,7 @@
       const badge = ensureNeonStatusBadge();
 
       if (!table) {
-        if (badge) badge.textContent = "Tabela de usuários não encontrada.";
+        if (badge) badge.textContent = "Tabela de usuÃ¡rios nÃ£o encontrada.";
         return;
       }
 
@@ -1318,7 +1320,7 @@
         const data = await response.json();
 
         if (!response.ok || !data.success) {
-          throw new Error(data.message || "Erro ao carregar usuários do Neon.");
+          throw new Error(data.message || "Erro ao carregar usuÃ¡rios do Neon.");
         }
 
         const users = Array.isArray(data.users) ? data.users : [];
@@ -1335,13 +1337,13 @@
         updateSummaryCards(users);
 
         if (badge) {
-          badge.textContent = "Usuários Neon atualizados às " + new Date().toLocaleTimeString("pt-BR");
+          badge.textContent = "UsuÃ¡rios Neon atualizados Ã s " + new Date().toLocaleTimeString("pt-BR");
         }
       } catch (error) {
-        console.warn("Erro ao carregar usuários do Neon no admin:", error);
+        console.warn("Erro ao carregar usuÃ¡rios do Neon no admin:", error);
 
         if (badge) {
-          badge.textContent = "Erro ao carregar usuários do Neon.";
+          badge.textContent = "Erro ao carregar usuÃ¡rios do Neon.";
         }
       } finally {
         loadingNeonUsers = false;
@@ -1419,7 +1421,7 @@
       let badge = document.querySelector("#adminNeonSummaryStatus");
       if (badge) return badge;
 
-      const firstCard = findMetricCard("usuários cadastrados");
+      const firstCard = findMetricCard("usuÃ¡rios cadastrados");
       if (!firstCard || !firstCard.parentElement) return null;
 
       badge = document.createElement("div");
@@ -1463,13 +1465,13 @@
 
         const summary = data.summary || {};
 
-        setMetric("usuários cadastrados", summary.users || 0);
+        setMetric("usuÃ¡rios cadastrados", summary.users || 0);
         setMetric("palpites salvos", summary.predictions || 0);
-        setMetric("resultados lançados", summary.results || 0);
-        setMetric("média por usuário", summary.averagePerUser || 0);
+        setMetric("resultados lanÃ§ados", summary.results || 0);
+        setMetric("mÃ©dia por usuÃ¡rio", summary.averagePerUser || 0);
 
         if (badge) {
-          badge.textContent = "Resumo Neon atualizado às " + new Date().toLocaleTimeString("pt-BR");
+          badge.textContent = "Resumo Neon atualizado Ã s " + new Date().toLocaleTimeString("pt-BR");
         }
       } catch (error) {
         console.warn("Erro ao carregar resumo Neon:", error);
@@ -1529,12 +1531,12 @@
 
       const rankingTable = tables.find((table) => {
         const text = normalizeText(table.textContent);
-        return text.includes("pontuação") ||
+        return text.includes("pontuaÃ§Ã£o") ||
           text.includes("pontuacao") ||
-          text.includes("posição") ||
+          text.includes("posiÃ§Ã£o") ||
           text.includes("posicao") ||
           text.includes("ranking") ||
-          text.includes("classificação") ||
+          text.includes("classificaÃ§Ã£o") ||
           text.includes("classificacao");
       });
 
@@ -1583,7 +1585,7 @@
             <strong>${name}</strong>
             <small style="display:block;opacity:.65;font-weight:800;">${user.phone || "-"}</small>
           </td>
-          <td>${user.activationOrigin || "Público Instagram"}</td>
+          <td>${user.activationOrigin || "PÃºblico Instagram"}</td>
           <td>${Number(user.points || 0)}</td>
           <td>${Number(user.predictionsCount || 0)}</td>
           <td>${Number(user.scoredPredictions || 0)}</td>
@@ -1598,7 +1600,7 @@
       const badge = ensureRankingBadge();
 
       if (!table) {
-        if (badge) badge.textContent = "Tabela de ranking não encontrada.";
+        if (badge) badge.textContent = "Tabela de ranking nÃ£o encontrada.";
         return;
       }
 
@@ -1633,8 +1635,8 @@
 
         thead.innerHTML = `
           <tr>
-            <th>Posição</th>
-            <th>Usuário</th>
+            <th>PosiÃ§Ã£o</th>
+            <th>UsuÃ¡rio</th>
             <th>Origem</th>
             <th>Pontos</th>
             <th>Palpites</th>
@@ -1645,7 +1647,7 @@
         tbody.innerHTML = ranking.map(buildRankingRow).join("");
 
         if (badge) {
-          badge.textContent = "Ranking Neon atualizado às " + new Date().toLocaleTimeString("pt-BR");
+          badge.textContent = "Ranking Neon atualizado Ã s " + new Date().toLocaleTimeString("pt-BR");
         }
       } catch (error) {
         console.warn("Erro ao carregar ranking Neon no admin:", error);
@@ -1779,8 +1781,8 @@
 <style id="fix-delete-user-button-admin-style">
   /*
     Ajuste visual apenas no dashboard:
-    mantém a coluna/botão de excluir usuário fixo na lateral direita da tabela.
-    Não altera banco, usuários, Neon, cadastro, login ou palpites.
+    mantÃ©m a coluna/botÃ£o de excluir usuÃ¡rio fixo na lateral direita da tabela.
+    NÃ£o altera banco, usuÃ¡rios, Neon, cadastro, login ou palpites.
   */
 
   .admin-users-table-wrap,
@@ -1905,12 +1907,12 @@
 
         if (
           text.includes("acao") ||
-          text.includes("ação") ||
+          text.includes("aÃ§Ã£o") ||
           text.includes("excluir") ||
           text.includes("remover") ||
           text.includes("deletar")
         ) {
-          lastHeader.textContent = "Ações";
+          lastHeader.textContent = "AÃ§Ãµes";
           lastHeader.dataset.fixedDeleteHeader = "1";
         }
       });
@@ -2128,19 +2130,19 @@
 
 
 <button id="adminFixedUserManagerButton" type="button">
-  Excluir usuário
+  Excluir usuÃ¡rio
 </button>
 
 <div id="adminFixedUserManagerOverlay" aria-hidden="true">
   <div class="admin-fixed-user-manager-modal" role="dialog" aria-modal="true">
     <div class="admin-fixed-user-manager-header">
-      <h2>Gerenciar usuários</h2>
-      <button id="adminFixedUserManagerClose" type="button">×</button>
+      <h2>Gerenciar usuÃ¡rios</h2>
+      <button id="adminFixedUserManagerClose" type="button">Ã—</button>
     </div>
 
     <div class="admin-fixed-user-manager-body">
       <input id="adminFixedUserSearch" type="search" placeholder="Buscar por nome ou telefone..." />
-      <div id="adminFixedUserList">Carregando usuários...</div>
+      <div id="adminFixedUserList">Carregando usuÃ¡rios...</div>
     </div>
   </div>
 </div>
@@ -2196,20 +2198,20 @@
       });
 
       if (!users.length) {
-        list.innerHTML = "<strong>Nenhum usuário encontrado.</strong>";
+        list.innerHTML = "<strong>Nenhum usuÃ¡rio encontrado.</strong>";
         return;
       }
 
       list.innerHTML = users.map((user) => {
-        const name = user.username || [user.firstName, user.lastName].filter(Boolean).join(" ") || "Usuário";
+        const name = user.username || [user.firstName, user.lastName].filter(Boolean).join(" ") || "UsuÃ¡rio";
         const phone = user.phone || "-";
-        const origin = user.activationOrigin || "Público Instagram";
+        const origin = user.activationOrigin || "PÃºblico Instagram";
 
         return `
           <div class="admin-fixed-user-row" data-user-row="${user.id}">
             <div>
               <strong>${name}</strong>
-              <small>Telefone: ${phone} · Origem: ${origin} · Palpites: ${Number(user.predictionsCount || 0)}</small>
+              <small>Telefone: ${phone} Â· Origem: ${origin} Â· Palpites: ${Number(user.predictionsCount || 0)}</small>
             </div>
             <button class="admin-fixed-delete-user-button" type="button" data-delete-user-id="${user.id}" data-delete-user-name="${name}">
               Excluir
@@ -2223,7 +2225,7 @@
       const list = document.querySelector("#adminFixedUserList");
 
       if (list) {
-        list.innerHTML = "Carregando usuários...";
+        list.innerHTML = "Carregando usuÃ¡rios...";
       }
 
       try {
@@ -2235,23 +2237,23 @@
         const data = await response.json();
 
         if (!response.ok || !data.success) {
-          throw new Error(data.message || "Erro ao carregar usuários.");
+          throw new Error(data.message || "Erro ao carregar usuÃ¡rios.");
         }
 
         cachedUsers = Array.isArray(data.users) ? data.users : [];
         renderUsers();
       } catch (error) {
         if (list) {
-          list.innerHTML = "Erro ao carregar usuários.";
+          list.innerHTML = "Erro ao carregar usuÃ¡rios.";
         }
 
-        console.warn("Erro ao carregar usuários:", error);
+        console.warn("Erro ao carregar usuÃ¡rios:", error);
       }
     }
 
     async function deleteUser(userId, userName) {
       const confirmed = confirm(
-        "Tem certeza que deseja excluir o usuário: " + userName + "?\n\nEssa ação também remove os palpites desse usuário."
+        "Tem certeza que deseja excluir o usuÃ¡rio: " + userName + "?\n\nEssa aÃ§Ã£o tambÃ©m remove os palpites desse usuÃ¡rio."
       );
 
       if (!confirmed) return;
@@ -2265,7 +2267,7 @@
         const data = await response.json();
 
         if (!response.ok || !data.success) {
-          throw new Error(data.message || "Erro ao excluir usuário.");
+          throw new Error(data.message || "Erro ao excluir usuÃ¡rio.");
         }
 
         cachedUsers = cachedUsers.filter((user) => String(user.id) !== String(userId));
@@ -2275,9 +2277,9 @@
         if (typeof loadNeonSummaryCards === "function") loadNeonSummaryCards();
         if (typeof loadNeonRankingToAdmin === "function") loadNeonRankingToAdmin();
 
-        alert("Usuário excluído com sucesso.");
+        alert("UsuÃ¡rio excluÃ­do com sucesso.");
       } catch (error) {
-        alert(error.message || "Erro ao excluir usuário.");
+        alert(error.message || "Erro ao excluir usuÃ¡rio.");
       }
     }
 
@@ -2314,7 +2316,7 @@
       const button = event.target.closest("[data-delete-user-id]");
       if (!button) return;
 
-      deleteUser(button.dataset.deleteUserId, button.dataset.deleteUserName || "Usuário");
+      deleteUser(button.dataset.deleteUserId, button.dataset.deleteUserName || "UsuÃ¡rio");
     });
 
     document.addEventListener("keydown", (event) => {
@@ -2328,3 +2330,4 @@
 
 </body>
 </html>
+

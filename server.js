@@ -1,4 +1,4 @@
-require("dotenv").config();
+﻿require("dotenv").config();
 const express = require("express");
 const bcrypt = require("bcrypt");
 const session = require("express-session");
@@ -70,7 +70,7 @@ function requireLogin(req, res, next) {
   if (!req.session.user) {
     return res.status(401).json({
       success: false,
-      message: "Você precisa estar logado."
+      message: "VocÃª precisa estar logado."
     });
   }
 
@@ -88,7 +88,7 @@ function isValidDate(date) {
 
 const ACTIVATION_CODES = {
   OUTLET2026: "Outlet 2026",
-  CD2026: "Centro de Distribuição",
+  CD2026: "Centro de DistribuiÃ§Ã£o",
   ADM2026: "Centro Administrativo",
   TRANS2026: "Solar Transporte",
   S12026: "Posto S1",
@@ -216,7 +216,7 @@ function getActivationCodeOrigin(activationCode) {
   const code = String(activationCode || "").trim().toUpperCase();
 
   if (!code) {
-    return "Público Instagram";
+    return "PÃºblico Instagram";
   }
 
   const extraActivationCodes = {
@@ -279,7 +279,7 @@ function getActivationCodeOriginFinal(activationCode) {
   const code = String(activationCode || "").trim().toUpperCase();
 
   if (!code) {
-    return "Público Instagram";
+    return "PÃºblico Instagram";
   }
 
   const allCodes = getAllActivationCodes();
@@ -316,7 +316,7 @@ function publicUser(user) {
 
 
 
-/* ===== CADASTRO PÚBLICO COM CÓDIGO OPCIONAL ===== */
+/* ===== CADASTRO PÃšBLICO COM CÃ“DIGO OPCIONAL ===== */
 
 
 
@@ -350,7 +350,7 @@ app.post("/register", (req, res) => {
   ) {
     return res.status(400).json({
       success: false,
-      message: "Código de ativação inválido."
+      message: "CÃ³digo de ativaÃ§Ã£o invÃ¡lido."
     });
   }
 
@@ -374,7 +374,7 @@ app.post("/register", (req, res) => {
       if (existingUser) {
         return res.status(400).json({
           success: false,
-          message: "Esse telefone já está cadastrado."
+          message: "Esse telefone jÃ¡ estÃ¡ cadastrado."
         });
       }
 
@@ -444,7 +444,7 @@ app.post("/register", (req, res) => {
                 });
               }
             } catch (error) {
-              console.error("Erro ao salvar usuário no Neon:", error.message);
+              console.error("Erro ao salvar usuÃ¡rio no Neon:", error.message);
             }
 
             req.session.user = user;
@@ -473,7 +473,7 @@ app.post("/register", (req, res) => {
   const activationCode = String(req.body.activationCode || "").trim().toUpperCase();
 
   
-  // Código de ativação liberado para campanha Outlet
+  // CÃ³digo de ativaÃ§Ã£o liberado para campanha Outlet
   if (activationCode === "OUTLET2026") {
     try {
       if (typeof ACTIVATION_CODES !== "undefined") {
@@ -484,7 +484,7 @@ app.post("/register", (req, res) => {
         activationCodes.OUTLET2026 = "Outlet 2026";
       }
     } catch (error) {
-      console.warn("Não foi possível registrar OUTLET2026:", error.message);
+      console.warn("NÃ£o foi possÃ­vel registrar OUTLET2026:", error.message);
     }
   }
 const codeMap = typeof ACTIVATION_CODES !== "undefined"
@@ -503,11 +503,11 @@ const codeMap = typeof ACTIVATION_CODES !== "undefined"
   if (activationCode && !codeMap[activationCode]) {
     return res.status(400).json({
       success: false,
-      message: "Código de ativação inválido."
+      message: "CÃ³digo de ativaÃ§Ã£o invÃ¡lido."
     });
   }
 
-  const activationOrigin = activationCode ? codeMap[activationCode] : "Público Instagram";
+  const activationOrigin = activationCode ? codeMap[activationCode] : "PÃºblico Instagram";
 
   const nameParts = fullName.split(/\s+/).filter(Boolean);
   const firstName = nameParts.shift() || fullName;
@@ -529,7 +529,7 @@ const codeMap = typeof ACTIVATION_CODES !== "undefined"
       if (existingUser) {
         return res.status(400).json({
           success: false,
-          message: "Esse telefone já está cadastrado."
+          message: "Esse telefone jÃ¡ estÃ¡ cadastrado."
         });
       }
 
@@ -626,7 +626,7 @@ app.post("/register", authLimiter, async (req, res) => {
     if (!fullName || !phone || !password || !activationCode) {
       return res.status(400).json({
         success: false,
-        message: "Informe nome e sobrenome, telefone, senha e código de ativação."
+        message: "Informe nome e sobrenome, telefone, senha e cÃ³digo de ativaÃ§Ã£o."
       });
     }
 
@@ -640,7 +640,7 @@ app.post("/register", authLimiter, async (req, res) => {
     if (phone.length < 10 || phone.length > 11) {
       return res.status(400).json({
         success: false,
-        message: "Informe um telefone válido com DDD."
+        message: "Informe um telefone vÃ¡lido com DDD."
       });
     }
 
@@ -654,7 +654,7 @@ app.post("/register", authLimiter, async (req, res) => {
     if (!activationOrigin) {
       return res.status(400).json({
         success: false,
-        message: "Código de ativação inválido."
+        message: "CÃ³digo de ativaÃ§Ã£o invÃ¡lido."
       });
     }
 
@@ -690,7 +690,7 @@ app.post("/register", authLimiter, async (req, res) => {
           if (error.message.includes("UNIQUE")) {
             return res.status(409).json({
               success: false,
-              message: "Esse telefone já está cadastrado."
+              message: "Esse telefone jÃ¡ estÃ¡ cadastrado."
             });
           }
 
@@ -758,7 +758,7 @@ app.post("/login", (req, res) => {
       if (!isValid) {
         return res.status(401).json({
           success: false,
-          message: "Telefone ou senha inválidos."
+          message: "Telefone ou senha invÃ¡lidos."
         });
       }
 
@@ -788,11 +788,11 @@ app.post("/login", (req, res) => {
     [phone],
     async (error, userRow) => {
       if (error) {
-        console.error("Erro ao buscar usuário no banco principal:", error.message);
+        console.error("Erro ao buscar usuÃ¡rio no banco principal:", error.message);
 
         return res.status(500).json({
           success: false,
-          message: "Erro ao buscar usuário."
+          message: "Erro ao buscar usuÃ¡rio."
         });
       }
 
@@ -805,7 +805,7 @@ app.post("/login", (req, res) => {
       if (!neonUser) {
         return res.status(401).json({
           success: false,
-          message: "Telefone ou senha inválidos."
+          message: "Telefone ou senha invÃ¡lidos."
         });
       }
 
@@ -818,7 +818,7 @@ app.get("/me", (req, res) => {
   if (!req.session.user) {
     return res.status(401).json({
       success: false,
-      message: "Usuário não está logado."
+      message: "UsuÃ¡rio nÃ£o estÃ¡ logado."
     });
   }
 
@@ -887,7 +887,7 @@ app.get("/matches/day/:date", requireLogin, (req, res) => {
   if (!isValidDate(date)) {
     return res.status(400).json({
       success: false,
-      message: "Data inválida. Use o formato YYYY-MM-DD."
+      message: "Data invÃ¡lida. Use o formato YYYY-MM-DD."
     });
   }
 
@@ -1133,7 +1133,7 @@ async function savePredictionToNeonFinal(data) {
     if (!pool) {
       return {
         success: false,
-        message: "Neon não configurado."
+        message: "Neon nÃ£o configurado."
       };
     }
 
@@ -1145,28 +1145,28 @@ async function savePredictionToNeonFinal(data) {
     if (!phone) {
       return {
         success: false,
-        message: "Usuário inválido para salvar placar."
+        message: "UsuÃ¡rio invÃ¡lido para salvar placar."
       };
     }
 
     if (!rawMatchId) {
       return {
         success: false,
-        message: "Jogo inválido."
+        message: "Jogo invÃ¡lido."
       };
     }
 
     if (!Number.isInteger(homeScore) || !Number.isInteger(awayScore)) {
       return {
         success: false,
-        message: "Placar inválido."
+        message: "Placar invÃ¡lido."
       };
     }
 
     if (homeScore < 0 || awayScore < 0 || homeScore > 99 || awayScore > 99) {
       return {
         success: false,
-        message: "O placar deve ter no máximo 2 dígitos por seleção."
+        message: "O placar deve ter no mÃ¡ximo 2 dÃ­gitos por seleÃ§Ã£o."
       };
     }
 
@@ -1183,7 +1183,7 @@ async function savePredictionToNeonFinal(data) {
     if (!userResult.rows.length) {
       return {
         success: false,
-        message: "Usuário não encontrado no banco."
+        message: "UsuÃ¡rio nÃ£o encontrado no banco."
       };
     }
 
@@ -1218,7 +1218,7 @@ async function savePredictionToNeonFinal(data) {
     if (!match) {
       return {
         success: false,
-        message: "Jogo não encontrado no banco."
+        message: "Jogo nÃ£o encontrado no banco."
       };
     }
 
@@ -1285,21 +1285,21 @@ app.post("/predictions", requireLogin, async (req, res) => {
   if (!matchId) {
     return res.status(400).json({
       success: false,
-      message: "Jogo inválido."
+      message: "Jogo invÃ¡lido."
     });
   }
 
   if (homeScore === null || awayScore === null || !Number.isInteger(homeScore) || !Number.isInteger(awayScore)) {
     return res.status(400).json({
       success: false,
-      message: "Informe um placar válido."
+      message: "Informe um placar vÃ¡lido."
     });
   }
 
   if (homeScore < 0 || awayScore < 0 || homeScore > 99 || awayScore > 99) {
     return res.status(400).json({
       success: false,
-      message: "O placar deve ter no máximo 2 dígitos por seleção."
+      message: "O placar deve ter no mÃ¡ximo 2 dÃ­gitos por seleÃ§Ã£o."
     });
   }
 
@@ -1338,7 +1338,7 @@ app.delete("/predictions/:matchId", requireLogin, async (req, res) => {
   if (!matchId) {
     return res.status(400).json({
       success: false,
-      message: "Jogo inválido."
+      message: "Jogo invÃ¡lido."
     });
   }
 
@@ -1413,11 +1413,11 @@ app.get("/leaderboard", requireLogin, (req, res) => {
     [],
     (error, rows) => {
       if (error) {
-        console.error("Erro ao buscar classificação:", error.message);
+        console.error("Erro ao buscar classificaÃ§Ã£o:", error.message);
 
         return res.status(500).json({
           success: false,
-          message: "Erro ao buscar classificação."
+          message: "Erro ao buscar classificaÃ§Ã£o."
         });
       }
 
@@ -1484,7 +1484,7 @@ function requireAdmin(req, res, next) {
   if (!req.session.admin) {
     return res.status(401).json({
       success: false,
-      message: "Acesso administrativo não autorizado."
+      message: "Acesso administrativo nÃ£o autorizado."
     });
   }
 
@@ -1499,13 +1499,13 @@ function getPredictionWinner(home, away) {
 
 function calculatePredictionPoints(prediction) {
   /*
-    Regra oficial do Bolão Solar:
+    Regra oficial do BolÃ£o Solar:
 
     +1 ponto por palpite realizado
     +3 pontos se acertar o vencedor ou empate
-    +2 pontos de bônus se acertar o placar exato
+    +2 pontos de bÃ´nus se acertar o placar exato
 
-    Máximo por jogo: 6 pontos.
+    MÃ¡ximo por jogo: 6 pontos.
   */
 
   let points = 1;
@@ -1552,7 +1552,7 @@ app.post("/admin/login", adminLimiter, (req, res) => {
   if (username !== ADMIN_USERNAME || password !== ADMIN_PASSWORD) {
     return res.status(401).json({
       success: false,
-      message: "Usuário ou senha de administrador inválidos."
+      message: "UsuÃ¡rio ou senha de administrador invÃ¡lidos."
     });
   }
 
@@ -1572,7 +1572,7 @@ app.get("/admin/me", (req, res) => {
   if (!req.session.admin) {
     return res.status(401).json({
       success: false,
-      message: "Administrador não está logado."
+      message: "Administrador nÃ£o estÃ¡ logado."
     });
   }
 
@@ -1601,7 +1601,7 @@ app.delete("/admin/users/:id", requireAdmin, (req, res) => {
   if (!Number.isInteger(userId) || userId <= 0) {
     return res.status(400).json({
       success: false,
-      message: "ID de usuário inválido."
+      message: "ID de usuÃ¡rio invÃ¡lido."
     });
   }
 
@@ -1610,18 +1610,18 @@ app.delete("/admin/users/:id", requireAdmin, (req, res) => {
     [userId],
     (findError, user) => {
       if (findError) {
-        console.error("Erro ao buscar usuário para exclusão:", findError.message);
+        console.error("Erro ao buscar usuÃ¡rio para exclusÃ£o:", findError.message);
 
         return res.status(500).json({
           success: false,
-          message: "Erro ao buscar usuário."
+          message: "Erro ao buscar usuÃ¡rio."
         });
       }
 
       if (!user) {
         return res.status(404).json({
           success: false,
-          message: "Usuário não encontrado."
+          message: "UsuÃ¡rio nÃ£o encontrado."
         });
       }
 
@@ -1631,11 +1631,11 @@ app.delete("/admin/users/:id", requireAdmin, (req, res) => {
           [userId],
           function (predictionsError) {
             if (predictionsError) {
-              console.error("Erro ao excluir palpites do usuário:", predictionsError.message);
+              console.error("Erro ao excluir palpites do usuÃ¡rio:", predictionsError.message);
 
               return res.status(500).json({
                 success: false,
-                message: "Erro ao excluir palpites do usuário."
+                message: "Erro ao excluir palpites do usuÃ¡rio."
               });
             }
 
@@ -1646,17 +1646,17 @@ app.delete("/admin/users/:id", requireAdmin, (req, res) => {
               [userId],
               function (userError) {
                 if (userError) {
-                  console.error("Erro ao excluir usuário:", userError.message);
+                  console.error("Erro ao excluir usuÃ¡rio:", userError.message);
 
                   return res.status(500).json({
                     success: false,
-                    message: "Erro ao excluir usuário."
+                    message: "Erro ao excluir usuÃ¡rio."
                   });
                 }
 
                 return res.json({
                   success: true,
-                  message: "Usuário excluído com sucesso.",
+                  message: "UsuÃ¡rio excluÃ­do com sucesso.",
                   deletedUser: {
                     id: user.id,
                     username:
@@ -1717,11 +1717,11 @@ app.get("/admin/export-users", requireAdmin, (req, res) => {
     [],
     async (error, rows) => {
       if (error) {
-        console.error("Erro ao exportar usuários:", error.message);
+        console.error("Erro ao exportar usuÃ¡rios:", error.message);
 
         return res.status(500).json({
           success: false,
-          message: "Erro ao exportar usuários."
+          message: "Erro ao exportar usuÃ¡rios."
         });
       }
 
@@ -1926,44 +1926,44 @@ app.get("/admin/export-users", requireAdmin, (req, res) => {
           ];
 
           summarySheet.addRows([
-            { label: "Data da exportação", value: new Date().toLocaleString("pt-BR") },
-            { label: "Total de usuários", value: totalUsers },
+            { label: "Data da exportaÃ§Ã£o", value: new Date().toLocaleString("pt-BR") },
+            { label: "Total de usuÃ¡rios", value: totalUsers },
             { label: "Total de palpites", value: totalPredictions },
             { label: "Total de jogos cadastrados", value: totalMatches },
-            { label: "Jogos com resultado lançado", value: totalResults },
-            { label: "Média de palpites por usuário", value: totalUsers > 0 ? Number((totalPredictions / totalUsers).toFixed(2)) : 0 },
-            { label: "Regra: placar exato", value: "2 pontos de bônus" },
+            { label: "Jogos com resultado lanÃ§ado", value: totalResults },
+            { label: "MÃ©dia de palpites por usuÃ¡rio", value: totalUsers > 0 ? Number((totalPredictions / totalUsers).toFixed(2)) : 0 },
+            { label: "Regra: placar exato", value: "2 pontos de bÃ´nus" },
             { label: "Regra: vencedor ou empate correto", value: "3 pontos" },
-            { label: "Regra: gols corretos por time", value: "pontuação máxima 6 pontos" }
+            { label: "Regra: gols corretos por time", value: "pontuaÃ§Ã£o mÃ¡xima 6 pontos" }
           ]);
 
           styleSheet(summarySheet);
 
-          const rankingSheet = workbook.addWorksheet("Classificação");
+          const rankingSheet = workbook.addWorksheet("ClassificaÃ§Ã£o");
 
           rankingSheet.columns = [
-            { header: "Posição", key: "position", width: 10 },
-            { header: "Usuário", key: "username", width: 32 },
+            { header: "PosiÃ§Ã£o", key: "position", width: 10 },
+            { header: "UsuÃ¡rio", key: "username", width: 32 },
             { header: "Telefone", key: "phone", width: 18 },
             { header: "Origem", key: "activationOrigin", width: 34 },
-            { header: "Código", key: "activationCode", width: 18 },
-            { header: "Pontuação", key: "points", width: 14 },
+            { header: "CÃ³digo", key: "activationCode", width: 18 },
+            { header: "PontuaÃ§Ã£o", key: "points", width: 14 },
             { header: "Palpites salvos", key: "predictionsCount", width: 18 },
             { header: "Palpites pontuados", key: "scoredPredictions", width: 22 },
-            { header: "Último palpite", key: "lastPredictionAt", width: 24 }
+            { header: "Ãšltimo palpite", key: "lastPredictionAt", width: 24 }
           ];
 
           users.forEach((user) => rankingSheet.addRow(user));
           styleSheet(rankingSheet);
           rankingSheet.autoFilter = { from: "A1", to: "I1" };
 
-          const usersSheet = workbook.addWorksheet("Usuários Cadastrados");
+          const usersSheet = workbook.addWorksheet("UsuÃ¡rios Cadastrados");
 
           usersSheet.columns = [
             { header: "ID", key: "id", width: 10 },
-            { header: "Usuário", key: "username", width: 32 },
+            { header: "UsuÃ¡rio", key: "username", width: 32 },
             { header: "Telefone", key: "phone", width: 18 },
-            { header: "Código de ativação", key: "activationCode", width: 22 },
+            { header: "CÃ³digo de ativaÃ§Ã£o", key: "activationCode", width: 22 },
             { header: "Origem", key: "activationOrigin", width: 34 },
             { header: "Data de cadastro", key: "createdAt", width: 24 }
           ];
@@ -1978,7 +1978,7 @@ app.get("/admin/export-users", requireAdmin, (req, res) => {
           const predictionsSheet = workbook.addWorksheet("Palpites Detalhados");
 
           predictionsSheet.columns = [
-            { header: "Usuário", key: "username", width: 32 },
+            { header: "UsuÃ¡rio", key: "username", width: 32 },
             { header: "Telefone", key: "phone", width: 18 },
             { header: "Origem", key: "activationOrigin", width: 34 },
             { header: "Jogo", key: "matchId", width: 14 },
@@ -1986,7 +1986,7 @@ app.get("/admin/export-users", requireAdmin, (req, res) => {
             { header: "Mandante", key: "homeTeam", width: 24 },
             { header: "Visitante", key: "awayTeam", width: 24 },
             { header: "Data", key: "matchDate", width: 16 },
-            { header: "Horário", key: "kickoffAt", width: 24 },
+            { header: "HorÃ¡rio", key: "kickoffAt", width: 24 },
             { header: "Palpite", key: "prediction", width: 14 },
             { header: "Resultado", key: "result", width: 20 },
             { header: "Pontos", key: "points", width: 12 },
@@ -2005,8 +2005,8 @@ app.get("/admin/export-users", requireAdmin, (req, res) => {
             { header: "Mandante", key: "home_team", width: 24 },
             { header: "Visitante", key: "away_team", width: 24 },
             { header: "Data", key: "match_date", width: 16 },
-            { header: "Horário", key: "kickoff_at", width: 24 },
-            { header: "Estádio", key: "venue", width: 42 },
+            { header: "HorÃ¡rio", key: "kickoff_at", width: 24 },
+            { header: "EstÃ¡dio", key: "venue", width: 42 },
             { header: "Fase", key: "stage", width: 20 }
           ];
 
@@ -2014,7 +2014,7 @@ app.get("/admin/export-users", requireAdmin, (req, res) => {
           styleSheet(matchesSheet);
           matchesSheet.autoFilter = { from: "A1", to: "H1" };
 
-          const resultsSheet = workbook.addWorksheet("Resultados Lançados");
+          const resultsSheet = workbook.addWorksheet("Resultados LanÃ§ados");
 
           resultsSheet.columns = [
             { header: "ID do jogo", key: "id", width: 14 },
@@ -2045,7 +2045,7 @@ app.get("/admin/export-users", requireAdmin, (req, res) => {
 
           originSheet.columns = [
             { header: "Origem", key: "activationOrigin", width: 34 },
-            { header: "Usuários", key: "usersCount", width: 14 },
+            { header: "UsuÃ¡rios", key: "usersCount", width: 14 },
             { header: "Palpites", key: "predictionsCount", width: 14 },
             { header: "Palpites pontuados", key: "scoredPredictions", width: 20 },
             { header: "Pontos totais", key: "points", width: 16 }
@@ -2176,118 +2176,191 @@ app.get("/admin/leaderboard", requireAdmin, (req, res) => {
   );
 });
 
-app.get("/admin/matches/day/:date", requireAdmin, (req, res) => {
-  const date = String(req.params.date || "").trim();
+app.get("/admin/matches/day/:date", requireAdmin, async (req, res) => {
+  try {
+    const date = String(req.params.date || "").trim();
 
-  if (!isValidDate(date)) {
-    return res.status(400).json({
-      success: false,
-      message: "Data inválida. Use o formato YYYY-MM-DD."
-    });
-  }
-
-  db.all(
-    `
-      SELECT
-        m.id,
-        m.group_name,
-        m.home_team,
-        m.away_team,
-        m.match_date,
-        m.kickoff_at,
-        m.venue,
-        r.home_score AS result_home_score,
-        r.away_score AS result_away_score,
-        r.updated_at AS result_updated_at
-      FROM matches m
-      LEFT JOIN match_results r ON r.match_id = m.id
-      WHERE m.stage = 'Fase de grupos'
-        AND m.match_date = ?
-      ORDER BY m.kickoff_at ASC
-    `,
-    [date],
-    (error, rows) => {
-      if (error) {
-        console.error("Erro ao buscar jogos do dia admin:", error.message);
-
-        return res.status(500).json({
-          success: false,
-          message: "Erro ao buscar jogos do dia."
-        });
-      }
-
-      return res.json({
-        success: true,
-        date,
-        matches: rows
+    if (!isValidDate(date)) {
+      return res.status(400).json({
+        success: false,
+        message: "Data inválida. Use o formato YYYY-MM-DD."
       });
     }
-  );
-});
 
-app.post("/admin/results", requireAdmin, (req, res) => {
-  const matchId = normalizeMatchIdForDatabase(req.body.matchId);
-  const homeScore = Number(req.body.homeScore);
-  const awayScore = Number(req.body.awayScore);
+    const neon = require("./neon-db");
+    const pool = neon.getNeonPool();
 
-  if (!matchId) {
-    return res.status(400).json({
-      success: false,
-      message: "Informe o ID do jogo."
-    });
-  }
-
-  if (!Number.isInteger(homeScore) || !Number.isInteger(awayScore)) {
-    return res.status(400).json({
-      success: false,
-      message: "Informe placares válidos."
-    });
-  }
-
-  if (homeScore < 0 || awayScore < 0 || homeScore > 99 || awayScore > 99) {
-    return res.status(400).json({
-      success: false,
-      message: "O placar deve estar entre 0 e 99."
-    });
-  }
-
-  db.get("SELECT id FROM matches WHERE id = ?", [matchId], async (matchError, match) => {
-    if (matchError) {
-      console.error("Erro ao buscar jogo para resultado:", matchError.message);
-
+    if (!pool) {
       return res.status(500).json({
         success: false,
-        message: "Erro ao buscar jogo."
+        message: "Neon não configurado."
       });
     }
 
-    if (!match) {
-        const neonFallback = await savePredictionOnlyInNeonIfAvailable({
-          phone: req.session.user && req.session.user.phone,
-          matchId,
-          homeScore,
-          awayScore
-        });
+    const result = await pool.query(
+      `
+        SELECT
+          m.id,
+          m.group_name,
+          m.home_team,
+          m.away_team,
+          TO_CHAR(m.match_date::date, 'YYYY-MM-DD') AS match_date,
+          m.kickoff_at,
+          m.venue,
+          r.home_score AS result_home_score,
+          r.away_score AS result_away_score,
+          r.updated_at AS result_updated_at
+        FROM matches m
+        LEFT JOIN match_results r ON r.match_id = m.id
+        WHERE m.match_date::date = $1::date
+        ORDER BY m.kickoff_at ASC, m.id ASC
+      `,
+      [date]
+    );
 
-        if (neonFallback.success) {
-          return res.json({
-            success: true,
-            message: "Palpite salvo com sucesso.",
-            prediction: {
-              matchId: neonFallback.matchId,
-              homeScore: neonFallback.homeScore,
-              awayScore: neonFallback.awayScore
-            }
-          });
-        }
+    const seen = new Set();
 
-        return res.status(404).json({
-          success: false,
-          message: neonFallback.message || "Jogo não encontrado."
-        });
-      }
+    const matches = result.rows.filter((match) => {
+      const key = [
+        String(match.home_team || "").trim().toLowerCase(),
+        String(match.away_team || "").trim().toLowerCase(),
+        String(match.match_date || "").trim(),
+        String(match.kickoff_at || "").trim()
+      ].join("|");
 
-    db.run(
+      if (seen.has(key)) return false;
+
+      seen.add(key);
+      return true;
+    });
+
+    return res.json({
+      success: true,
+      date,
+      matches
+    });
+  } catch (error) {
+    console.error("Erro ao buscar jogos do dia admin no Neon:", error.message);
+
+    return res.status(500).json({
+      success: false,
+      message: "Erro ao buscar jogos do dia no Neon.",
+      error: error.message
+    });
+  }
+});
+app.get("/admin/matches/group-stage", requireAdmin, async (req, res) => {
+  try {
+    const neon = require("./neon-db");
+    const pool = neon.getNeonPool();
+
+    if (!pool) {
+      return res.status(500).json({
+        success: false,
+        message: "Neon não configurado."
+      });
+    }
+
+    const result = await pool.query(
+      `
+        SELECT
+          m.id,
+          m.group_name,
+          m.home_team,
+          m.away_team,
+          TO_CHAR(m.match_date::date, 'YYYY-MM-DD') AS match_date,
+          m.kickoff_at,
+          m.venue,
+          r.home_score AS result_home_score,
+          r.away_score AS result_away_score,
+          r.updated_at AS result_updated_at
+        FROM matches m
+        LEFT JOIN match_results r ON r.match_id = m.id
+        WHERE m.stage = 'Fase de grupos'
+        ORDER BY m.match_date::date ASC, m.kickoff_at ASC, m.id ASC
+      `
+    );
+
+    const seen = new Set();
+
+    const matches = result.rows.filter((match) => {
+      const key = [
+        String(match.home_team || "").trim().toLowerCase(),
+        String(match.away_team || "").trim().toLowerCase(),
+        String(match.match_date || "").trim(),
+        String(match.kickoff_at || "").trim()
+      ].join("|");
+
+      if (seen.has(key)) return false;
+
+      seen.add(key);
+      return true;
+    });
+
+    return res.json({
+      success: true,
+      matches
+    });
+  } catch (error) {
+    console.error("Erro ao buscar fase de grupos admin no Neon:", error.message);
+
+    return res.status(500).json({
+      success: false,
+      message: "Erro ao buscar fase de grupos no Neon.",
+      error: error.message
+    });
+  }
+});
+app.post("/admin/results", requireAdmin, async (req, res) => {
+  try {
+    const matchId = normalizeMatchIdForDatabase(req.body.matchId);
+    const homeScore = Number(req.body.homeScore);
+    const awayScore = Number(req.body.awayScore);
+
+    if (!matchId) {
+      return res.status(400).json({
+        success: false,
+        message: "Informe o ID do jogo."
+      });
+    }
+
+    if (!Number.isInteger(homeScore) || !Number.isInteger(awayScore)) {
+      return res.status(400).json({
+        success: false,
+        message: "Informe placares válidos."
+      });
+    }
+
+    if (homeScore < 0 || awayScore < 0 || homeScore > 99 || awayScore > 99) {
+      return res.status(400).json({
+        success: false,
+        message: "O placar deve estar entre 0 e 99."
+      });
+    }
+
+    const neon = require("./neon-db");
+    const pool = neon.getNeonPool();
+
+    if (!pool) {
+      return res.status(500).json({
+        success: false,
+        message: "Neon não configurado."
+      });
+    }
+
+    const matchResult = await pool.query(
+      "SELECT id FROM matches WHERE id = $1",
+      [matchId]
+    );
+
+    if (!matchResult.rows.length) {
+      return res.status(404).json({
+        success: false,
+        message: "Jogo não encontrado no Neon."
+      });
+    }
+
+    await pool.query(
       `
         INSERT INTO match_results (
           match_id,
@@ -2295,38 +2368,35 @@ app.post("/admin/results", requireAdmin, (req, res) => {
           away_score,
           updated_at
         )
-        VALUES (?, ?, ?, CURRENT_TIMESTAMP)
-        ON CONFLICT(match_id)
+        VALUES ($1, $2, $3, NOW())
+        ON CONFLICT (match_id)
         DO UPDATE SET
-          home_score = excluded.home_score,
-          away_score = excluded.away_score,
-          updated_at = CURRENT_TIMESTAMP
+          home_score = EXCLUDED.home_score,
+          away_score = EXCLUDED.away_score,
+          updated_at = NOW()
       `,
-      [matchId, homeScore, awayScore],
-      function (error) {
-        if (error) {
-          console.error("Erro ao salvar resultado:", error.message);
-
-          return res.status(500).json({
-            success: false,
-            message: "Erro ao salvar resultado."
-          });
-        }
-
-        return res.json({
-          success: true,
-          message: "Resultado atualizado com sucesso.",
-          result: {
-            matchId,
-            homeScore,
-            awayScore
-          }
-        });
-      }
+      [matchId, homeScore, awayScore]
     );
-  });
-});
 
+    return res.json({
+      success: true,
+      message: "Resultado atualizado com sucesso.",
+      result: {
+        matchId,
+        homeScore,
+        awayScore
+      }
+    });
+  } catch (error) {
+    console.error("Erro ao salvar resultado no Neon:", error.message);
+
+    return res.status(500).json({
+      success: false,
+      message: "Erro ao salvar resultado no Neon.",
+      error: error.message
+    });
+  }
+});
 // ===== END ADMIN DASHBOARD ROUTES =====
 
 
@@ -2344,8 +2414,8 @@ app.get("/admin/summary", requireAdmin, (req, res) => {
 
   db.get("SELECT COUNT(*) AS total FROM users", [], (usersError, usersRow) => {
     if (usersError) {
-      console.error("Erro ao contar usuários:", usersError.message);
-      return res.status(500).json({ success: false, message: "Erro ao contar usuários." });
+      console.error("Erro ao contar usuÃ¡rios:", usersError.message);
+      return res.status(500).json({ success: false, message: "Erro ao contar usuÃ¡rios." });
     }
 
     summary.users = Number(usersRow?.total || 0);
@@ -2394,7 +2464,7 @@ async function deletePredictionFromNeonIfAvailable(data) {
       return {
         success: false,
         deleted: 0,
-        message: "Neon não configurado."
+        message: "Neon nÃ£o configurado."
       };
     }
 
@@ -2423,7 +2493,7 @@ async function deletePredictionFromNeonIfAvailable(data) {
       return {
         success: false,
         deleted: 0,
-        message: "Usuário não encontrado no Neon."
+        message: "UsuÃ¡rio nÃ£o encontrado no Neon."
       };
     }
 
@@ -2468,7 +2538,7 @@ async function savePredictionOnlyInNeonIfAvailable(data) {
     if (!pool) {
       return {
         success: false,
-        message: "Neon não configurado."
+        message: "Neon nÃ£o configurado."
       };
     }
 
@@ -2480,28 +2550,28 @@ async function savePredictionOnlyInNeonIfAvailable(data) {
     if (!phone) {
       return {
         success: false,
-        message: "Usuário inválido para salvar palpite."
+        message: "UsuÃ¡rio invÃ¡lido para salvar palpite."
       };
     }
 
     if (!rawMatchId) {
       return {
         success: false,
-        message: "Jogo inválido para salvar palpite."
+        message: "Jogo invÃ¡lido para salvar palpite."
       };
     }
 
     if (!Number.isInteger(homeScore) || !Number.isInteger(awayScore)) {
       return {
         success: false,
-        message: "Placar inválido."
+        message: "Placar invÃ¡lido."
       };
     }
 
     if (homeScore < 0 || awayScore < 0 || homeScore > 99 || awayScore > 99) {
       return {
         success: false,
-        message: "O placar deve ter no máximo 2 dígitos por seleção."
+        message: "O placar deve ter no mÃ¡ximo 2 dÃ­gitos por seleÃ§Ã£o."
       };
     }
 
@@ -2518,7 +2588,7 @@ async function savePredictionOnlyInNeonIfAvailable(data) {
     if (!userResult.rows.length) {
       return {
         success: false,
-        message: "Usuário não encontrado no Neon."
+        message: "UsuÃ¡rio nÃ£o encontrado no Neon."
       };
     }
 
@@ -2552,7 +2622,7 @@ async function savePredictionOnlyInNeonIfAvailable(data) {
     if (!match) {
       return {
         success: false,
-        message: "Jogo não encontrado no Neon."
+        message: "Jogo nÃ£o encontrado no Neon."
       };
     }
 
@@ -2610,7 +2680,7 @@ async function savePredictionToNeonIfAvailable(data) {
     const pool = neon.getNeonPool();
 
     if (!pool) {
-      console.warn("Neon não configurado. Palpite salvo apenas no banco principal.");
+      console.warn("Neon nÃ£o configurado. Palpite salvo apenas no banco principal.");
       return;
     }
 
@@ -2635,7 +2705,7 @@ async function savePredictionToNeonIfAvailable(data) {
     );
 
     if (!userResult.rows.length) {
-      console.warn("Usuário não encontrado no Neon para salvar palpite:", phone);
+      console.warn("UsuÃ¡rio nÃ£o encontrado no Neon para salvar palpite:", phone);
       return;
     }
 
@@ -2686,7 +2756,7 @@ async function savePredictionToNeonIfAvailable(data) {
     }
 
     if (!match) {
-      console.warn("Jogo não encontrado no Neon para salvar palpite:", matchId);
+      console.warn("Jogo nÃ£o encontrado no Neon para salvar palpite:", matchId);
       return;
     }
 
@@ -2759,7 +2829,7 @@ async function findUserInNeonByPhone(phone) {
 
     return result.rows[0] || null;
   } catch (error) {
-    console.error("Erro ao buscar usuário no Neon:", error.message);
+    console.error("Erro ao buscar usuÃ¡rio no Neon:", error.message);
     return null;
   }
 }
@@ -2771,7 +2841,7 @@ async function saveUserToNeonIfAvailable(userData) {
     const pool = neon.getNeonPool();
 
     if (!pool) {
-      console.warn("Neon não configurado. Cadastro salvo apenas no banco principal.");
+      console.warn("Neon nÃ£o configurado. Cadastro salvo apenas no banco principal.");
       return;
     }
 
@@ -2780,11 +2850,11 @@ async function saveUserToNeonIfAvailable(userData) {
     const lastName = String(userData.lastName || "").trim();
     const phone = String(userData.phone || "").replace(/\D/g, "");
     const activationCode = userData.activationCode || null;
-    const activationOrigin = userData.activationOrigin || "Público Instagram";
+    const activationOrigin = userData.activationOrigin || "PÃºblico Instagram";
     const passwordHash = userData.passwordHash;
 
     if (!phone || !passwordHash) {
-      console.warn("Dados insuficientes para salvar usuário no Neon.");
+      console.warn("Dados insuficientes para salvar usuÃ¡rio no Neon.");
       return;
     }
 
@@ -2821,9 +2891,9 @@ async function saveUserToNeonIfAvailable(userData) {
       ]
     );
 
-    console.log("Usuário salvo/atualizado no Neon:", phone);
+    console.log("UsuÃ¡rio salvo/atualizado no Neon:", phone);
   } catch (error) {
-    console.error("Erro ao salvar usuário no Neon:", error.message);
+    console.error("Erro ao salvar usuÃ¡rio no Neon:", error.message);
   }
 }
 
@@ -2836,7 +2906,7 @@ app.get("/admin/neon-status", requireAdmin, async (req, res) => {
       return res.status(500).json({
         success: false,
         connected: false,
-        message: "DATABASE_URL não encontrada no ambiente."
+        message: "DATABASE_URL nÃ£o encontrada no ambiente."
       });
     }
 
@@ -2869,7 +2939,7 @@ app.get("/admin/neon-users", requireAdmin, async (req, res) => {
     if (!pool) {
       return res.status(500).json({
         success: false,
-        message: "Neon não configurado."
+        message: "Neon nÃ£o configurado."
       });
     }
 
@@ -2905,11 +2975,11 @@ app.get("/admin/neon-users", requireAdmin, async (req, res) => {
       }))
     });
   } catch (error) {
-    console.error("Erro ao listar usuários do Neon:", error.message);
+    console.error("Erro ao listar usuÃ¡rios do Neon:", error.message);
 
     return res.status(500).json({
       success: false,
-      message: "Erro ao listar usuários do Neon.",
+      message: "Erro ao listar usuÃ¡rios do Neon.",
       error: error.message
     });
   }
@@ -2925,7 +2995,7 @@ app.get("/admin/neon-summary", requireAdmin, async (req, res) => {
     if (!pool) {
       return res.status(500).json({
         success: false,
-        message: "Neon não configurado."
+        message: "Neon nÃ£o configurado."
       });
     }
 
@@ -2967,7 +3037,7 @@ app.get("/admin/neon-ranking", requireAdmin, async (req, res) => {
     if (!pool) {
       return res.status(500).json({
         success: false,
-        message: "Neon não configurado."
+        message: "Neon nÃ£o configurado."
       });
     }
 
@@ -3002,7 +3072,7 @@ app.get("/admin/neon-ranking", requireAdmin, async (req, res) => {
           firstName: row.first_name,
           lastName: row.last_name,
           phone: row.phone,
-          activationOrigin: row.activation_origin || "Público Instagram",
+          activationOrigin: row.activation_origin || "PÃºblico Instagram",
           predictionsCount: 0,
           scoredPredictions: 0,
           points: 0
@@ -3065,7 +3135,7 @@ app.get("/leaderboard-neon", async (req, res) => {
     if (!pool) {
       return res.status(500).json({
         success: false,
-        message: "Neon não configurado."
+        message: "Neon nÃ£o configurado."
       });
     }
 
@@ -3101,7 +3171,7 @@ app.get("/leaderboard-neon", async (req, res) => {
           firstName: row.first_name,
           lastName: row.last_name,
           phone: row.phone,
-          activationOrigin: row.activation_origin || "Público Instagram",
+          activationOrigin: row.activation_origin || "PÃºblico Instagram",
           predictionsCount: 0,
           scoredPredictions: 0,
           points: 0
@@ -3145,11 +3215,11 @@ app.get("/leaderboard-neon", async (req, res) => {
       ranking
     });
   } catch (error) {
-    console.error("Erro ao carregar classificação pública Neon:", error.message);
+    console.error("Erro ao carregar classificaÃ§Ã£o pÃºblica Neon:", error.message);
 
     return res.status(500).json({
       success: false,
-      message: "Erro ao carregar classificação pública Neon.",
+      message: "Erro ao carregar classificaÃ§Ã£o pÃºblica Neon.",
       error: error.message
     });
   }
@@ -3172,7 +3242,7 @@ async function exportNeonDashboardSpreadsheet(req, res) {
     if (!pool) {
       return res.status(500).json({
         success: false,
-        message: "Neon não configurado."
+        message: "Neon nÃ£o configurado."
       });
     }
 
@@ -3329,7 +3399,7 @@ async function exportNeonDashboardSpreadsheet(req, res) {
           nome: row.username || [row.first_name, row.last_name].filter(Boolean).join(" "),
           telefone: row.phone,
           codigo: row.activation_code || "",
-          origem: row.activation_origin || "Público Instagram",
+          origem: row.activation_origin || "PÃºblico Instagram",
           pontos: 0,
           palpites: 0,
           palpitesPontuados: 0
@@ -3370,7 +3440,7 @@ async function exportNeonDashboardSpreadsheet(req, res) {
     const origemMap = new Map();
 
     users.forEach((user) => {
-      const origem = user.activation_origin || "Público Instagram";
+      const origem = user.activation_origin || "PÃºblico Instagram";
 
       if (!origemMap.has(origem)) {
         origemMap.set(origem, {
@@ -3384,7 +3454,7 @@ async function exportNeonDashboardSpreadsheet(req, res) {
     });
 
     predictions.forEach((prediction) => {
-      const origem = prediction.activation_origin || "Público Instagram";
+      const origem = prediction.activation_origin || "PÃºblico Instagram";
 
       if (!origemMap.has(origem)) {
         origemMap.set(origem, {
@@ -3406,16 +3476,16 @@ async function exportNeonDashboardSpreadsheet(req, res) {
 
     resumoSheet.addRows([
       { indicador: "FONTE DOS DADOS", valor: "NEON POSTGRESQL" },
-      { indicador: "Usuários cadastrados", valor: users.length },
+      { indicador: "UsuÃ¡rios cadastrados", valor: users.length },
       { indicador: "Palpites salvos", valor: predictions.length },
       {
-        indicador: "Média de palpites por usuário",
+        indicador: "MÃ©dia de palpites por usuÃ¡rio",
         valor: users.length > 0 ? Number((predictions.length / users.length).toFixed(2)) : 0
       },
       { indicador: "Exportado em", valor: new Date().toLocaleString("pt-BR") },
-      { indicador: "Regra: placar exato", valor: "2 pontos de bônus" },
+      { indicador: "Regra: placar exato", valor: "2 pontos de bÃ´nus" },
       { indicador: "Regra: vencedor ou empate correto", valor: "3 pontos" },
-      { indicador: "Regra: gols corretos por time", valor: "pontuação máxima 6 pontos" }
+      { indicador: "Regra: gols corretos por time", valor: "pontuaÃ§Ã£o mÃ¡xima 6 pontos" }
     ]);
 
     styleSheet(resumoSheet, colors.black);
@@ -3424,8 +3494,8 @@ async function exportNeonDashboardSpreadsheet(req, res) {
     const origemSheet = workbook.addWorksheet("Por origem");
 
     origemSheet.columns = [
-      { header: "Origem / Código", key: "origem" },
-      { header: "Usuários", key: "usuarios" },
+      { header: "Origem / CÃ³digo", key: "origem" },
+      { header: "UsuÃ¡rios", key: "usuarios" },
       { header: "Palpites", key: "palpites" }
     ];
 
@@ -3437,7 +3507,7 @@ async function exportNeonDashboardSpreadsheet(req, res) {
     autoWidth(origemSheet);
     origemSheet.autoFilter = { from: "A1", to: "C1" };
 
-    const usersSheet = workbook.addWorksheet("Usuários");
+    const usersSheet = workbook.addWorksheet("UsuÃ¡rios");
 
     usersSheet.columns = [
       { header: "ID", key: "id" },
@@ -3445,7 +3515,7 @@ async function exportNeonDashboardSpreadsheet(req, res) {
       { header: "Primeiro nome", key: "firstName" },
       { header: "Sobrenome", key: "lastName" },
       { header: "Telefone", key: "phone" },
-      { header: "Código de ativação", key: "activationCode" },
+      { header: "CÃ³digo de ativaÃ§Ã£o", key: "activationCode" },
       { header: "Origem", key: "activationOrigin" },
       { header: "Data de cadastro", key: "createdAt" }
     ];
@@ -3458,7 +3528,7 @@ async function exportNeonDashboardSpreadsheet(req, res) {
         lastName: user.last_name,
         phone: user.phone,
         activationCode: user.activation_code || "",
-        activationOrigin: user.activation_origin || "Público Instagram",
+        activationOrigin: user.activation_origin || "PÃºblico Instagram",
         createdAt: formatDate(user.created_at)
       });
     });
@@ -3471,9 +3541,9 @@ async function exportNeonDashboardSpreadsheet(req, res) {
 
     predictionsSheet.columns = [
       { header: "ID", key: "id" },
-      { header: "Usuário", key: "user" },
+      { header: "UsuÃ¡rio", key: "user" },
       { header: "Telefone", key: "phone" },
-      { header: "Código", key: "code" },
+      { header: "CÃ³digo", key: "code" },
       { header: "Origem", key: "origin" },
       { header: "Jogo", key: "matchId" },
       { header: "Mandante", key: "homeTeam" },
@@ -3490,7 +3560,7 @@ async function exportNeonDashboardSpreadsheet(req, res) {
         user: prediction.username,
         phone: prediction.phone,
         code: prediction.activation_code || "",
-        origin: prediction.activation_origin || "Público Instagram",
+        origin: prediction.activation_origin || "PÃºblico Instagram",
         matchId: prediction.match_id,
         homeTeam: prediction.home_team,
         awayTeam: prediction.away_team,
@@ -3508,10 +3578,10 @@ async function exportNeonDashboardSpreadsheet(req, res) {
     const rankingSheet = workbook.addWorksheet("Ranking");
 
     rankingSheet.columns = [
-      { header: "Posição", key: "posicao" },
+      { header: "PosiÃ§Ã£o", key: "posicao" },
       { header: "Nome", key: "nome" },
       { header: "Telefone", key: "telefone" },
-      { header: "Código", key: "codigo" },
+      { header: "CÃ³digo", key: "codigo" },
       { header: "Origem", key: "origem" },
       { header: "Pontos", key: "pontos" },
       { header: "Palpites", key: "palpites" },
@@ -3563,7 +3633,7 @@ app.delete("/admin/neon-users/:id", requireAdmin, async (req, res) => {
     if (!pool) {
       return res.status(500).json({
         success: false,
-        message: "Neon não configurado."
+        message: "Neon nÃ£o configurado."
       });
     }
 
@@ -3572,7 +3642,7 @@ app.delete("/admin/neon-users/:id", requireAdmin, async (req, res) => {
     if (!Number.isInteger(userId) || userId <= 0) {
       return res.status(400).json({
         success: false,
-        message: "Usuário inválido."
+        message: "UsuÃ¡rio invÃ¡lido."
       });
     }
 
@@ -3584,7 +3654,7 @@ app.delete("/admin/neon-users/:id", requireAdmin, async (req, res) => {
     if (!userResult.rows.length) {
       return res.status(404).json({
         success: false,
-        message: "Usuário não encontrado."
+        message: "UsuÃ¡rio nÃ£o encontrado."
       });
     }
 
@@ -3593,15 +3663,15 @@ app.delete("/admin/neon-users/:id", requireAdmin, async (req, res) => {
 
     return res.json({
       success: true,
-      message: "Usuário excluído com sucesso.",
+      message: "UsuÃ¡rio excluÃ­do com sucesso.",
       user: userResult.rows[0]
     });
   } catch (error) {
-    console.error("Erro ao excluir usuário do Neon:", error.message);
+    console.error("Erro ao excluir usuÃ¡rio do Neon:", error.message);
 
     return res.status(500).json({
       success: false,
-      message: "Erro ao excluir usuário.",
+      message: "Erro ao excluir usuÃ¡rio.",
       error: error.message
     });
   }
@@ -3617,7 +3687,7 @@ app.post("/admin/neon-users/:id/delete", requireAdmin, async (req, res) => {
     if (!pool) {
       return res.status(500).json({
         success: false,
-        message: "Neon não configurado."
+        message: "Neon nÃ£o configurado."
       });
     }
 
@@ -3626,7 +3696,7 @@ app.post("/admin/neon-users/:id/delete", requireAdmin, async (req, res) => {
     if (!Number.isInteger(userId) || userId <= 0) {
       return res.status(400).json({
         success: false,
-        message: "Usuário inválido."
+        message: "UsuÃ¡rio invÃ¡lido."
       });
     }
 
@@ -3638,7 +3708,7 @@ app.post("/admin/neon-users/:id/delete", requireAdmin, async (req, res) => {
     if (!userResult.rows.length) {
       return res.status(404).json({
         success: false,
-        message: "Usuário não encontrado."
+        message: "UsuÃ¡rio nÃ£o encontrado."
       });
     }
 
@@ -3647,15 +3717,15 @@ app.post("/admin/neon-users/:id/delete", requireAdmin, async (req, res) => {
 
     return res.json({
       success: true,
-      message: "Usuário excluído com sucesso.",
+      message: "UsuÃ¡rio excluÃ­do com sucesso.",
       user: userResult.rows[0]
     });
   } catch (error) {
-    console.error("Erro ao excluir usuário do Neon:", error.message);
+    console.error("Erro ao excluir usuÃ¡rio do Neon:", error.message);
 
     return res.status(500).json({
       success: false,
-      message: "Erro ao excluir usuário.",
+      message: "Erro ao excluir usuÃ¡rio.",
       error: error.message
     });
   }
@@ -3678,7 +3748,7 @@ app.get("/matches/day", async (req, res) => {
       return res.status(500).json({
         success: false,
         sucesso: false,
-        message: "Neon não configurado."
+        message: "Neon nÃ£o configurado."
       });
     }
 
@@ -3688,7 +3758,7 @@ app.get("/matches/day", async (req, res) => {
       return res.status(400).json({
         success: false,
         sucesso: false,
-        message: "Data inválida. Use ?date=YYYY-MM-DD"
+        message: "Data invÃ¡lida. Use ?date=YYYY-MM-DD"
       });
     }
 
@@ -3715,7 +3785,7 @@ app.get("/matches/day", async (req, res) => {
       .filter((match) => {
         const id = String(match.id || "").trim();
 
-        // Abertura já fica fixa no app. Não duplica em Jogos do Dia.
+        // Abertura jÃ¡ fica fixa no app. NÃ£o duplica em Jogos do Dia.
         if (id === "A-01" || id === "m01" || id === "M01") {
           return false;
         }
@@ -3774,7 +3844,7 @@ app.get("/matches/first-round", async (req, res) => {
     if (!pool) {
       return res.status(500).json({
         success: false,
-        message: "Neon não configurado."
+        message: "Neon nÃ£o configurado."
       });
     }
 
@@ -3887,7 +3957,7 @@ app.get("/api/first-round-matches", async (req, res) => {
     if (!pool) {
       return res.status(500).json({
         success: false,
-        message: "Neon não configurado."
+        message: "Neon nÃ£o configurado."
       });
     }
 
@@ -3994,3 +4064,5 @@ app.get("/api/first-round-matches", async (req, res) => {
 app.listen(PORT, () => {
   console.log(`Servidor rodando em http://localhost:${PORT}`);
 });
+
+
