@@ -218,6 +218,44 @@ function parseMatchDateTime(match) {
 }
 
 
+function formatMatchKickoffForClient(match) {
+  const kickoffDate = parseMatchDateTime(match);
+
+  if (!kickoffDate) {
+    return {
+      kickoff_at: match && match.kickoff_at ? match.kickoff_at : null,
+      kickoffAt: match && (match.kickoffAt || match.kickoff_at) ? (match.kickoffAt || match.kickoff_at) : null,
+      kickoffTimeBR: match && (match.kickoffTimeBR || match.kickoff_time_br) ? (match.kickoffTimeBR || match.kickoff_time_br) : null,
+      timezone: "America/Sao_Paulo"
+    };
+  }
+
+  return {
+    kickoff_at: kickoffDate.toISOString(),
+    kickoffAt: kickoffDate.toISOString(),
+    kickoffTimeBR: kickoffDate.toLocaleTimeString("pt-BR", {
+      timeZone: "America/Sao_Paulo",
+      hour: "2-digit",
+      minute: "2-digit",
+      hour12: false
+    }),
+    timezone: "America/Sao_Paulo"
+  };
+}
+
+function normalizeMatchForClient(match) {
+  if (!match) return match;
+
+  return {
+    ...match,
+    ...formatMatchKickoffForClient(match)
+  };
+}
+
+function normalizeMatchesForClient(matches) {
+  return Array.isArray(matches) ? matches.map(normalizeMatchForClient) : [];
+}
+
 function isPredictionLockedForMatch(match) {
   const kickoffDate = parseMatchDateTime(match);
 
@@ -937,7 +975,7 @@ app.get("/matches", requireLogin, (req, res) => {
 
       return res.json({
         success: true,
-        matches: rows
+        matches: normalizeMatchesForClient(rows)
       });
     }
   );
@@ -983,7 +1021,7 @@ app.get("/matches/day/:date", requireLogin, (req, res) => {
       return res.json({
         success: true,
         date,
-        matches: rows
+        matches: normalizeMatchesForClient(rows)
       });
     }
   );
@@ -1022,7 +1060,7 @@ app.get("/matches/:group", requireLogin, (req, res) => {
       return res.json({
         success: true,
         group,
-        matches: rows
+        matches: normalizeMatchesForClient(rows)
       });
     }
   );
@@ -3911,16 +3949,29 @@ app.get("/matches/day", async (req, res) => {
         seen.add(key);
         return true;
       })
-      .map((match) => ({
-        id: match.id,
-        groupName: match.group_name,
-        homeTeam: match.home_team,
-        awayTeam: match.away_team,
-        matchDate: match.match_date_br,
-        kickoffTimeBR: match.kickoff_time_br,
-        kickoffAt: match.kickoff_at,
-        timezone: "America/Sao_Paulo"
-      }));
+      .map((match) => {
+        const kickoff = formatMatchKickoffForClient({
+          id: match.id,
+          match_id: match.id,
+          home_team: match.home_team,
+          away_team: match.away_team,
+          match_date: match.match_date_br,
+          kickoff_at: match.kickoff_at,
+          kickoff_time_br: match.kickoff_time_br
+        });
+
+        return {
+          id: match.id,
+          groupName: match.group_name,
+          homeTeam: match.home_team,
+          awayTeam: match.away_team,
+          matchDate: match.match_date_br,
+          kickoffTimeBR: kickoff.kickoffTimeBR,
+          kickoffAt: kickoff.kickoffAt,
+          kickoff_at: kickoff.kickoff_at,
+          timezone: kickoff.timezone
+        };
+      });
 
     return res.json({
       success: true,
