@@ -1,4 +1,4 @@
-﻿require("dotenv").config();
+require("dotenv").config();
 const express = require("express");
 const bcrypt = require("bcrypt");
 const session = require("express-session");
@@ -169,6 +169,21 @@ function parseMatchDateTime(match) {
 }
 
 
+
+
+function isPredictionLockedForMatch(match) {
+  const kickoffDate = parseMatchDateTime(match);
+
+  if (!kickoffDate) {
+    return false;
+  }
+
+  return Date.now() >= kickoffDate.getTime();
+}
+
+function getPredictionLockedMessage() {
+  return "O prazo para palpitar neste jogo foi encerrado porque a partida ja comecou. Nao e possivel salvar, alterar ou resetar este palpite.";
+}
 
 function normalizeMatchIdForDatabase(matchId) {
   const value = String(matchId || "").trim();
@@ -1086,45 +1101,6 @@ app.get("/predictions", requireLogin, async (req, res) => {
 /* ===== FIM GET PREDICTIONS COM FALLBACK NEON ===== */
 
 
-app.get("/predictions", requireLogin, (req, res) => {
-  db.all(
-    `
-      SELECT
-        p.match_id,
-        p.home_team,
-        p.away_team,
-        p.home_score,
-        p.away_score,
-        p.updated_at,
-        m.group_name,
-        m.kickoff_at,
-        m.venue,
-        m.match_date
-      FROM predictions p
-      LEFT JOIN matches m ON m.id = p.match_id
-      WHERE p.user_id = ?
-      ORDER BY p.updated_at DESC
-    `,
-    [req.session.user.id],
-    (error, rows) => {
-      if (error) {
-        console.error("Erro ao buscar palpites:", error.message);
-
-        return res.status(500).json({
-          success: false,
-          message: "Erro ao buscar palpites."
-        });
-      }
-
-      return res.json({
-        success: true,
-        predictions: rows
-      });
-    }
-  );
-});
-
-
 async function savePredictionToNeonFinal(data) {
   try {
     const neon = require("./neon-db");
@@ -1201,7 +1177,7 @@ async function savePredictionToNeonFinal(data) {
     for (const candidate of candidates) {
       const matchResult = await pool.query(
         `
-          SELECT id, home_team, away_team
+          SELECT id, home_team, away_team, match_date, kickoff_at
           FROM matches
           WHERE id = $1
           LIMIT 1
@@ -1222,6 +1198,13 @@ async function savePredictionToNeonFinal(data) {
       };
     }
 
+    if (isPredictionLockedForMatch(match)) {
+      return {
+        success: false,
+        locked: true,
+        message: getPredictionLockedMessage()
+      };
+    }
     await pool.query(
       `
         INSERT INTO predictions (
@@ -1311,8 +1294,9 @@ app.post("/predictions", requireLogin, async (req, res) => {
   });
 
   if (!neonResult.success) {
-    return res.status(400).json({
+    return res.status(neonResult.locked ? 403 : 400).json({
       success: false,
+      locked: Boolean(neonResult.locked),
       message: neonResult.message || "Erro ao salvar placar."
     });
   }
@@ -1348,10 +1332,56 @@ app.delete("/predictions/:matchId", requireLogin, async (req, res) => {
     matchId === "m01" ? "A-01" : null
   ].filter(Boolean)));
 
+  let matchToReset = null;
+
+  try {
+    matchToReset = await new Promise((resolve, reject) => {
+      db.get(
+        `
+          SELECT id, match_date, kickoff_at
+          FROM matches
+          WHERE id IN (${matchIds.map(() => "?").join(",")})
+          LIMIT 1
+        `,
+        matchIds,
+        (error, row) => {
+          if (error) {
+            return reject(error);
+          }
+
+          return resolve(row || null);
+        }
+      );
+    });
+  } catch (error) {
+    console.error("Erro ao validar horario do jogo antes de resetar palpite:", error.message);
+
+    return res.status(500).json({
+      success: false,
+      message: "Erro ao validar horario do jogo."
+    });
+  }
+
+  if (matchToReset && isPredictionLockedForMatch(matchToReset)) {
+    return res.status(403).json({
+      success: false,
+      locked: true,
+      message: getPredictionLockedMessage()
+    });
+  }
+
   const neonResult = await deletePredictionFromNeonIfAvailable({
     phone,
     matchId
   });
+
+  if (neonResult.locked) {
+    return res.status(403).json({
+      success: false,
+      locked: true,
+      message: neonResult.message || getPredictionLockedMessage()
+    });
+  }
 
   db.run(
     `
@@ -2503,6 +2533,27 @@ async function deletePredictionFromNeonIfAvailable(data) {
       rawMatchId === "m01" ? "A-01" : null
     ].filter(Boolean)));
 
+    const matchResult = await pool.query(
+      `
+        SELECT id, match_date, kickoff_at
+        FROM matches
+        WHERE id = ANY($1::text[])
+        LIMIT 1
+      `,
+      [matchIds]
+    );
+
+    const matchToReset = matchResult.rows[0] || null;
+
+    if (matchToReset && isPredictionLockedForMatch(matchToReset)) {
+      return {
+        success: false,
+        deleted: 0,
+        locked: true,
+        message: getPredictionLockedMessage()
+      };
+    }
+
     const result = await pool.query(
       `
         DELETE FROM predictions
@@ -2604,7 +2655,7 @@ async function savePredictionOnlyInNeonIfAvailable(data) {
     for (const candidateId of possibleMatchIds) {
       const matchResult = await pool.query(
         `
-          SELECT id, home_team, away_team
+          SELECT id, home_team, away_team, match_date, kickoff_at
           FROM matches
           WHERE id = $1
           LIMIT 1
@@ -2626,6 +2677,13 @@ async function savePredictionOnlyInNeonIfAvailable(data) {
       };
     }
 
+    if (isPredictionLockedForMatch(match)) {
+      return {
+        success: false,
+        locked: true,
+        message: getPredictionLockedMessage()
+      };
+    }
     await pool.query(
       `
         INSERT INTO predictions (
@@ -2713,7 +2771,7 @@ async function savePredictionToNeonIfAvailable(data) {
 
     const matchResult = await pool.query(
       `
-        SELECT id, home_team, away_team
+        SELECT id, home_team, away_team, match_date, kickoff_at
         FROM matches
         WHERE id = $1
         LIMIT 1
@@ -2726,7 +2784,7 @@ async function savePredictionToNeonIfAvailable(data) {
     if (!match && finalMatchId === "A-01") {
       const fallback = await pool.query(
         `
-          SELECT id, home_team, away_team
+          SELECT id, home_team, away_team, match_date, kickoff_at
           FROM matches
           WHERE id = 'm01'
           LIMIT 1
@@ -2742,7 +2800,7 @@ async function savePredictionToNeonIfAvailable(data) {
     if (!match && finalMatchId === "m01") {
       const fallback = await pool.query(
         `
-          SELECT id, home_team, away_team
+          SELECT id, home_team, away_team, match_date, kickoff_at
           FROM matches
           WHERE id = 'A-01'
           LIMIT 1
@@ -2760,6 +2818,10 @@ async function savePredictionToNeonIfAvailable(data) {
       return;
     }
 
+    if (isPredictionLockedForMatch(match)) {
+      console.warn("Palpite bloqueado no Neon porque o jogo ja comecou:", phone, finalMatchId);
+      return;
+    }
     await pool.query(
       `
         INSERT INTO predictions (
@@ -4064,5 +4126,3 @@ app.get("/api/first-round-matches", async (req, res) => {
 app.listen(PORT, () => {
   console.log(`Servidor rodando em http://localhost:${PORT}`);
 });
-
-
