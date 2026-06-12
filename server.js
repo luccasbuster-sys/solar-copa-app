@@ -125,39 +125,88 @@ function splitFullName(fullName) {
 
 
 
+function normalizeTextForMatchCompare(value) {
+  return String(value || "")
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase()
+    .trim();
+}
+
+function getOfficialKickoffOverride(match) {
+  if (!match) return null;
+
+  const id = String(match.id || match.match_id || "").trim().toLowerCase();
+  const home = normalizeTextForMatchCompare(match.home_team || match.homeTeam || "");
+  const away = normalizeTextForMatchCompare(match.away_team || match.awayTeam || "");
+
+  if (
+    id === "m03" ||
+    id === "b-01" ||
+    (home.includes("canad") && away.includes("bosnia"))
+  ) {
+    return "2026-06-12T19:00:00Z";
+  }
+
+  if (
+    id === "m04" ||
+    id === "d-01" ||
+    ((home.includes("estados unidos") || home.includes("united states")) && (away.includes("paraguai") || away.includes("paraguay")))
+  ) {
+    return "2026-06-13T01:00:00Z";
+  }
+
+  return null;
+}
+
 function parseMatchDateTime(match) {
   if (!match) return null;
 
-  const rawKickoff = String(match.kickoff_at || match.kickoff || "").trim();
-  const rawDate = String(match.match_date || match.date || "").trim();
+  const officialKickoff = getOfficialKickoffOverride(match);
+
+  if (officialKickoff) {
+    const date = new Date(officialKickoff);
+
+    if (!Number.isNaN(date.getTime())) {
+      return date;
+    }
+  }
+
+  const rawKickoff = String(match.kickoff_at || match.kickoff || match.kickoffAt || "").trim();
+  const rawDate = String(match.match_date || match.date || match.matchDate || "").trim();
 
   if (!rawKickoff && !rawDate) {
     return null;
   }
 
   const candidates = [];
+  const hasTimezone = /(?:z|[+-]\d{2}:?\d{2})$/i.test(rawKickoff);
 
   if (rawKickoff.includes("T")) {
+    if (!hasTimezone) {
+      candidates.push(rawKickoff + "-03:00");
+    }
+
     candidates.push(rawKickoff);
   }
 
-  if (rawDate && /^\d{2}:\d{2}/.test(rawKickoff)) {
-    candidates.push(`${rawDate}T${rawKickoff}:00`);
-  }
+  const timeMatch = rawKickoff.match(/^(\d{2}:\d{2})(?::(\d{2}))?$/);
 
-  if (rawDate && /^\d{2}:\d{2}:\d{2}/.test(rawKickoff)) {
-    candidates.push(`${rawDate}T${rawKickoff}`);
+  if (rawDate && timeMatch) {
+    const timeText = timeMatch[2] ? rawKickoff : rawKickoff + ":00";
+    candidates.push(rawDate + "T" + timeText + "-03:00");
+    candidates.push(rawDate + "T" + timeText);
   }
 
   if (rawDate && rawKickoff) {
-    candidates.push(`${rawDate} ${rawKickoff}`);
+    candidates.push(rawDate + " " + rawKickoff);
   }
 
   if (rawKickoff) {
     candidates.push(rawKickoff);
   }
 
-  for (const candidate of candidates) {
+  for (const candidate of Array.from(new Set(candidates))) {
     const date = new Date(candidate);
 
     if (!Number.isNaN(date.getTime())) {
@@ -167,8 +216,6 @@ function parseMatchDateTime(match) {
 
   return null;
 }
-
-
 
 
 function isPredictionLockedForMatch(match) {
@@ -3981,16 +4028,33 @@ app.get("/matches/first-round", async (req, res) => {
       return String(a.id).localeCompare(String(b.id));
     });
 
-    const matches = firstRound.map((match) => ({
-      id: match.id,
-      groupName: match.group_name,
-      homeTeam: match.home_team,
-      awayTeam: match.away_team,
-      matchDate: match.match_date,
-      kickoffTimeBR: match.kickoff_time_br,
-      kickoffAt: match.kickoff_at,
-      timezone: "America/Sao_Paulo"
-    }));
+    const matches = firstRound.map((match) => {
+      const kickoffDate = parseMatchDateTime(match);
+
+      const kickoffTimeBR = kickoffDate
+        ? kickoffDate.toLocaleTimeString("pt-BR", {
+            timeZone: "America/Sao_Paulo",
+            hour: "2-digit",
+            minute: "2-digit",
+            hour12: false
+          })
+        : match.kickoff_time_br;
+
+      const kickoffAt = kickoffDate
+        ? kickoffDate.toISOString()
+        : match.kickoff_at;
+
+      return {
+        id: match.id,
+        groupName: match.group_name,
+        homeTeam: match.home_team,
+        awayTeam: match.away_team,
+        matchDate: match.match_date,
+        kickoffTimeBR,
+        kickoffAt,
+        timezone: "America/Sao_Paulo"
+      };
+    });
 
     return res.json({
       success: true,
@@ -4092,16 +4156,33 @@ app.get("/api/first-round-matches", async (req, res) => {
       return String(a.id).localeCompare(String(b.id));
     });
 
-    const matches = firstRound.map((match) => ({
-      id: match.id,
-      groupName: match.group_name,
-      homeTeam: match.home_team,
-      awayTeam: match.away_team,
-      matchDate: match.match_date,
-      kickoffTimeBR: match.kickoff_time_br,
-      kickoffAt: match.kickoff_at,
-      timezone: "America/Sao_Paulo"
-    }));
+    const matches = firstRound.map((match) => {
+      const kickoffDate = parseMatchDateTime(match);
+
+      const kickoffTimeBR = kickoffDate
+        ? kickoffDate.toLocaleTimeString("pt-BR", {
+            timeZone: "America/Sao_Paulo",
+            hour: "2-digit",
+            minute: "2-digit",
+            hour12: false
+          })
+        : match.kickoff_time_br;
+
+      const kickoffAt = kickoffDate
+        ? kickoffDate.toISOString()
+        : match.kickoff_at;
+
+      return {
+        id: match.id,
+        groupName: match.group_name,
+        homeTeam: match.home_team,
+        awayTeam: match.away_team,
+        matchDate: match.match_date,
+        kickoffTimeBR,
+        kickoffAt,
+        timezone: "America/Sao_Paulo"
+      };
+    });
 
     return res.json({
       success: true,
