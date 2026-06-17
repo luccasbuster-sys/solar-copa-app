@@ -1,4 +1,4 @@
-require("dotenv").config();
+﻿require("dotenv").config();
 const express = require("express");
 const bcrypt = require("bcrypt");
 const session = require("express-session");
@@ -45,489 +45,6 @@ const adminLimiter = rateLimit({
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
-
-// SOLAR_NEON_2R_ROTAS_REAIS_START
-(function instalarRotasNeonSegundaRodada() {
-  const fs = require("fs");
-  const path = require("path");
-  const { Pool } = require("pg");
-
-  function loadEnvIfNeeded() {
-    const hasUrl =
-      process.env.DATABASE_URL ||
-      process.env.NEON_DATABASE_URL ||
-      process.env.POSTGRES_URL ||
-      process.env.POSTGRES_PRISMA_URL;
-
-    if (hasUrl) return;
-
-    const envPath = path.join(__dirname, ".env");
-
-    if (!fs.existsSync(envPath)) return;
-
-    const text = fs.readFileSync(envPath, "utf8");
-
-    text.split(/\r?\n/).forEach((line) => {
-      const clean = line.trim();
-
-      if (!clean || clean.startsWith("#")) return;
-
-      const index = clean.indexOf("=");
-
-      if (index === -1) return;
-
-      const key = clean.slice(0, index).trim();
-      let value = clean.slice(index + 1).trim();
-
-      if (
-        (value.startsWith('"') && value.endsWith('"')) ||
-        (value.startsWith("'") && value.endsWith("'"))
-      ) {
-        value = value.slice(1, -1);
-      }
-
-      if (!process.env[key]) {
-        process.env[key] = value;
-      }
-    });
-  }
-
-  loadEnvIfNeeded();
-
-  const DATABASE_URL =
-    process.env.DATABASE_URL ||
-    process.env.NEON_DATABASE_URL ||
-    process.env.POSTGRES_URL ||
-    process.env.POSTGRES_PRISMA_URL ||
-    "";
-
-  const LOCK_MINUTES = 15;
-
-  let pool = null;
-  let tableReady = false;
-
-  const GAMES = {
-    "18-06-2026-a-tchequia-x-africa-do-sul": ["18/06/2026", "A", "Tchéquia", "África do Sul", "2026-06-18T13:00:00-03:00"],
-    "18-06-2026-b-suica-x-bosnia-e-herzegovina": ["18/06/2026", "B", "Suíça", "Bósnia e Herzegovina", "2026-06-18T16:00:00-03:00"],
-    "18-06-2026-b-canada-x-catar": ["18/06/2026", "B", "Canadá", "Catar", "2026-06-18T19:00:00-03:00"],
-    "18-06-2026-a-mexico-x-coreia-do-sul": ["18/06/2026", "A", "México", "Coreia do Sul", "2026-06-18T22:00:00-03:00"],
-
-    "19-06-2026-d-estados-unidos-x-australia": ["19/06/2026", "D", "Estados Unidos", "Austrália", "2026-06-19T16:00:00-03:00"],
-    "19-06-2026-c-escocia-x-marrocos": ["19/06/2026", "C", "Escócia", "Marrocos", "2026-06-19T19:00:00-03:00"],
-    "19-06-2026-c-brasil-x-haiti": ["19/06/2026", "C", "Brasil", "Haiti", "2026-06-19T21:30:00-03:00"],
-    "20-06-2026-d-turquia-x-paraguai": ["20/06/2026", "D", "Turquia", "Paraguai", "2026-06-20T00:00:00-03:00"],
-
-    "20-06-2026-f-holanda-x-suecia": ["20/06/2026", "F", "Holanda", "Suécia", "2026-06-20T14:00:00-03:00"],
-    "20-06-2026-e-alemanha-x-costa-do-marfim": ["20/06/2026", "E", "Alemanha", "Costa do Marfim", "2026-06-20T17:00:00-03:00"],
-    "20-06-2026-e-equador-x-curacao": ["20/06/2026", "E", "Equador", "Curaçao", "2026-06-20T21:00:00-03:00"],
-    "21-06-2026-f-tunisia-x-japao": ["21/06/2026", "F", "Tunísia", "Japão", "2026-06-21T01:00:00-03:00"],
-
-    "21-06-2026-h-espanha-x-arabia-saudita": ["21/06/2026", "H", "Espanha", "Arábia Saudita", "2026-06-21T13:00:00-03:00"],
-    "21-06-2026-g-belgica-x-ira": ["21/06/2026", "G", "Bélgica", "Irã", "2026-06-21T16:00:00-03:00"],
-    "21-06-2026-h-uruguai-x-cabo-verde": ["21/06/2026", "H", "Uruguai", "Cabo Verde", "2026-06-21T19:00:00-03:00"],
-    "21-06-2026-g-nova-zelandia-x-egito": ["21/06/2026", "G", "Nova Zelândia", "Egito", "2026-06-21T22:00:00-03:00"],
-
-    "22-06-2026-j-argentina-x-austria": ["22/06/2026", "J", "Argentina", "Áustria", "2026-06-22T14:00:00-03:00"],
-    "22-06-2026-i-franca-x-iraque": ["22/06/2026", "I", "França", "Iraque", "2026-06-22T18:00:00-03:00"],
-    "22-06-2026-i-noruega-x-senegal": ["22/06/2026", "I", "Noruega", "Senegal", "2026-06-22T21:00:00-03:00"],
-    "23-06-2026-j-jordania-x-argelia": ["23/06/2026", "J", "Jordânia", "Argélia", "2026-06-23T00:00:00-03:00"],
-
-    "23-06-2026-k-portugal-x-uzbequistao": ["23/06/2026", "K", "Portugal", "Uzbequistão", "2026-06-23T14:00:00-03:00"],
-    "23-06-2026-l-inglaterra-x-gana": ["23/06/2026", "L", "Inglaterra", "Gana", "2026-06-23T17:00:00-03:00"],
-    "23-06-2026-l-panama-x-croacia": ["23/06/2026", "L", "Panamá", "Croácia", "2026-06-23T20:00:00-03:00"],
-    "23-06-2026-k-colombia-x-rd-congo": ["23/06/2026", "K", "Colômbia", "RD Congo", "2026-06-23T23:00:00-03:00"]
-  };
-
-  function getPool() {
-    if (!DATABASE_URL) {
-      throw new Error("DATABASE_URL / NEON_DATABASE_URL / POSTGRES_URL não configurada.");
-    }
-
-    if (!pool) {
-      pool = new Pool({
-        connectionString: DATABASE_URL,
-        ssl: DATABASE_URL.includes("localhost") || DATABASE_URL.includes("127.0.0.1")
-          ? false
-          : { rejectUnauthorized: false },
-        max: 5
-      });
-    }
-
-    return pool;
-  }
-
-  async function ensureTable() {
-    if (tableReady) return;
-
-    await getPool().query(`
-      CREATE TABLE IF NOT EXISTS solar_segunda_rodada_palpites (
-        id BIGSERIAL PRIMARY KEY,
-        user_key TEXT NOT NULL,
-        game_id TEXT NOT NULL,
-        round_code TEXT NOT NULL DEFAULT '2',
-        game_date TEXT,
-        group_code TEXT,
-        home_team TEXT,
-        away_team TEXT,
-        home_score INTEGER,
-        away_score INTEGER,
-        source TEXT DEFAULT 'app',
-        created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-        updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-        UNIQUE (user_key, game_id)
-      );
-    `);
-
-    await getPool().query(`
-      CREATE INDEX IF NOT EXISTS idx_solar_2r_palpites_user_key
-      ON solar_segunda_rodada_palpites (user_key);
-    `);
-
-    await getPool().query(`
-      CREATE INDEX IF NOT EXISTS idx_solar_2r_palpites_game_id
-      ON solar_segunda_rodada_palpites (game_id);
-    `);
-
-    tableReady = true;
-  }
-
-  function clean(value) {
-    return String(value || "").trim();
-  }
-
-  function getUserKey(req) {
-    const session = req.session || {};
-    const user = session.user || session.usuario || session.authUser || {};
-
-    const values = [
-      user.id,
-      user.email,
-      user.codigo,
-      user.nome,
-      user.name,
-      session.userId,
-      session.usuarioId,
-      session.email,
-      req.body && req.body.clientUserKey,
-      req.body && req.body.userKey,
-      req.query && req.query.clientUserKey,
-      req.query && req.query.userKey,
-      req.sessionID
-    ];
-
-    for (const item of values) {
-      const value = clean(item);
-
-      if (value) {
-        return value.slice(0, 180);
-      }
-    }
-
-    return "";
-  }
-
-  function parseScore(value, label) {
-    if (value === undefined || value === null || String(value).trim() === "") {
-      throw new Error(label + " obrigatório.");
-    }
-
-    const number = Number(value);
-
-    if (!Number.isInteger(number) || number < 0 || number > 99) {
-      throw new Error(label + " inválido.");
-    }
-
-    return number;
-  }
-
-  function lockInfo(gameId) {
-    const game = GAMES[gameId];
-
-    if (!game) return null;
-
-    const startAt = new Date(game[4]);
-    const lockedAt = new Date(startAt.getTime() - LOCK_MINUTES * 60 * 1000);
-    const now = new Date();
-
-    return {
-      locked: now.getTime() >= lockedAt.getTime(),
-      startAt,
-      lockedAt,
-      now
-    };
-  }
-
-  function formatBrasilia(date) {
-    try {
-      return date.toLocaleString("pt-BR", {
-        timeZone: "America/Sao_Paulo",
-        day: "2-digit",
-        month: "2-digit",
-        year: "numeric",
-        hour: "2-digit",
-        minute: "2-digit"
-      });
-    } catch (error) {
-      return date.toISOString();
-    }
-  }
-
-  function blocked(res, gameId, info) {
-    return res.status(423).json({
-      ok: false,
-      success: false,
-      code: "SOLAR_2R_BET_LOCKED",
-      message: "Aposta bloqueada: o prazo encerra 15 minutos antes do jogo no horário de Brasília.",
-      gameId,
-      lockedAtBrasilia: formatBrasilia(info.lockedAt),
-      startAtBrasilia: formatBrasilia(info.startAt),
-      serverNowBrasilia: formatBrasilia(info.now)
-    });
-  }
-
-  app.get("/api/segunda-rodada-neon/status", async function (req, res) {
-    try {
-      await ensureTable();
-
-      const result = await getPool().query(
-        "SELECT COUNT(*)::int AS total FROM solar_segunda_rodada_palpites"
-      );
-
-      return res.json({
-        ok: true,
-        success: true,
-        neon: true,
-        table: "solar_segunda_rodada_palpites",
-        total: result.rows[0] ? result.rows[0].total : 0
-      });
-    } catch (error) {
-      console.error("Erro status Neon 2R:", error);
-
-      return res.status(500).json({
-        ok: false,
-        success: false,
-        neon: false,
-        message: error.message || "Erro ao verificar Neon."
-      });
-    }
-  });
-
-  app.get("/api/segunda-rodada-neon/palpites", async function (req, res) {
-    try {
-      await ensureTable();
-
-      const userKey = getUserKey(req);
-
-      if (!userKey) {
-        return res.status(401).json({
-          ok: false,
-          success: false,
-          message: "Usuário não identificado."
-        });
-      }
-
-      const result = await getPool().query(
-        `
-          SELECT
-            game_id,
-            game_date,
-            group_code,
-            home_team,
-            away_team,
-            home_score,
-            away_score,
-            updated_at
-          FROM solar_segunda_rodada_palpites
-          WHERE user_key = $1
-          ORDER BY game_date, game_id
-        `,
-        [userKey]
-      );
-
-      return res.json({
-        ok: true,
-        success: true,
-        neon: true,
-        palpites: result.rows
-      });
-    } catch (error) {
-      console.error("Erro carregar palpites Neon 2R:", error);
-
-      return res.status(500).json({
-        ok: false,
-        success: false,
-        neon: false,
-        message: error.message || "Erro ao carregar palpites."
-      });
-    }
-  });
-
-  app.post("/api/segunda-rodada-neon/palpites", async function (req, res) {
-    try {
-      await ensureTable();
-
-      const userKey = getUserKey(req);
-      const gameId = clean(req.body && req.body.gameId);
-      const game = GAMES[gameId];
-
-      if (!userKey) {
-        return res.status(401).json({
-          ok: false,
-          success: false,
-          message: "Usuário não identificado."
-        });
-      }
-
-      if (!game) {
-        return res.status(400).json({
-          ok: false,
-          success: false,
-          message: "Jogo da 2ª rodada não reconhecido.",
-          gameId
-        });
-      }
-
-      const info = lockInfo(gameId);
-
-      if (info && info.locked) {
-        return blocked(res, gameId, info);
-      }
-
-      const homeScore = parseScore(req.body && req.body.homeScore, "Placar do mandante");
-      const awayScore = parseScore(req.body && req.body.awayScore, "Placar do visitante");
-
-      const result = await getPool().query(
-        `
-          INSERT INTO solar_segunda_rodada_palpites (
-            user_key,
-            game_id,
-            round_code,
-            game_date,
-            group_code,
-            home_team,
-            away_team,
-            home_score,
-            away_score,
-            source,
-            created_at,
-            updated_at
-          )
-          VALUES ($1, $2, '2', $3, $4, $5, $6, $7, $8, 'app', NOW(), NOW())
-          ON CONFLICT (user_key, game_id)
-          DO UPDATE SET
-            game_date = EXCLUDED.game_date,
-            group_code = EXCLUDED.group_code,
-            home_team = EXCLUDED.home_team,
-            away_team = EXCLUDED.away_team,
-            home_score = EXCLUDED.home_score,
-            away_score = EXCLUDED.away_score,
-            source = 'app',
-            updated_at = NOW()
-          RETURNING
-            id,
-            user_key,
-            game_id,
-            game_date,
-            group_code,
-            home_team,
-            away_team,
-            home_score,
-            away_score,
-            updated_at
-        `,
-        [
-          userKey,
-          gameId,
-          game[0],
-          game[1],
-          game[2],
-          game[3],
-          homeScore,
-          awayScore
-        ]
-      );
-
-      return res.json({
-        ok: true,
-        success: true,
-        neon: true,
-        message: "Palpite salvo no Neon.",
-        palpite: result.rows[0]
-      });
-    } catch (error) {
-      console.error("Erro salvar palpite Neon 2R:", error);
-
-      return res.status(500).json({
-        ok: false,
-        success: false,
-        neon: false,
-        message: error.message || "Erro ao salvar palpite."
-      });
-    }
-  });
-
-  app.delete("/api/segunda-rodada-neon/palpites/:gameId", async function (req, res) {
-    try {
-      await ensureTable();
-
-      const userKey = getUserKey(req);
-      const gameId = clean(req.params && req.params.gameId);
-      const game = GAMES[gameId];
-
-      if (!userKey) {
-        return res.status(401).json({
-          ok: false,
-          success: false,
-          message: "Usuário não identificado."
-        });
-      }
-
-      if (!game) {
-        return res.status(400).json({
-          ok: false,
-          success: false,
-          message: "Jogo da 2ª rodada não reconhecido.",
-          gameId
-        });
-      }
-
-      const info = lockInfo(gameId);
-
-      if (info && info.locked) {
-        return blocked(res, gameId, info);
-      }
-
-      await getPool().query(
-        `
-          DELETE FROM solar_segunda_rodada_palpites
-          WHERE user_key = $1 AND game_id = $2
-        `,
-        [userKey, gameId]
-      );
-
-      return res.json({
-        ok: true,
-        success: true,
-        neon: true,
-        message: "Palpite removido do Neon.",
-        gameId
-      });
-    } catch (error) {
-      console.error("Erro resetar palpite Neon 2R:", error);
-
-      return res.status(500).json({
-        ok: false,
-        success: false,
-        neon: false,
-        message: error.message || "Erro ao resetar palpite."
-      });
-    }
-  });
-
-  console.log("Rotas Neon da 2ª rodada carregadas.");
-})();
-// SOLAR_NEON_2R_ROTAS_REAIS_END
-
 // SOLAR_BACKEND_BLOQUEIO_15MIN_2R_START
 /*
   Bloqueio antifraude no backend:
@@ -5089,7 +4606,1847 @@ app.get("/api/second-round-matches", async (req, res) => {
   }
 });
 
+// SOLAR_ADMIN_FRONT_ROUTE_START
+(function instalarRotasFrontAdminSolar() {
+  const path = require("path");
+
+  const adminFrontHandler = function (req, res) {
+    return res.sendFile(path.join(__dirname, "public", "index.html"));
+  };
+
+  app.get("/admin", adminFrontHandler);
+  app.get("/administrador", adminFrontHandler);
+  app.get("/painel-admin", adminFrontHandler);
+
+  console.log("Rotas front do administrador carregadas: /admin, /administrador, /painel-admin");
+})();
+// SOLAR_ADMIN_FRONT_ROUTE_END
+
+// SOLAR_2R_PONTUACAO_GLOBAL_BACKEND_START
+(function instalarPontuacaoGlobalSegundaRodada() {
+  const fs = require("fs");
+  const path = require("path");
+  const { Pool } = require("pg");
+
+  function loadEnvIfNeeded() {
+    const hasUrl =
+      process.env.DATABASE_URL ||
+      process.env.NEON_DATABASE_URL ||
+      process.env.POSTGRES_URL ||
+      process.env.POSTGRES_PRISMA_URL;
+
+    if (hasUrl) return;
+
+    const envPath = path.join(__dirname, ".env");
+
+    if (!fs.existsSync(envPath)) return;
+
+    fs.readFileSync(envPath, "utf8").split(/\r?\n/).forEach((line) => {
+      const clean = line.trim();
+      if (!clean || clean.startsWith("#")) return;
+
+      const index = clean.indexOf("=");
+      if (index === -1) return;
+
+      const key = clean.slice(0, index).trim();
+      let value = clean.slice(index + 1).trim();
+
+      if (
+        (value.startsWith('"') && value.endsWith('"')) ||
+        (value.startsWith("'") && value.endsWith("'"))
+      ) {
+        value = value.slice(1, -1);
+      }
+
+      if (!process.env[key]) process.env[key] = value;
+    });
+  }
+
+  loadEnvIfNeeded();
+
+  const DATABASE_URL =
+    process.env.DATABASE_URL ||
+    process.env.NEON_DATABASE_URL ||
+    process.env.POSTGRES_URL ||
+    process.env.POSTGRES_PRISMA_URL ||
+    "";
+
+  let pool = null;
+  let tablesReady = false;
+
+  const LOCK_MINUTES = 15;
+
+  const GAMES = {
+    "18-06-2026-a-tchequia-x-africa-do-sul": ["18/06/2026", "A", "Tchéquia", "África do Sul", "2026-06-18T13:00:00-03:00"],
+    "18-06-2026-b-suica-x-bosnia-e-herzegovina": ["18/06/2026", "B", "Suíça", "Bósnia e Herzegovina", "2026-06-18T16:00:00-03:00"],
+    "18-06-2026-b-canada-x-catar": ["18/06/2026", "B", "Canadá", "Catar", "2026-06-18T19:00:00-03:00"],
+    "18-06-2026-a-mexico-x-coreia-do-sul": ["18/06/2026", "A", "México", "Coreia do Sul", "2026-06-18T22:00:00-03:00"],
+
+    "19-06-2026-d-estados-unidos-x-australia": ["19/06/2026", "D", "Estados Unidos", "Austrália", "2026-06-19T16:00:00-03:00"],
+    "19-06-2026-c-escocia-x-marrocos": ["19/06/2026", "C", "Escócia", "Marrocos", "2026-06-19T19:00:00-03:00"],
+    "19-06-2026-c-brasil-x-haiti": ["19/06/2026", "C", "Brasil", "Haiti", "2026-06-19T21:30:00-03:00"],
+    "20-06-2026-d-turquia-x-paraguai": ["20/06/2026", "D", "Turquia", "Paraguai", "2026-06-20T00:00:00-03:00"],
+
+    "20-06-2026-f-holanda-x-suecia": ["20/06/2026", "F", "Holanda", "Suécia", "2026-06-20T14:00:00-03:00"],
+    "20-06-2026-e-alemanha-x-costa-do-marfim": ["20/06/2026", "E", "Alemanha", "Costa do Marfim", "2026-06-20T17:00:00-03:00"],
+    "20-06-2026-e-equador-x-curacao": ["20/06/2026", "E", "Equador", "Curaçao", "2026-06-20T21:00:00-03:00"],
+    "21-06-2026-f-tunisia-x-japao": ["21/06/2026", "F", "Tunísia", "Japão", "2026-06-21T01:00:00-03:00"],
+
+    "21-06-2026-h-espanha-x-arabia-saudita": ["21/06/2026", "H", "Espanha", "Arábia Saudita", "2026-06-21T13:00:00-03:00"],
+    "21-06-2026-g-belgica-x-ira": ["21/06/2026", "G", "Bélgica", "Irã", "2026-06-21T16:00:00-03:00"],
+    "21-06-2026-h-uruguai-x-cabo-verde": ["21/06/2026", "H", "Uruguai", "Cabo Verde", "2026-06-21T19:00:00-03:00"],
+    "21-06-2026-g-nova-zelandia-x-egito": ["21/06/2026", "G", "Nova Zelândia", "Egito", "2026-06-21T22:00:00-03:00"],
+
+    "22-06-2026-j-argentina-x-austria": ["22/06/2026", "J", "Argentina", "Áustria", "2026-06-22T14:00:00-03:00"],
+    "22-06-2026-i-franca-x-iraque": ["22/06/2026", "I", "França", "Iraque", "2026-06-22T18:00:00-03:00"],
+    "22-06-2026-i-noruega-x-senegal": ["22/06/2026", "I", "Noruega", "Senegal", "2026-06-22T21:00:00-03:00"],
+    "23-06-2026-j-jordania-x-argelia": ["23/06/2026", "J", "Jordânia", "Argélia", "2026-06-23T00:00:00-03:00"],
+
+    "23-06-2026-k-portugal-x-uzbequistao": ["23/06/2026", "K", "Portugal", "Uzbequistão", "2026-06-23T14:00:00-03:00"],
+    "23-06-2026-l-inglaterra-x-gana": ["23/06/2026", "L", "Inglaterra", "Gana", "2026-06-23T17:00:00-03:00"],
+    "23-06-2026-l-panama-x-croacia": ["23/06/2026", "L", "Panamá", "Croácia", "2026-06-23T20:00:00-03:00"],
+    "23-06-2026-k-colombia-x-rd-congo": ["23/06/2026", "K", "Colômbia", "RD Congo", "2026-06-23T23:00:00-03:00"]
+  };
+
+  const GAME_IDS = Object.keys(GAMES);
+
+  function getPool() {
+    if (!DATABASE_URL) {
+      throw new Error("DATABASE_URL / NEON_DATABASE_URL / POSTGRES_URL não configurada.");
+    }
+
+    if (!pool) {
+      pool = new Pool({
+        connectionString: DATABASE_URL,
+        ssl: DATABASE_URL.includes("localhost") || DATABASE_URL.includes("127.0.0.1")
+          ? false
+          : { rejectUnauthorized: false },
+        max: 5
+      });
+    }
+
+    return pool;
+  }
+
+  async function ensureTables() {
+    if (tablesReady) return;
+
+    await getPool().query(`
+      CREATE TABLE IF NOT EXISTS solar_segunda_rodada_palpites (
+        id BIGSERIAL PRIMARY KEY,
+        user_key TEXT NOT NULL,
+        game_id TEXT NOT NULL,
+        round_code TEXT NOT NULL DEFAULT '2',
+        game_date TEXT,
+        group_code TEXT,
+        home_team TEXT,
+        away_team TEXT,
+        home_score INTEGER,
+        away_score INTEGER,
+        source TEXT DEFAULT 'app',
+        created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+        updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+        UNIQUE (user_key, game_id)
+      );
+    `);
+
+    await getPool().query(`
+      CREATE TABLE IF NOT EXISTS solar_segunda_rodada_pontos (
+        user_key TEXT PRIMARY KEY,
+        palpites_salvos INTEGER NOT NULL DEFAULT 0,
+        pontos_segunda_rodada INTEGER NOT NULL DEFAULT 0,
+        rodada_completa BOOLEAN NOT NULL DEFAULT FALSE,
+        total_jogos INTEGER NOT NULL DEFAULT 24,
+        primeiro_palpite TIMESTAMPTZ,
+        ultimo_palpite TIMESTAMPTZ,
+        updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+      );
+    `);
+
+    await getPool().query(`
+      CREATE INDEX IF NOT EXISTS idx_solar_2r_palpites_user_key
+      ON solar_segunda_rodada_palpites (user_key);
+    `);
+
+    await getPool().query(`
+      CREATE INDEX IF NOT EXISTS idx_solar_2r_palpites_game_id
+      ON solar_segunda_rodada_palpites (game_id);
+    `);
+
+    tablesReady = true;
+  }
+
+  function clean(value) {
+    return String(value || "").trim();
+  }
+
+  function getUserKey(req) {
+    const session = req.session || {};
+    const user = session.user || session.usuario || session.authUser || {};
+
+    const values = [
+      req.body && req.body.clientUserKey,
+      req.body && req.body.userKey,
+      req.query && req.query.clientUserKey,
+      req.query && req.query.userKey,
+      user.telefone,
+      user.phone,
+      user.whatsapp,
+      user.celular,
+      user.email,
+      user.id,
+      user.codigo,
+      session.telefone,
+      session.phone,
+      session.whatsapp,
+      session.email,
+      session.userId,
+      session.usuarioId,
+      req.sessionID
+    ];
+
+    for (const item of values) {
+      const value = clean(item);
+      if (value) return value.slice(0, 180);
+    }
+
+    return "";
+  }
+
+  function parseScore(value, label) {
+    if (value === undefined || value === null || String(value).trim() === "") {
+      throw new Error(label + " obrigatório.");
+    }
+
+    const number = Number(value);
+
+    if (!Number.isInteger(number) || number < 0 || number > 99) {
+      throw new Error(label + " inválido.");
+    }
+
+    return number;
+  }
+
+  function lockInfo(gameId) {
+    const game = GAMES[gameId];
+    if (!game) return null;
+
+    const startAt = new Date(game[4]);
+    const lockedAt = new Date(startAt.getTime() - LOCK_MINUTES * 60 * 1000);
+    const now = new Date();
+
+    return {
+      locked: now.getTime() >= lockedAt.getTime(),
+      startAt,
+      lockedAt,
+      now
+    };
+  }
+
+  function formatBrasilia(date) {
+    try {
+      return date.toLocaleString("pt-BR", {
+        timeZone: "America/Sao_Paulo",
+        day: "2-digit",
+        month: "2-digit",
+        year: "numeric",
+        hour: "2-digit",
+        minute: "2-digit"
+      });
+    } catch (error) {
+      return date.toISOString();
+    }
+  }
+
+  function blocked(res, gameId, info) {
+    return res.status(423).json({
+      ok: false,
+      success: false,
+      code: "SOLAR_2R_BET_LOCKED",
+      message: "Aposta bloqueada: o prazo encerra 15 minutos antes do jogo no horário de Brasília.",
+      gameId,
+      lockedAtBrasilia: formatBrasilia(info.lockedAt),
+      startAtBrasilia: formatBrasilia(info.startAt),
+      serverNowBrasilia: formatBrasilia(info.now)
+    });
+  }
+
+  async function refreshPointsForUser(userKey) {
+    await ensureTables();
+
+    const key = clean(userKey);
+    if (!key) return null;
+
+    await getPool().query(
+      `DELETE FROM solar_segunda_rodada_pontos WHERE user_key = $1`,
+      [key]
+    );
+
+    const result = await getPool().query(
+      `
+        INSERT INTO solar_segunda_rodada_pontos (
+          user_key,
+          palpites_salvos,
+          pontos_segunda_rodada,
+          rodada_completa,
+          total_jogos,
+          primeiro_palpite,
+          ultimo_palpite,
+          updated_at
+        )
+        SELECT
+          user_key,
+          COUNT(DISTINCT game_id)::int AS palpites_salvos,
+          COUNT(DISTINCT game_id)::int AS pontos_segunda_rodada,
+          CASE WHEN COUNT(DISTINCT game_id) = 24 THEN TRUE ELSE FALSE END AS rodada_completa,
+          24 AS total_jogos,
+          MIN(created_at) AS primeiro_palpite,
+          MAX(updated_at) AS ultimo_palpite,
+          NOW() AS updated_at
+        FROM solar_segunda_rodada_palpites
+        WHERE user_key = $1
+          AND game_id = ANY($2::text[])
+        GROUP BY user_key
+        RETURNING *
+      `,
+      [key, GAME_IDS]
+    );
+
+    return result.rows[0] || {
+      user_key: key,
+      palpites_salvos: 0,
+      pontos_segunda_rodada: 0,
+      rodada_completa: false,
+      total_jogos: 24
+    };
+  }
+
+  async function refreshAllPoints() {
+    await ensureTables();
+
+    await getPool().query(`DELETE FROM solar_segunda_rodada_pontos`);
+
+    await getPool().query(
+      `
+        INSERT INTO solar_segunda_rodada_pontos (
+          user_key,
+          palpites_salvos,
+          pontos_segunda_rodada,
+          rodada_completa,
+          total_jogos,
+          primeiro_palpite,
+          ultimo_palpite,
+          updated_at
+        )
+        SELECT
+          user_key,
+          COUNT(DISTINCT game_id)::int AS palpites_salvos,
+          COUNT(DISTINCT game_id)::int AS pontos_segunda_rodada,
+          CASE WHEN COUNT(DISTINCT game_id) = 24 THEN TRUE ELSE FALSE END AS rodada_completa,
+          24 AS total_jogos,
+          MIN(created_at) AS primeiro_palpite,
+          MAX(updated_at) AS ultimo_palpite,
+          NOW() AS updated_at
+        FROM solar_segunda_rodada_palpites
+        WHERE game_id = ANY($1::text[])
+        GROUP BY user_key
+      `,
+      [GAME_IDS]
+    );
+  }
+
+  
+// === RANKING ATIVO SEGUNDA RODADA PALPITES START ===
+app.get("/api/segunda-rodada-neon/ranking", async function (req, res) {
+  try {
+    const result = await getPool().query(`
+      SELECT
+        COALESCE(NULLIF(TRIM(user_key), ''), 'sem_usuario') AS "userKey",
+        COUNT(*)::int AS "totalPalpites",
+        COUNT(*) FILTER (
+          WHERE home_score IS NOT NULL
+          AND away_score IS NOT NULL
+        )::int AS "palpitesValidos",
+        MIN(created_at) AS "primeiroPalpiteEm",
+        MAX(updated_at) AS "ultimoPalpiteEm"
+      FROM solar_segunda_rodada_palpites
+      WHERE game_id IS NOT NULL
+      GROUP BY COALESCE(NULLIF(TRIM(user_key), ''), 'sem_usuario')
+      ORDER BY
+        COUNT(*) FILTER (
+          WHERE home_score IS NOT NULL
+          AND away_score IS NOT NULL
+        ) DESC,
+        COUNT(*) DESC,
+        MAX(updated_at) ASC,
+        COALESCE(NULLIF(TRIM(user_key), ''), 'sem_usuario') ASC
+    `);
+
+    return res.json({
+      ok: true,
+      source: "neon",
+      roundCode: "segunda_rodada",
+      totalJogosDisponiveis: 24,
+      totalUsuarios: result.rows.length,
+      ranking: result.rows
+    });
+  } catch (error) {
+    console.error("Erro ao carregar ranking da segunda rodada:", error);
+
+    return res.status(500).json({
+      ok: false,
+      error: "Erro ao carregar ranking da segunda rodada."
+    });
+  }
+});
+// === RANKING ATIVO SEGUNDA RODADA PALPITES END ===
+
+app.get("/api/segunda-rodada-neon/status", async function (req, res) {
+    try {
+      await ensureTables();
+      await refreshAllPoints();
+
+      const palpites = await getPool().query(
+        "SELECT COUNT(*)::int AS total FROM solar_segunda_rodada_palpites WHERE game_id = ANY($1::text[])",
+        [GAME_IDS]
+      );
+
+      const pontos = await getPool().query(
+        "SELECT COUNT(*)::int AS total_usuarios, COALESCE(SUM(pontos_segunda_rodada), 0)::int AS total_pontos FROM solar_segunda_rodada_pontos"
+      );
+
+      return res.json({
+        ok: true,
+        success: true,
+        neon: true,
+        tablePalpites: "solar_segunda_rodada_palpites",
+        tablePontos: "solar_segunda_rodada_pontos",
+        totalPalpites: palpites.rows[0].total,
+        totalUsuariosPontuados: pontos.rows[0].total_usuarios,
+        totalPontosSegundaRodada: pontos.rows[0].total_pontos,
+        regra: "1 palpite salvo = 1 ponto"
+      });
+    } catch (error) {
+      console.error("Erro status Neon 2R:", error);
+
+      return res.status(500).json({
+        ok: false,
+        success: false,
+        message: error.message || "Erro ao verificar Neon."
+      });
+    }
+  });
+
+  app.get("/api/segunda-rodada-neon/palpites", async function (req, res) {
+    try {
+      await ensureTables();
+
+      const userKey = getUserKey(req);
+
+      if (!userKey) {
+        return res.status(401).json({
+          ok: false,
+          success: false,
+          message: "Usuário não identificado."
+        });
+      }
+
+      const result = await getPool().query(
+        `
+          SELECT
+            game_id,
+            game_date,
+            group_code,
+            home_team,
+            away_team,
+            home_score,
+            away_score,
+            updated_at
+          FROM solar_segunda_rodada_palpites
+          WHERE user_key = $1
+            AND game_id = ANY($2::text[])
+          ORDER BY game_date, game_id
+        `,
+        [userKey, GAME_IDS]
+      );
+
+      const pontos = await refreshPointsForUser(userKey);
+
+      return res.json({
+        ok: true,
+        success: true,
+        neon: true,
+        userKey,
+        palpites: result.rows,
+        pontos
+      });
+    } catch (error) {
+      console.error("Erro carregar palpites Neon 2R:", error);
+
+      return res.status(500).json({
+        ok: false,
+        success: false,
+        message: error.message || "Erro ao carregar palpites."
+      });
+    }
+  });
+
+  app.post("/api/segunda-rodada-neon/palpites", async function (req, res) {
+    try {
+      await ensureTables();
+
+      const userKey = getUserKey(req);
+      const gameId = clean(req.body && req.body.gameId);
+      const game = GAMES[gameId];
+
+      if (!userKey) {
+        return res.status(401).json({
+          ok: false,
+          success: false,
+          message: "Usuário não identificado."
+        });
+      }
+
+      if (!game) {
+        return res.status(400).json({
+          ok: false,
+          success: false,
+          message: "Jogo da 2ª rodada não reconhecido.",
+          gameId
+        });
+      }
+
+      const info = lockInfo(gameId);
+
+      if (info && info.locked) {
+        return blocked(res, gameId, info);
+      }
+
+      const homeScore = parseScore(req.body && req.body.homeScore, "Placar do mandante");
+      const awayScore = parseScore(req.body && req.body.awayScore, "Placar do visitante");
+
+      const result = await getPool().query(
+        `
+          INSERT INTO solar_segunda_rodada_palpites (
+            user_key,
+            game_id,
+            round_code,
+            game_date,
+            group_code,
+            home_team,
+            away_team,
+            home_score,
+            away_score,
+            source,
+            created_at,
+            updated_at
+          )
+          VALUES ($1, $2, '2', $3, $4, $5, $6, $7, $8, 'app', NOW(), NOW())
+          ON CONFLICT (user_key, game_id)
+          DO UPDATE SET
+            game_date = EXCLUDED.game_date,
+            group_code = EXCLUDED.group_code,
+            home_team = EXCLUDED.home_team,
+            away_team = EXCLUDED.away_team,
+            home_score = EXCLUDED.home_score,
+            away_score = EXCLUDED.away_score,
+            source = 'app',
+            updated_at = NOW()
+          RETURNING
+            id,
+            user_key,
+            game_id,
+            game_date,
+            group_code,
+            home_team,
+            away_team,
+            home_score,
+            away_score,
+            updated_at
+        `,
+        [
+          userKey,
+          gameId,
+          game[0],
+          game[1],
+          game[2],
+          game[3],
+          homeScore,
+          awayScore
+        ]
+      );
+
+      const pontos = await refreshPointsForUser(userKey);
+
+      return res.json({
+        ok: true,
+        success: true,
+        neon: true,
+        message: "Palpite salvo.",
+        palpite: result.rows[0],
+        pontos
+      });
+    } catch (error) {
+      console.error("Erro salvar palpite Neon 2R:", error);
+
+      return res.status(500).json({
+        ok: false,
+        success: false,
+        message: error.message || "Erro ao salvar palpite."
+      });
+    }
+  });
+
+  app.delete("/api/segunda-rodada-neon/palpites/:gameId", async function (req, res) {
+    try {
+      await ensureTables();
+
+      const userKey = getUserKey(req);
+      const gameId = clean(req.params && req.params.gameId);
+      const game = GAMES[gameId];
+
+      if (!userKey) {
+        return res.status(401).json({
+          ok: false,
+          success: false,
+          message: "Usuário não identificado."
+        });
+      }
+
+      if (!game) {
+        return res.status(400).json({
+          ok: false,
+          success: false,
+          message: "Jogo da 2ª rodada não reconhecido.",
+          gameId
+        });
+      }
+
+      const info = lockInfo(gameId);
+
+      if (info && info.locked) {
+        return blocked(res, gameId, info);
+      }
+
+      await getPool().query(
+        `
+          DELETE FROM solar_segunda_rodada_palpites
+          WHERE user_key = $1
+            AND game_id = $2
+        `,
+        [userKey, gameId]
+      );
+
+      const pontos = await refreshPointsForUser(userKey);
+
+      return res.json({
+        ok: true,
+        success: true,
+        neon: true,
+        message: "Palpite removido.",
+        gameId,
+        pontos
+      });
+    } catch (error) {
+      console.error("Erro resetar palpite Neon 2R:", error);
+
+      return res.status(500).json({
+        ok: false,
+        success: false,
+        message: error.message || "Erro ao resetar palpite."
+      });
+    }
+  });
+
+  app.post("/api/segunda-rodada-neon/sincronizar-usuario", async function (req, res) {
+    try {
+      await ensureTables();
+
+      const oldUserKey = clean(req.body && req.body.oldUserKey);
+      const newUserKey = clean(req.body && req.body.newUserKey);
+
+      if (!oldUserKey || !newUserKey || oldUserKey === newUserKey) {
+        return res.json({
+          ok: true,
+          success: true,
+          migrated: false,
+          message: "Nada para sincronizar."
+        });
+      }
+
+      await getPool().query(
+        `
+          INSERT INTO solar_segunda_rodada_palpites (
+            user_key,
+            game_id,
+            round_code,
+            game_date,
+            group_code,
+            home_team,
+            away_team,
+            home_score,
+            away_score,
+            source,
+            created_at,
+            updated_at
+          )
+          SELECT
+            $2 AS user_key,
+            game_id,
+            round_code,
+            game_date,
+            group_code,
+            home_team,
+            away_team,
+            home_score,
+            away_score,
+            'migrado-local' AS source,
+            created_at,
+            updated_at
+          FROM solar_segunda_rodada_palpites
+          WHERE user_key = $1
+            AND game_id = ANY($3::text[])
+          ON CONFLICT (user_key, game_id)
+          DO UPDATE SET
+            game_date = EXCLUDED.game_date,
+            group_code = EXCLUDED.group_code,
+            home_team = EXCLUDED.home_team,
+            away_team = EXCLUDED.away_team,
+            home_score = EXCLUDED.home_score,
+            away_score = EXCLUDED.away_score,
+            source = 'migrado-local',
+            updated_at = GREATEST(solar_segunda_rodada_palpites.updated_at, EXCLUDED.updated_at)
+        `,
+        [oldUserKey, newUserKey, GAME_IDS]
+      );
+
+      if (/^(local-|anon-|guest-)/i.test(oldUserKey)) {
+        await getPool().query(
+          `
+            DELETE FROM solar_segunda_rodada_palpites
+            WHERE user_key = $1
+              AND game_id = ANY($2::text[])
+          `,
+          [oldUserKey, GAME_IDS]
+        );
+      }
+
+      await refreshPointsForUser(oldUserKey);
+      const pontos = await refreshPointsForUser(newUserKey);
+
+      return res.json({
+        ok: true,
+        success: true,
+        migrated: true,
+        oldUserKey,
+        newUserKey,
+        pontos
+      });
+    } catch (error) {
+      console.error("Erro sincronizar usuário 2R:", error);
+
+      return res.status(500).json({
+        ok: false,
+        success: false,
+        message: error.message || "Erro ao sincronizar usuário."
+      });
+    }
+  });
+
+  app.get("/api/admin/segunda-rodada-neon/pontos", async function (req, res) {
+    try {
+      await ensureTables();
+      await refreshAllPoints();
+
+      const total = await getPool().query(
+        `
+          SELECT
+            COUNT(*)::int AS total_usuarios,
+            COALESCE(SUM(palpites_salvos), 0)::int AS total_palpites,
+            COALESCE(SUM(pontos_segunda_rodada), 0)::int AS total_pontos,
+            COUNT(*) FILTER (WHERE rodada_completa = TRUE)::int AS usuarios_com_rodada_completa
+          FROM solar_segunda_rodada_pontos
+        `
+      );
+
+      const ranking = await getPool().query(
+        `
+          SELECT
+            user_key,
+            palpites_salvos,
+            pontos_segunda_rodada,
+            GREATEST(24 - palpites_salvos, 0)::int AS faltam,
+            rodada_completa,
+            CASE
+              WHEN rodada_completa = TRUE THEN 'RODADA COMPLETA'
+              ELSE 'INCOMPLETO'
+            END AS status_rodada,
+            primeiro_palpite,
+            ultimo_palpite,
+            updated_at
+          FROM solar_segunda_rodada_pontos
+          ORDER BY
+            pontos_segunda_rodada DESC,
+            ultimo_palpite DESC,
+            user_key ASC
+        `
+      );
+
+      return res.json({
+        ok: true,
+        success: true,
+        regra: "1 palpite salvo = 1 ponto",
+        totalJogosSegundaRodada: 24,
+        resumo: {
+          totalUsuarios: total.rows[0].total_usuarios,
+          totalPalpites: total.rows[0].total_palpites,
+          totalPontos: total.rows[0].total_pontos,
+          usuariosComRodadaCompleta: total.rows[0].usuarios_com_rodada_completa
+        },
+        ranking: ranking.rows,
+        atualizadoEm: new Date().toISOString()
+      });
+    } catch (error) {
+      console.error("Erro admin pontos 2R:", error);
+
+      return res.status(500).json({
+        ok: false,
+        success: false,
+        message: error.message || "Erro ao carregar pontuação da 2ª rodada."
+      });
+    }
+  });
+
+  console.log("Pontuação global da 2ª rodada carregada.");
+})();
+// SOLAR_2R_PONTUACAO_GLOBAL_BACKEND_END
+
+// SOLAR_2R_AUTO_VINCULO_GERAL_START
+(function instalarAutoVinculoGeral2R() {
+  const fs = require("fs");
+  const path = require("path");
+  const { Pool } = require("pg");
+
+  function loadEnvIfNeeded() {
+    const exists =
+      process.env.DATABASE_URL ||
+      process.env.NEON_DATABASE_URL ||
+      process.env.POSTGRES_URL ||
+      process.env.POSTGRES_PRISMA_URL;
+
+    if (exists) return;
+
+    const envPath = path.join(__dirname, ".env");
+    if (!fs.existsSync(envPath)) return;
+
+    fs.readFileSync(envPath, "utf8").split(/\r?\n/).forEach(function (line) {
+      const clean = line.trim();
+      if (!clean || clean.startsWith("#")) return;
+
+      const index = clean.indexOf("=");
+      if (index === -1) return;
+
+      const key = clean.slice(0, index).trim();
+      let value = clean.slice(index + 1).trim();
+
+      if (
+        (value.startsWith('"') && value.endsWith('"')) ||
+        (value.startsWith("'") && value.endsWith("'"))
+      ) {
+        value = value.slice(1, -1);
+      }
+
+      if (!process.env[key]) process.env[key] = value;
+    });
+  }
+
+  loadEnvIfNeeded();
+
+  const DATABASE_URL =
+    process.env.DATABASE_URL ||
+    process.env.NEON_DATABASE_URL ||
+    process.env.POSTGRES_URL ||
+    process.env.POSTGRES_PRISMA_URL ||
+    "";
+
+  let pool = null;
+
+  function getPool() {
+    if (!DATABASE_URL) {
+      throw new Error("DATABASE_URL / NEON_DATABASE_URL não configurada.");
+    }
+
+    if (!pool) {
+      pool = new Pool({
+        connectionString: DATABASE_URL,
+        ssl: DATABASE_URL.includes("localhost") || DATABASE_URL.includes("127.0.0.1")
+          ? false
+          : { rejectUnauthorized: false },
+        max: 8
+      });
+    }
+
+    return pool;
+  }
+
+  function clean(value) {
+    return String(value == null ? "" : value).trim();
+  }
+
+  function digits(value) {
+    return clean(value).replace(/\D+/g, "");
+  }
+
+  function normalizePhone(value) {
+    let d = digits(value);
+
+    if (d.length === 13 && d.indexOf("55") === 0) {
+      d = d.slice(2);
+    }
+
+    return d;
+  }
+
+  function normalizeKey(value) {
+    const raw = clean(value).toLowerCase();
+    const phone = normalizePhone(raw);
+
+    if (phone.length >= 10 && phone.length <= 11) return phone;
+
+    return raw;
+  }
+
+  function firstValue() {
+    for (let i = 0; i < arguments.length; i += 1) {
+      const value = clean(arguments[i]);
+      if (value) return value;
+    }
+
+    return "";
+  }
+
+  function getSessionUser(req) {
+    const session = req.session || {};
+    return (
+      session.user ||
+      session.usuario ||
+      session.authUser ||
+      session.currentUser ||
+      session.participante ||
+      {}
+    );
+  }
+
+  function getRealIdentity(req) {
+    const body = req.body || {};
+    const query = req.query || {};
+    const user = getSessionUser(req);
+    const session = req.session || {};
+
+    const phone = normalizePhone(firstValue(
+      body.realPhone,
+      body.phone,
+      body.telefone,
+      body.whatsapp,
+      body.celular,
+      body.clientUserPhone,
+      query.realPhone,
+      query.phone,
+      query.telefone,
+      user.phone,
+      user.telefone,
+      user.whatsapp,
+      user.celular,
+      session.phone,
+      session.telefone,
+      session.whatsapp,
+      session.celular
+    ));
+
+    const explicitKey = firstValue(
+      body.realUserKey,
+      body.userKey,
+      body.clientUserKeyReal,
+      query.realUserKey,
+      query.userKey
+    );
+
+    const sessionKey = firstValue(
+      user.user_key,
+      user.userKey,
+      user.id,
+      user.user_id,
+      user.usuario_id,
+      user.email,
+      session.userKey,
+      session.userId,
+      session.usuarioId,
+      session.email
+    );
+
+    let realUserKey = "";
+
+    if (phone) {
+      realUserKey = phone;
+    } else if (explicitKey && !/^local-/i.test(explicitKey)) {
+      realUserKey = explicitKey;
+    } else if (sessionKey && !/^local-/i.test(sessionKey)) {
+      realUserKey = sessionKey;
+    }
+
+    const name = firstValue(
+      body.realName,
+      body.name,
+      body.nome,
+      user.nomedeusuario,
+      user.username,
+      user.name,
+      user.nome,
+      [user.firstName || user.primeiroNome, user.lastName || user.sobrenome].filter(Boolean).join(" ")
+    );
+
+    return {
+      realUserKey: clean(realUserKey),
+      realPhone: phone,
+      realName: name
+    };
+  }
+
+  function getLocalKeysFromBody(req) {
+    const body = req.body || {};
+    const values = [];
+
+    if (Array.isArray(body.localUserKeys)) {
+      values.push.apply(values, body.localUserKeys);
+    }
+
+    [
+      body.localUserKey,
+      body.oldUserKey,
+      body.previousLocalUserKey,
+      body.clientUserKey,
+      body.userKey
+    ].forEach(function (value) {
+      if (value) values.push(value);
+    });
+
+    const out = [];
+
+    values.forEach(function (value) {
+      const text = clean(value);
+      const matches = text.match(/local-[a-z0-9][a-z0-9_-]*/gi) || [];
+
+      matches.forEach(function (match) {
+        if (match && /^local-/i.test(match)) out.push(match);
+      });
+    });
+
+    return Array.from(new Set(out)).slice(0, 30);
+  }
+
+  async function ensureTables() {
+    await getPool().query(`
+      CREATE TABLE IF NOT EXISTS solar_2r_user_key_vinculos (
+        id BIGSERIAL PRIMARY KEY,
+        old_user_key TEXT NOT NULL UNIQUE,
+        real_user_key TEXT NOT NULL,
+        real_phone TEXT,
+        real_name TEXT,
+        origem TEXT DEFAULT 'auto',
+        created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+        updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+      );
+    `);
+
+    await getPool().query(`
+      CREATE TABLE IF NOT EXISTS solar_2r_user_key_vinculos_log (
+        id BIGSERIAL PRIMARY KEY,
+        old_user_key TEXT NOT NULL,
+        real_user_key TEXT NOT NULL,
+        real_phone TEXT,
+        real_name TEXT,
+        origem TEXT,
+        payload JSONB,
+        created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+      );
+    `);
+
+    await getPool().query(`
+      CREATE TABLE IF NOT EXISTS solar_segunda_rodada_pontos (
+        user_key TEXT PRIMARY KEY,
+        palpites_salvos INTEGER NOT NULL DEFAULT 0,
+        pontos_segunda_rodada INTEGER NOT NULL DEFAULT 0,
+        rodada_completa BOOLEAN NOT NULL DEFAULT FALSE,
+        total_jogos INTEGER NOT NULL DEFAULT 24,
+        primeiro_palpite TIMESTAMPTZ,
+        ultimo_palpite TIMESTAMPTZ,
+        updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+      );
+    `);
+  }
+
+  async function recalcularPontos2R() {
+    await ensureTables();
+
+    await getPool().query(`DELETE FROM solar_segunda_rodada_pontos`);
+
+    await getPool().query(`
+      INSERT INTO solar_segunda_rodada_pontos (
+        user_key,
+        palpites_salvos,
+        pontos_segunda_rodada,
+        rodada_completa,
+        total_jogos,
+        primeiro_palpite,
+        ultimo_palpite,
+        updated_at
+      )
+      SELECT
+        COALESCE(v.real_user_key, p.user_key) AS user_key,
+        COUNT(DISTINCT p.game_id)::int AS palpites_salvos,
+        COUNT(DISTINCT p.game_id)::int AS pontos_segunda_rodada,
+        CASE WHEN COUNT(DISTINCT p.game_id) = 24 THEN TRUE ELSE FALSE END AS rodada_completa,
+        24 AS total_jogos,
+        MIN(p.created_at) AS primeiro_palpite,
+        MAX(p.updated_at) AS ultimo_palpite,
+        NOW() AS updated_at
+      FROM solar_segunda_rodada_palpites p
+      LEFT JOIN solar_2r_user_key_vinculos v
+        ON v.old_user_key = p.user_key
+      GROUP BY COALESCE(v.real_user_key, p.user_key)
+    `);
+  }
+
+  async function vincularLocalKeys(localKeys, identity, origem) {
+    await ensureTables();
+
+    const vinculados = [];
+
+    for (const localKey of localKeys) {
+      const oldUserKey = clean(localKey);
+
+      if (!oldUserKey || !/^local-/i.test(oldUserKey)) continue;
+      if (!identity.realUserKey) continue;
+
+      const existePalpite = await getPool().query(
+        `
+          SELECT COUNT(*)::int AS total
+          FROM solar_segunda_rodada_palpites
+          WHERE user_key = $1
+        `,
+        [oldUserKey]
+      );
+
+      if (!Number(existePalpite.rows[0].total || 0)) continue;
+
+      await getPool().query(
+        `
+          INSERT INTO solar_2r_user_key_vinculos (
+            old_user_key,
+            real_user_key,
+            real_phone,
+            real_name,
+            origem,
+            created_at,
+            updated_at
+          )
+          VALUES ($1, $2, $3, $4, $5, NOW(), NOW())
+          ON CONFLICT (old_user_key)
+          DO UPDATE SET
+            real_user_key = EXCLUDED.real_user_key,
+            real_phone = EXCLUDED.real_phone,
+            real_name = EXCLUDED.real_name,
+            origem = EXCLUDED.origem,
+            updated_at = NOW()
+        `,
+        [
+          oldUserKey,
+          identity.realUserKey,
+          identity.realPhone || identity.realUserKey,
+          identity.realName || null,
+          origem || "auto"
+        ]
+      );
+
+      await getPool().query(
+        `
+          INSERT INTO solar_2r_user_key_vinculos_log (
+            old_user_key,
+            real_user_key,
+            real_phone,
+            real_name,
+            origem,
+            payload,
+            created_at
+          )
+          VALUES ($1, $2, $3, $4, $5, $6::jsonb, NOW())
+        `,
+        [
+          oldUserKey,
+          identity.realUserKey,
+          identity.realPhone || identity.realUserKey,
+          identity.realName || null,
+          origem || "auto",
+          JSON.stringify({ automatico: true, data: new Date().toISOString() })
+        ]
+      );
+
+      vinculados.push(oldUserKey);
+    }
+
+    if (vinculados.length) {
+      await recalcularPontos2R();
+    }
+
+    return vinculados;
+  }
+
+  app.post("/api/segunda-rodada-neon/auto-vincular-usuario", async function (req, res) {
+    try {
+      const identity = getRealIdentity(req);
+      const localKeys = getLocalKeysFromBody(req);
+
+      if (!localKeys.length) {
+        return res.json({
+          ok: true,
+          success: true,
+          vinculado: false,
+          motivo: "Nenhuma chave local-* enviada."
+        });
+      }
+
+      if (!identity.realUserKey) {
+        return res.json({
+          ok: true,
+          success: true,
+          vinculado: false,
+          motivo: "Usuário real ainda não identificado por sessão/localStorage.",
+          localKeys
+        });
+      }
+
+      const vinculados = await vincularLocalKeys(localKeys, identity, "auto-frontend");
+
+      return res.json({
+        ok: true,
+        success: true,
+        vinculado: vinculados.length > 0,
+        vinculados,
+        realUserKey: identity.realUserKey,
+        realPhone: identity.realPhone || null,
+        realName: identity.realName || null
+      });
+    } catch (error) {
+      console.error("Erro auto-vincular usuário 2R:", error);
+
+      return res.status(500).json({
+        ok: false,
+        success: false,
+        message: error.message || "Erro ao auto-vincular usuário."
+      });
+    }
+  });
+
+  app.get("/api/admin/segunda-rodada-neon/auto-vinculos", async function (req, res) {
+    try {
+      await ensureTables();
+
+      const vinculados = await getPool().query(`
+        SELECT
+          v.old_user_key,
+          v.real_user_key,
+          v.real_phone,
+          v.real_name,
+          v.origem,
+          v.updated_at,
+          COUNT(DISTINCT p.game_id)::int AS palpites_vinculados
+        FROM solar_2r_user_key_vinculos v
+        LEFT JOIN solar_segunda_rodada_palpites p
+          ON p.user_key = v.old_user_key
+        GROUP BY
+          v.old_user_key,
+          v.real_user_key,
+          v.real_phone,
+          v.real_name,
+          v.origem,
+          v.updated_at
+        ORDER BY v.updated_at DESC
+      `);
+
+      const pendentes = await getPool().query(`
+        SELECT
+          p.user_key,
+          COUNT(DISTINCT p.game_id)::int AS palpites_salvos,
+          MIN(p.created_at) AS primeiro_palpite,
+          MAX(p.updated_at) AS ultimo_palpite
+        FROM solar_segunda_rodada_palpites p
+        LEFT JOIN solar_2r_user_key_vinculos v
+          ON v.old_user_key = p.user_key
+        WHERE p.user_key LIKE 'local-%'
+          AND v.old_user_key IS NULL
+        GROUP BY p.user_key
+        ORDER BY COUNT(DISTINCT p.game_id) DESC, MAX(p.updated_at) DESC
+      `);
+
+      return res.json({
+        ok: true,
+        success: true,
+        vinculados: vinculados.rows,
+        pendentes: pendentes.rows
+      });
+    } catch (error) {
+      return res.status(500).json({
+        ok: false,
+        success: false,
+        message: error.message || "Erro ao consultar vínculos."
+      });
+    }
+  });
+
+  app.post("/api/admin/segunda-rodada-neon/recalcular-pontos", async function (req, res) {
+    try {
+      await recalcularPontos2R();
+
+      const resumo = await getPool().query(`
+        SELECT
+          COUNT(*)::int AS total_usuarios,
+          COALESCE(SUM(palpites_salvos), 0)::int AS total_palpites,
+          COALESCE(SUM(pontos_segunda_rodada), 0)::int AS total_pontos,
+          COUNT(*) FILTER (WHERE rodada_completa = TRUE)::int AS usuarios_com_24_palpites
+        FROM solar_segunda_rodada_pontos
+      `);
+
+      return res.json({
+        ok: true,
+        success: true,
+        message: "Pontuação recalculada sem alterar palpites.",
+        resumo: resumo.rows[0]
+      });
+    } catch (error) {
+      return res.status(500).json({
+        ok: false,
+        success: false,
+        message: error.message || "Erro ao recalcular pontos."
+      });
+    }
+  });
+
+  function findRankingArray(payload) {
+    if (Array.isArray(payload)) return payload;
+
+    if (!payload || typeof payload !== "object") return null;
+
+    const keys = [
+      "classificação",
+      "classificacao",
+      "ranking",
+      "leaderboard",
+      "users",
+      "usuarios",
+      "participantes",
+      "data",
+      "rows",
+      "items"
+    ];
+
+    for (const key of keys) {
+      if (Array.isArray(payload[key])) return payload[key];
+    }
+
+    if (payload.data && typeof payload.data === "object") {
+      for (const key of keys) {
+        if (Array.isArray(payload.data[key])) return payload.data[key];
+      }
+    }
+
+    return null;
+  }
+
+  function rowKeys(row) {
+    const keys = [];
+
+    if (!row || typeof row !== "object") return keys;
+
+    [
+      "user_key",
+      "userKey",
+      "id",
+      "user_id",
+      "userId",
+      "usuario_id",
+      "usuarioId",
+      "phone",
+      "telefone",
+      "whatsapp",
+      "celular",
+      "email"
+    ].forEach(function (field) {
+      if (row[field] !== undefined && row[field] !== null && clean(row[field])) {
+        keys.push(clean(row[field]));
+        keys.push(normalizeKey(row[field]));
+        keys.push(normalizePhone(row[field]));
+      }
+    });
+
+    return Array.from(new Set(keys.filter(Boolean)));
+  }
+
+  function getBasePoints(row) {
+    if (row && row.pontos_sem_segunda_rodada !== undefined) {
+      const base = Number(row.pontos_sem_segunda_rodada);
+      if (Number.isFinite(base)) return base;
+    }
+
+    const fields = [
+      "points",
+      "pontos",
+      "pontuacao",
+      "pontuação",
+      "score",
+      "total",
+      "totalPoints",
+      "total_points",
+      "pontos_total",
+      "total_pontos"
+    ];
+
+    for (const field of fields) {
+      if (row[field] !== undefined && row[field] !== null && row[field] !== "") {
+        const n = Number(row[field]);
+        if (Number.isFinite(n)) return n;
+      }
+    }
+
+    return 0;
+  }
+
+  function setTotalPoints(row, total) {
+    let changed = false;
+
+    [
+      "points",
+      "pontos",
+      "pontuacao",
+      "pontuação",
+      "score",
+      "totalPoints",
+      "total_points",
+      "pontos_total",
+      "total_pontos"
+    ].forEach(function (field) {
+      if (row[field] !== undefined && row[field] !== null && row[field] !== "") {
+        const n = Number(row[field]);
+
+        if (Number.isFinite(n)) {
+          row[field] = total;
+          changed = true;
+        }
+      }
+    });
+
+    if (!changed) row.points = total;
+  }
+
+  async function loadPontosParaRanking() {
+    await ensureTables();
+
+    const result = await getPool().query(`
+      SELECT
+        COALESCE(v.real_user_key, p.user_key) AS user_key_classificacao,
+        COUNT(DISTINCT p.game_id)::int AS palpites_salvos,
+        COUNT(DISTINCT p.game_id)::int AS pontos_segunda_rodada,
+        CASE WHEN COUNT(DISTINCT p.game_id) = 24 THEN TRUE ELSE FALSE END AS rodada_completa,
+        ARRAY_AGG(DISTINCT p.user_key) AS chaves_origem
+      FROM solar_segunda_rodada_palpites p
+      LEFT JOIN solar_2r_user_key_vinculos v
+        ON v.old_user_key = p.user_key
+      GROUP BY COALESCE(v.real_user_key, p.user_key)
+    `);
+
+    const map = new Map();
+
+    result.rows.forEach(function (row) {
+      [
+        row.user_key_classificacao,
+        normalizeKey(row.user_key_classificacao),
+        normalizePhone(row.user_key_classificacao)
+      ].forEach(function (key) {
+        key = clean(key);
+        if (!key) return;
+
+        map.set(key, {
+          user_key_classificacao: row.user_key_classificacao,
+          palpites_salvos: Number(row.palpites_salvos || 0),
+          pontos_segunda_rodada: Number(row.pontos_segunda_rodada || 0),
+          rodada_completa: !!row.rodada_completa,
+          chaves_origem: row.chaves_origem || []
+        });
+      });
+    });
+
+    return map;
+  }
+
+  async function aplicar2RNoRanking(payload) {
+    if (!payload) return payload;
+
+    if (
+      payload &&
+      typeof payload === "object" &&
+      payload.segundaRodada &&
+      payload.segundaRodada.modo === "auto-vinculo-geral"
+    ) {
+      return payload;
+    }
+
+    const ranking = findRankingArray(payload);
+
+    if (!ranking) return payload;
+
+    const map = await loadPontosParaRanking();
+
+    let usuariosComPontos = 0;
+    let totalSomado = 0;
+
+    ranking.forEach(function (row) {
+      if (!row || typeof row !== "object") return;
+
+      const keys = rowKeys(row);
+      let found = null;
+
+      for (const key of keys) {
+        if (map.has(key)) {
+          found = map.get(key);
+          break;
+        }
+      }
+
+      const base = getBasePoints(row);
+      const extra = found ? Number(found.pontos_segunda_rodada || 0) : 0;
+      const total = base + extra;
+
+      row.pontos_sem_segunda_rodada = base;
+      row.pontos_segunda_rodada = extra;
+      row.pontos_2r = extra;
+      row.total_com_segunda_rodada = total;
+      row.palpites_segunda_rodada = found ? Number(found.palpites_salvos || 0) : 0;
+      row.rodada_2_completa = found ? !!found.rodada_completa : false;
+      row.user_key_segunda_rodada = found ? found.user_key_classificacao : null;
+      row.chaves_origem_segunda_rodada = found ? found.chaves_origem : [];
+
+      setTotalPoints(row, total);
+
+      if (extra > 0) {
+        usuariosComPontos += 1;
+        totalSomado += extra;
+      }
+    });
+
+    ranking.sort(function (a, b) {
+      return Number(b.total_com_segunda_rodada || 0) - Number(a.total_com_segunda_rodada || 0);
+    });
+
+    ranking.forEach(function (row, index) {
+      const pos = index + 1;
+      row.position = pos;
+      row.posicao = pos;
+      row["posição"] = pos;
+      row.posicao_com_segunda_rodada = pos;
+    });
+
+    if (payload && typeof payload === "object" && !Array.isArray(payload)) {
+      payload.segundaRodada = {
+        aplicada: true,
+        modo: "auto-vinculo-geral",
+        regra: "1 palpite salvo = 1 ponto",
+        usuariosComPontos2R: usuariosComPontos,
+        totalPontosSomados2R: totalSomado
+      };
+    }
+
+    return payload;
+  }
+
+  function patchResponseBuffer(req, res) {
+    if (res.__solar2rAutoVinculoPatched) return;
+
+    res.__solar2rAutoVinculoPatched = true;
+
+    const originalWrite = res.write.bind(res);
+    const originalEnd = res.end.bind(res);
+    const chunks = [];
+
+    res.write = function patchedWrite(chunk, encoding, callback) {
+      if (chunk) {
+        chunks.push(Buffer.isBuffer(chunk) ? chunk : Buffer.from(String(chunk), encoding || "utf8"));
+      }
+
+      if (typeof callback === "function") callback();
+
+      return true;
+    };
+
+    res.end = function patchedEnd(chunk, encoding, callback) {
+      if (chunk) {
+        chunks.push(Buffer.isBuffer(chunk) ? chunk : Buffer.from(String(chunk), encoding || "utf8"));
+      }
+
+      const buffer = Buffer.concat(chunks);
+      const text = buffer.toString("utf8");
+      const trimmed = text.trim();
+
+      if (!trimmed || (trimmed[0] !== "{" && trimmed[0] !== "[")) {
+        return originalEnd(buffer.length ? buffer : chunk, encoding, callback);
+      }
+
+      let parsed;
+
+      try {
+        parsed = JSON.parse(trimmed);
+      } catch (error) {
+        return originalEnd(buffer.length ? buffer : chunk, encoding, callback);
+      }
+
+      Promise.resolve()
+        .then(function () {
+          return aplicar2RNoRanking(parsed);
+        })
+        .then(function (novo) {
+          const output = JSON.stringify(novo);
+
+          try {
+            res.removeHeader("Content-Length");
+          } catch (_) {}
+
+          res.setHeader("Content-Type", "application/json; charset=utf-8");
+
+          return originalEnd(output, "utf8", callback);
+        })
+        .catch(function (error) {
+          console.error("[2R AUTO VINCULO] erro ao atualizar ranking:", error);
+          return originalEnd(buffer.length ? buffer : chunk, encoding, callback);
+        });
+    };
+  }
+
+  function wrapRouteLayer(layer) {
+    if (!layer || !layer.route || !layer.route.path || !layer.route.stack) return 0;
+
+    const routePath = String(layer.route.path);
+
+    const targets = [
+      "/admin/neon-ranking",
+      "/admin/leaderboard",
+      "/admin/summary",
+      "/admin/export-dashboard",
+      "/admin/export-neon"
+    ];
+
+    if (!targets.includes(routePath)) return 0;
+    if (!layer.route.methods || !layer.route.methods.get) return 0;
+
+    let count = 0;
+
+    layer.route.stack.forEach(function (routeLayer) {
+      if (!routeLayer || typeof routeLayer.handle !== "function") return;
+      if (routeLayer.handle.__solar2rAutoVinculoWrapped) return;
+
+      const original = routeLayer.handle;
+
+      routeLayer.handle = function wrappedAdminRoute2RAuto(req, res, next) {
+        console.log("[2R AUTO VINCULO] atualizando ranking admin", req.method, req.originalUrl || req.url);
+        patchResponseBuffer(req, res);
+        return original.call(this, req, res, next);
+      };
+
+      routeLayer.handle.__solar2rAutoVinculoWrapped = true;
+      count += 1;
+    });
+
+    return count;
+  }
+
+  function wrapStack(stack) {
+    let total = 0;
+
+    if (!Array.isArray(stack)) return total;
+
+    stack.forEach(function (layer) {
+      total += wrapRouteLayer(layer);
+
+      if (layer && layer.handle && Array.isArray(layer.handle.stack)) {
+        total += wrapStack(layer.handle.stack);
+      }
+    });
+
+    return total;
+  }
+
+  const router = app._router || app.router;
+  const stack = router && router.stack ? router.stack : [];
+  const wrapped = wrapStack(stack);
+
+  app.get("/api/debug/segunda-rodada-auto-vinculo", async function (req, res) {
+    try {
+      await ensureTables();
+
+      const pontos = await getPool().query(`
+        SELECT
+          COUNT(*)::int AS usuarios,
+          COALESCE(SUM(pontos_segunda_rodada), 0)::int AS pontos
+        FROM solar_segunda_rodada_pontos
+      `);
+
+      const vinculos = await getPool().query(`
+        SELECT COUNT(*)::int AS total
+        FROM solar_2r_user_key_vinculos
+      `);
+
+      return res.json({
+        ok: true,
+        wrapped,
+        modo: "auto-vinculo-geral",
+        vinculos: Number(vinculos.rows[0].total || 0),
+        pontos: pontos.rows[0]
+      });
+    } catch (error) {
+      return res.status(500).json({
+        ok: false,
+        wrapped,
+        message: error.message || "Erro debug auto-vinculo."
+      });
+    }
+  });
+
+  console.log("[2R AUTO VINCULO] carregado. Rotas admin atualizadas:", wrapped);
+})();
+// SOLAR_2R_AUTO_VINCULO_GERAL_END
+
+
+// === RANKING SEGUNDA RODADA NEON START ===
+const { Pool: SegundaRodadaRankingPool } = require("pg");
+
+let segundaRodadaRankingPool = null;
+
+function getSegundaRodadaRankingPool() {
+  if (!process.env.DATABASE_URL) {
+    return null;
+  }
+
+  if (!segundaRodadaRankingPool) {
+    segundaRodadaRankingPool = new SegundaRodadaRankingPool({
+      connectionString: process.env.DATABASE_URL,
+      ssl: {
+        rejectUnauthorized: false
+      }
+    });
+  }
+
+  return segundaRodadaRankingPool;
+}
+
+app.get("/api/segunda-rodada-neon/ranking", async function (req, res) {
+  try {
+    const pool = getSegundaRodadaRankingPool();
+
+    if (!pool) {
+      return res.status(503).json({
+        ok: false,
+        error: "DATABASE_URL não configurada."
+      });
+    }
+
+    const sql = `
+      SELECT
+        user_key AS "userKey",
+        COUNT(*)::int AS "totalPalpites",
+        COUNT(*) FILTER (
+          WHERE home_score IS NOT NULL
+          AND away_score IS NOT NULL
+        )::int AS "palpitesValidos",
+        MIN(created_at) AS "primeiroPalpiteEm",
+        MAX(updated_at) AS "ultimoPalpiteEm"
+      FROM solar_segunda_rodada_palpites
+      WHERE game_id IS NOT NULL
+      GROUP BY user_key
+      ORDER BY
+        COUNT(*) DESC,
+        MAX(updated_at) ASC,
+        user_key ASC
+    `;
+
+    const result = await pool.query(sql);
+
+    return res.json({
+      ok: true,
+      roundCode: "segunda_rodada",
+      totalJogosDisponiveis: 24,
+      totalUsuarios: result.rows.length,
+      ranking: result.rows
+    });
+  } catch (error) {
+    console.error("Erro ao carregar ranking da segunda rodada:", error);
+
+    return res.status(500).json({
+      ok: false,
+      error: "Erro ao carregar ranking da segunda rodada."
+    });
+  }
+});
+
+app.get("/api/ranking/segunda-rodada", async function (req, res) {
+  try {
+    const pool = getSegundaRodadaRankingPool();
+
+    if (!pool) {
+      return res.status(503).json({
+        ok: false,
+        error: "DATABASE_URL não configurada."
+      });
+    }
+
+    const sql = `
+      SELECT
+        user_key AS "userKey",
+        COUNT(*)::int AS "totalPalpites",
+        COUNT(*) FILTER (
+          WHERE home_score IS NOT NULL
+          AND away_score IS NOT NULL
+        )::int AS "palpitesValidos",
+        MIN(created_at) AS "primeiroPalpiteEm",
+        MAX(updated_at) AS "ultimoPalpiteEm"
+      FROM solar_segunda_rodada_palpites
+      WHERE game_id IS NOT NULL
+      GROUP BY user_key
+      ORDER BY
+        COUNT(*) DESC,
+        MAX(updated_at) ASC,
+        user_key ASC
+    `;
+
+    const result = await pool.query(sql);
+
+    return res.json({
+      ok: true,
+      roundCode: "segunda_rodada",
+      totalJogosDisponiveis: 24,
+      totalUsuarios: result.rows.length,
+      ranking: result.rows
+    });
+  } catch (error) {
+    console.error("Erro ao carregar ranking da segunda rodada:", error);
+
+    return res.status(500).json({
+      ok: false,
+      error: "Erro ao carregar ranking da segunda rodada."
+    });
+  }
+});
+// === RANKING SEGUNDA RODADA NEON END ===
+
 app.listen(PORT, () => {
   console.log(`Servidor rodando em http://localhost:${PORT}`);
 });
+
+
 
