@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="pt-BR">
 <head>
   <meta charset="UTF-8" />
@@ -5732,6 +5732,31 @@
         </button>
 
         <button id="btnSegundaRodadaNativa" type="button" class="btn solar-segunda-rodada-btn">VER JOGOS DA 2ª RODADA</button>
+
+<!-- === RANKING VISUAL SEGUNDA RODADA START === -->
+<section id="ranking-segunda-rodada" class="segunda-ranking-shell" aria-labelledby="rankingSegundaRodadaTitulo">
+  <div class="segunda-ranking-head">
+    <div>
+      <span class="segunda-ranking-kicker">🏆 Ranking ao vivo</span>
+      <h2 id="rankingSegundaRodadaTitulo" class="segunda-ranking-title">Ranking geral atualizado</h2>
+      <p class="segunda-ranking-subtitle">
+        Ranking geral atualizado atualizado, somando a 1ª rodada e mostrando quem já palpitou na 2ª rodada.
+      </p>
+    </div>
+
+    <button id="segundaRankingRefresh" class="segunda-ranking-refresh" type="button">
+      Atualizar ranking geral
+    </button>
+  </div>
+
+  <div id="segundaRankingStatus" class="segunda-ranking-loading">
+    Carregando ranking geral...
+  </div>
+
+  <div id="segundaRankingGrid" class="segunda-ranking-grid" hidden></div>
+</section>
+<!-- === RANKING VISUAL SEGUNDA RODADA END === -->
+
 
         
 <section id="secaoSegundaRodadaNativa" class="solar-2r-final-section" hidden>
@@ -15626,8 +15651,1674 @@ function renderLoggedContent() {
 })();
 </script>
 <!-- SOLAR_2R_BANDEIRAS_REAIS_SEM_NEON_END -->
+
+<!-- SOLAR_ADMIN_PONTOS_2R_FRONTEND_START -->
+<style>
+  .solar-admin-2r-scoreboard {
+    display: grid;
+    gap: 14px;
+    margin: 22px 0;
+    padding: 18px;
+    border: 5px solid #000;
+    border-radius: 26px;
+    background:
+      radial-gradient(circle at 10% 10%, rgba(255,255,255,.45), transparent 26%),
+      linear-gradient(135deg, #ccff00 0%, #00ff88 100%);
+    color: #000;
+    box-shadow: 9px 9px 0 #000;
+    font-family: Arial, sans-serif;
+  }
+
+  .solar-admin-2r-scoreboard * {
+    box-sizing: border-box;
+  }
+
+  .solar-admin-2r-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 14px;
+    flex-wrap: wrap;
+  }
+
+  .solar-admin-2r-head strong {
+    display: block;
+    font-size: clamp(20px, 3vw, 30px);
+    font-weight: 1000;
+    line-height: 1;
+    text-transform: uppercase;
+  }
+
+  .solar-admin-2r-head span {
+    display: block;
+    margin-top: 5px;
+    font-size: 12px;
+    font-weight: 900;
+  }
+
+  .solar-admin-2r-refresh {
+    min-height: 42px;
+    padding: 9px 14px;
+    border: 4px solid #000;
+    border-radius: 999px;
+    background: #000;
+    color: #ccff00;
+    box-shadow: 5px 5px 0 #ccff00;
+    font-size: 12px;
+    font-weight: 1000;
+    text-transform: uppercase;
+    cursor: pointer;
+  }
+
+  .solar-admin-2r-cards {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+    gap: 10px;
+  }
+
+  .solar-admin-2r-kpi {
+    padding: 12px;
+    border: 4px solid #000;
+    border-radius: 18px;
+    background: #fff;
+    box-shadow: 5px 5px 0 #000;
+  }
+
+  .solar-admin-2r-kpi b {
+    display: block;
+    font-size: 24px;
+    font-weight: 1000;
+  }
+
+  .solar-admin-2r-kpi span {
+    display: block;
+    margin-top: 3px;
+    font-size: 11px;
+    font-weight: 900;
+    text-transform: uppercase;
+  }
+
+  .solar-admin-2r-table-wrap {
+    overflow-x: auto;
+    border: 4px solid #000;
+    border-radius: 18px;
+    background: #fff;
+    box-shadow: 5px 5px 0 #000;
+  }
+
+  .solar-admin-2r-table {
+    width: 100%;
+    min-width: 720px;
+    border-collapse: collapse;
+    background: #fff;
+  }
+
+  .solar-admin-2r-table th,
+  .solar-admin-2r-table td {
+    padding: 10px 11px;
+    border-bottom: 2px solid #000;
+    text-align: left;
+    font-size: 12px;
+    font-weight: 900;
+  }
+
+  .solar-admin-2r-table th {
+    background: #000;
+    color: #ccff00;
+    text-transform: uppercase;
+  }
+
+  .solar-admin-2r-table tr.is-complete td {
+    background: #eaffad;
+  }
+
+  .solar-admin-2r-badge {
+    display: inline-flex;
+    align-items: center;
+    min-height: 26px;
+    padding: 4px 8px;
+    border: 3px solid #000;
+    border-radius: 999px;
+    background: #fff;
+    box-shadow: 3px 3px 0 #000;
+    font-size: 10px;
+    font-weight: 1000;
+    text-transform: uppercase;
+    white-space: nowrap;
+  }
+
+  .solar-admin-2r-badge.is-complete {
+    background: #ccff00;
+  }
+
+  .solar-admin-2r-badge.is-open {
+    background: #ffe600;
+  }
+
+  .solar-admin-2r-note {
+    padding: 10px 12px;
+    border: 3px solid #000;
+    border-radius: 16px;
+    background: #000;
+    color: #ccff00;
+    box-shadow: 4px 4px 0 #000;
+    font-size: 12px;
+    font-weight: 900;
+    line-height: 1.35;
+  }
+
+  @media (max-width: 620px) {
+    .solar-admin-2r-scoreboard {
+      padding: 14px;
+      border-radius: 22px;
+    }
+
+    .solar-admin-2r-refresh {
+      width: 100%;
+    }
+  }
+
+/* === RANKING VISUAL SEGUNDA RODADA START === */
+.segunda-ranking-shell {
+  width: min(1120px, calc(100% - 28px));
+  margin: 28px auto;
+  padding: clamp(18px, 3vw, 28px);
+  border: 5px solid #050505;
+  border-radius: 28px;
+  background:
+    radial-gradient(circle at 10% 0%, rgba(57, 255, 20, 0.24), transparent 34%),
+    radial-gradient(circle at 100% 20%, rgba(0, 240, 255, 0.22), transparent 30%),
+    linear-gradient(135deg, #fffbe8 0%, #f4ffe8 45%, #eafff9 100%);
+  box-shadow: 10px 10px 0 #050505, 0 0 34px rgba(57, 255, 20, 0.28);
+  color: #050505;
+  position: relative;
+  overflow: hidden;
+  isolation: isolate;
+}
+
+.segunda-ranking-shell::before {
+  content: "";
+  position: absolute;
+  inset: -40%;
+  background:
+    linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.42), transparent);
+  transform: rotate(12deg) translateX(-70%);
+  animation: segundaRankingShine 6s ease-in-out infinite;
+  z-index: -1;
+}
+
+.segunda-ranking-head {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 18px;
+  flex-wrap: wrap;
+  margin-bottom: 18px;
+}
+
+.segunda-ranking-kicker {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 13px;
+  border: 3px solid #050505;
+  border-radius: 999px;
+  background: #39ff14;
+  color: #050505;
+  font-weight: 1000;
+  text-transform: uppercase;
+  letter-spacing: .06em;
+  box-shadow: 4px 4px 0 #050505;
+}
+
+.segunda-ranking-title {
+  margin: 12px 0 6px;
+  font-size: clamp(1.8rem, 4vw, 3.2rem);
+  line-height: .95;
+  font-weight: 1000;
+  letter-spacing: -0.06em;
+  text-transform: uppercase;
+}
+
+.segunda-ranking-subtitle {
+  margin: 0;
+  max-width: 760px;
+  font-weight: 800;
+  color: rgba(5, 5, 5, .72);
+}
+
+.segunda-ranking-refresh {
+  border: 4px solid #050505;
+  border-radius: 18px;
+  background: #050505;
+  color: #39ff14;
+  padding: 13px 16px;
+  font-weight: 1000;
+  text-transform: uppercase;
+  letter-spacing: .03em;
+  cursor: pointer;
+  box-shadow: 6px 6px 0 #39ff14;
+  transition: transform .18s ease, box-shadow .18s ease, background .18s ease, color .18s ease;
+}
+
+.segunda-ranking-refresh:hover,
+.segunda-ranking-refresh:focus-visible {
+  transform: translate(-2px, -2px);
+  box-shadow: 9px 9px 0 #39ff14;
+  background: #39ff14;
+  color: #050505;
+  outline: none;
+}
+
+.segunda-ranking-grid {
+  display: grid;
+  gap: 12px;
+}
+
+.segunda-ranking-row {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 12px;
+  padding: 14px;
+  border: 4px solid #050505;
+  border-radius: 20px;
+  background: rgba(255, 255, 255, .86);
+  box-shadow: 5px 5px 0 #050505;
+  transform: translateY(0);
+  transition: transform .2s ease, box-shadow .2s ease, background .2s ease;
+}
+
+.segunda-ranking-row:hover {
+  transform: translate(-2px, -2px);
+  box-shadow: 8px 8px 0 #050505;
+  background: #ffffff;
+}
+
+.segunda-ranking-pos {
+  width: 48px;
+  height: 48px;
+  display: grid;
+  place-items: center;
+  border: 4px solid #050505;
+  border-radius: 16px;
+  background: #39ff14;
+  font-weight: 1000;
+  box-shadow: 3px 3px 0 #050505;
+}
+
+.segunda-ranking-user {
+  min-width: 0;
+}
+
+.segunda-ranking-name {
+  display: block;
+  font-weight: 1000;
+  font-size: clamp(.92rem, 2vw, 1.05rem);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.segunda-ranking-meta {
+  display: block;
+  margin-top: 4px;
+  font-size: .82rem;
+  font-weight: 800;
+  color: rgba(5, 5, 5, .62);
+}
+
+.segunda-ranking-score {
+  display: grid;
+  place-items: center;
+  min-width: 88px;
+  padding: 10px 12px;
+  border: 4px solid #050505;
+  border-radius: 16px;
+  background: #050505;
+  color: #39ff14;
+  font-weight: 1000;
+  text-align: center;
+  box-shadow: 3px 3px 0 #39ff14;
+}
+
+.segunda-ranking-score small {
+  display: block;
+  color: rgba(57, 255, 20, .78);
+  font-size: .68rem;
+  text-transform: uppercase;
+  letter-spacing: .06em;
+}
+
+.segunda-ranking-empty,
+.segunda-ranking-error,
+.segunda-ranking-loading {
+  padding: 18px;
+  border: 4px dashed #050505;
+  border-radius: 20px;
+  background: rgba(255,255,255,.78);
+  font-weight: 900;
+}
+
+.segunda-ranking-error {
+  background: #fff0f0;
+}
+
+@keyframes segundaRankingShine {
+  0%, 58% {
+    transform: rotate(12deg) translateX(-76%);
+  }
+  78%, 100% {
+    transform: rotate(12deg) translateX(76%);
+  }
+}
+
+@media (max-width: 640px) {
+  .segunda-ranking-row {
+    grid-template-columns: auto minmax(0, 1fr);
+  }
+
+  .segunda-ranking-score {
+    grid-column: 1 / -1;
+    width: 100%;
+  }
+
+  .segunda-ranking-refresh {
+    width: 100%;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .segunda-ranking-shell::before {
+    animation: none !important;
+  }
+
+  .segunda-ranking-refresh,
+  .segunda-ranking-row {
+    transition: none !important;
+  }
+}
+/* === RANKING VISUAL SEGUNDA RODADA END === */
+</style>
+
+<script>
+(function () {
+  "use strict";
+
+  var API = "/api/admin/segunda-rodada-neon/pontos";
+  var MOUNT_ID = "solarAdminPontos2R";
+  var loadedOnce = false;
+
+  function isAdminContext() {
+    var url = String(location.href || "").toLowerCase();
+    var text = String(document.body ? document.body.innerText : "").toLowerCase();
+
+    return (
+      url.indexOf("admin") !== -1 ||
+      url.indexOf("administrador") !== -1 ||
+      text.indexOf("painel do administrador") !== -1 ||
+      text.indexOf("administrador") !== -1 ||
+      text.indexOf("admin") !== -1
+    );
+  }
+
+  function findAdminHost() {
+    var selectors = [
+      "#adminPanel",
+      "#admin-panel",
+      "#painelAdmin",
+      "#painel-admin",
+      "#adminArea",
+      "#admin-area",
+      ".admin-panel",
+      ".admin-dashboard",
+      ".admin-area",
+      ".painel-admin",
+      "[data-admin-panel]",
+      "main"
+    ];
+
+    for (var i = 0; i < selectors.length; i += 1) {
+      var el = document.querySelector(selectors[i]);
+
+      if (el) return el;
+    }
+
+    return document.body;
+  }
+
+  function escapeHtml(value) {
+    return String(value == null ? "" : value).replace(/[&<>"']/g, function (char) {
+      return {
+        "&": "&amp;",
+        "<": "&lt;",
+        ">": "&gt;",
+        '"': "&quot;",
+        "'": "&#039;"
+      }[char];
+    });
+  }
+
+  function formatDate(value) {
+    if (!value) return "-";
+
+    try {
+      return new Date(value).toLocaleString("pt-BR", {
+        day: "2-digit",
+        month: "2-digit",
+        year: "numeric",
+        hour: "2-digit",
+        minute: "2-digit"
+      });
+    } catch (error) {
+      return String(value);
+    }
+  }
+
+  function mount() {
+    if (!isAdminContext()) return null;
+
+    var existing = document.getElementById(MOUNT_ID);
+
+    if (existing) return existing;
+
+    var host = findAdminHost();
+
+    if (!host) return null;
+
+    var box = document.createElement("section");
+    box.id = MOUNT_ID;
+    box.className = "solar-admin-2r-scoreboard";
+    box.innerHTML =
+      "<div class='solar-admin-2r-head'>" +
+        "<div>" +
+          "<strong>Pontuação 2ª rodada</strong>" +
+          "<span>1 palpite salvo = 1 ponto · rodada inteira = 24 pontos</span>" +
+        "</div>" +
+        "<button type='button' class='solar-admin-2r-refresh'>Atualizar pontos</button>" +
+      "</div>" +
+      "<div class='solar-admin-2r-note'>Carregando pontuação da 2ª rodada...</div>";
+
+    var first = host.firstElementChild;
+
+    if (first) {
+      host.insertBefore(box, first);
+    } else {
+      host.appendChild(box);
+    }
+
+    box.querySelector(".solar-admin-2r-refresh").addEventListener("click", load);
+
+    return box;
+  }
+
+  function renderError(message) {
+    var box = mount();
+
+    if (!box) return;
+
+    box.innerHTML =
+      "<div class='solar-admin-2r-head'>" +
+        "<div>" +
+          "<strong>Pontuação 2ª rodada</strong>" +
+          "<span>1 palpite salvo = 1 ponto · rodada inteira = 24 pontos</span>" +
+        "</div>" +
+        "<button type='button' class='solar-admin-2r-refresh'>Atualizar pontos</button>" +
+      "</div>" +
+      "<div class='solar-admin-2r-note'>Erro ao carregar pontuação: " + escapeHtml(message) + "</div>";
+
+    box.querySelector(".solar-admin-2r-refresh").addEventListener("click", load);
+  }
+
+  function render(payload) {
+    var box = mount();
+
+    if (!box) return;
+
+    var ranking = payload.ranking || [];
+    var resumo = payload.resumo || {};
+    var duplicados = payload.duplicados || [];
+
+    var html = "";
+
+    html += "<div class='solar-admin-2r-head'>";
+    html += "<div>";
+    html += "<strong>Pontuação 2ª rodada</strong>";
+    html += "<span>1 palpite salvo = 1 ponto · rodada inteira = 24 pontos</span>";
+    html += "</div>";
+    html += "<button type='button' class='solar-admin-2r-refresh'>Atualizar pontos</button>";
+    html += "</div>";
+
+    html += "<div class='solar-admin-2r-cards'>";
+    html += "<div class='solar-admin-2r-kpi'><b>" + escapeHtml(resumo.totalPalpites || 0) + "</b><span>palpites salvos</span></div>";
+    html += "<div class='solar-admin-2r-kpi'><b>" + escapeHtml(resumo.totalUsuarios || 0) + "</b><span>usuários</span></div>";
+    html += "<div class='solar-admin-2r-kpi'><b>" + escapeHtml(resumo.usuariosComRodadaCompleta || 0) + "</b><span>rodadas completas</span></div>";
+    html += "<div class='solar-admin-2r-kpi'><b>24</b><span>pontos máximos</span></div>";
+    html += "</div>";
+
+    html += "<div class='solar-admin-2r-table-wrap'>";
+    html += "<table class='solar-admin-2r-table'>";
+    html += "<thead><tr>";
+    html += "<th>Usuário</th>";
+    html += "<th>Palpites</th>";
+    html += "<th>Pontos</th>";
+    html += "<th>Faltam</th>";
+    html += "<th>Status</th>";
+    html += "<th>Último palpite</th>";
+    html += "</tr></thead>";
+    html += "<tbody>";
+
+    if (!ranking.length) {
+      html += "<tr><td colspan='6'>Nenhum palpite da 2ª rodada salvo ainda.</td></tr>";
+    } else {
+      ranking.forEach(function (row) {
+        var complete = Number(row.palpites_salvos) === 24;
+
+        html += "<tr class='" + (complete ? "is-complete" : "") + "'>";
+        html += "<td>" + escapeHtml(row.user_key) + "</td>";
+        html += "<td>" + escapeHtml(row.palpites_salvos) + " / 24</td>";
+        html += "<td><strong>" + escapeHtml(row.pontos_segunda_rodada) + "</strong></td>";
+        html += "<td>" + escapeHtml(row.faltam) + "</td>";
+        html += "<td><span class='solar-admin-2r-badge " + (complete ? "is-complete" : "is-open") + "'>" + escapeHtml(row.status_rodada) + "</span></td>";
+        html += "<td>" + escapeHtml(formatDate(row.ultimo_palpite)) + "</td>";
+        html += "</tr>";
+      });
+    }
+
+    html += "</tbody></table></div>";
+
+    if (duplicados.length) {
+      html += "<div class='solar-admin-2r-note'>Atenção: existem duplicidades por usuário/jogo. Revisar banco antes de fechar a pontuação.</div>";
+    } else {
+      html += "<div class='solar-admin-2r-note'>OK: sem duplicidade. Cada usuário recebe 1 ponto por jogo apostado na 2ª rodada.</div>";
+    }
+
+    box.innerHTML = html;
+    box.querySelector(".solar-admin-2r-refresh").addEventListener("click", load);
+  }
+
+  async function load() {
+    var box = mount();
+
+    if (!box) return;
+
+    try {
+      var response = await fetch(API, {
+        method: "GET",
+        credentials: "same-origin",
+        headers: {
+          "Accept": "application/json"
+        }
+      });
+
+      var payload = await response.json().catch(function () {
+        return {};
+      });
+
+      if (!response.ok || !payload.ok) {
+        throw new Error(payload.message || "API não confirmou a pontuação.");
+      }
+
+      render(payload);
+      loadedOnce = true;
+    } catch (error) {
+      renderError(error.message || error);
+    }
+  }
+
+  function tryStart() {
+    if (!isAdminContext()) return;
+
+    mount();
+
+    if (!loadedOnce) {
+      load();
+    }
+  }
+
+  document.addEventListener("click", function () {
+    window.setTimeout(tryStart, 250);
+  });
+
+  window.addEventListener("hashchange", function () {
+    window.setTimeout(tryStart, 250);
+  });
+
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", function () {
+      window.setTimeout(tryStart, 300);
+      window.setTimeout(tryStart, 1200);
+      window.setTimeout(tryStart, 2500);
+    });
+  } else {
+    window.setTimeout(tryStart, 300);
+    window.setTimeout(tryStart, 1200);
+    window.setTimeout(tryStart, 2500);
+  }
+})();
+</script>
+<!-- SOLAR_ADMIN_PONTOS_2R_FRONTEND_END -->
+
+<!-- SOLAR_2R_USERKEY_GLOBAL_FRONTEND_START -->
+<script>
+(function () {
+  "use strict";
+
+  if (window.__solar2rUserKeyGlobalInstalled) return;
+  window.__solar2rUserKeyGlobalInstalled = true;
+
+  var STORAGE_KEY = "solar_copa_2r_user_key_global";
+  var OLD_KEYS_SYNCED = "solar_copa_2r_old_keys_synced";
+
+  function clean(value) {
+    return String(value == null ? "" : value).trim();
+  }
+
+  function onlyDigits(value) {
+    return clean(value).replace(/\D+/g, "");
+  }
+
+  function isGoodPhone(value) {
+    var digits = onlyDigits(value);
+    return digits.length >= 10 && digits.length <= 13;
+  }
+
+  function normalizePhone(value) {
+    var digits = onlyDigits(value);
+
+    if (digits.length === 13 && digits.indexOf("55") === 0) {
+      digits = digits.slice(2);
+    }
+
+    if (digits.length >= 10 && digits.length <= 11) {
+      return digits;
+    }
+
+    return "";
+  }
+
+  function isEmail(value) {
+    return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(clean(value));
+  }
+
+  function scanObject(obj, depth) {
+    if (!obj || depth > 4) return "";
+
+    if (typeof obj === "string") {
+      if (isGoodPhone(obj)) return normalizePhone(obj);
+      if (isEmail(obj)) return obj.toLowerCase();
+      return "";
+    }
+
+    if (typeof obj !== "object") return "";
+
+    var preferred = [
+      "telefone",
+      "phone",
+      "whatsapp",
+      "celular",
+      "mobile",
+      "numero",
+      "email",
+      "id",
+      "userId",
+      "usuarioId",
+      "cpf"
+    ];
+
+    for (var i = 0; i < preferred.length; i += 1) {
+      var key = preferred[i];
+
+      if (Object.prototype.hasOwnProperty.call(obj, key)) {
+        var value = obj[key];
+
+        if (isGoodPhone(value)) return normalizePhone(value);
+        if (isEmail(value)) return String(value).toLowerCase();
+
+        var simple = clean(value);
+
+        if (simple && !/^local-/i.test(simple) && simple.length >= 3 && simple.length <= 120) {
+          return simple;
+        }
+      }
+    }
+
+    for (var prop in obj) {
+      if (!Object.prototype.hasOwnProperty.call(obj, prop)) continue;
+
+      var found = scanObject(obj[prop], depth + 1);
+
+      if (found) return found;
+    }
+
+    return "";
+  }
+
+  function readStorage(storage) {
+    var oldKeys = [];
+    var identity = "";
+
+    try {
+      for (var i = 0; i < storage.length; i += 1) {
+        var key = storage.key(i);
+        var value = storage.getItem(key);
+
+        if (/^local-[a-z0-9-]+/i.test(clean(key))) {
+          oldKeys.push(clean(key));
+        }
+
+        if (/^local-[a-z0-9-]+/i.test(clean(value))) {
+          oldKeys.push(clean(value));
+        }
+
+        if (!identity) {
+          if (isGoodPhone(value)) identity = normalizePhone(value);
+          else if (isEmail(value)) identity = clean(value).toLowerCase();
+        }
+
+        if (!identity && value && /^[\[{]/.test(value.trim())) {
+          try {
+            identity = scanObject(JSON.parse(value), 0);
+          } catch (error) {}
+        }
+      }
+    } catch (error) {}
+
+    return {
+      identity: identity,
+      oldKeys: oldKeys
+    };
+  }
+
+  function unique(list) {
+    var out = [];
+    var seen = {};
+
+    list.forEach(function (item) {
+      item = clean(item);
+
+      if (!item || seen[item]) return;
+
+      seen[item] = true;
+      out.push(item);
+    });
+
+    return out;
+  }
+
+  function getUserKey() {
+    var local = readStorage(window.localStorage);
+    var session = readStorage(window.sessionStorage);
+    var identity = local.identity || session.identity;
+
+    if (identity && !/^local-/i.test(identity)) {
+      try {
+        localStorage.setItem(STORAGE_KEY, identity);
+      } catch (error) {}
+
+      return identity;
+    }
+
+    try {
+      var saved = localStorage.getItem(STORAGE_KEY);
+
+      if (saved) return saved;
+    } catch (error) {}
+
+    var generated = "local-" + Date.now() + "-" + Math.random().toString(16).slice(2);
+
+    try {
+      localStorage.setItem(STORAGE_KEY, generated);
+    } catch (error) {}
+
+    return generated;
+  }
+
+  function getOldLocalKeys() {
+    var local = readStorage(window.localStorage);
+    var session = readStorage(window.sessionStorage);
+    var current = getUserKey();
+
+    return unique(local.oldKeys.concat(session.oldKeys)).filter(function (key) {
+      return key && key !== current && /^local-/i.test(key);
+    });
+  }
+
+  function patchUrl(input, userKey) {
+    try {
+      var url = new URL(typeof input === "string" ? input : input.url, location.origin);
+
+      if (url.pathname.indexOf("/api/segunda-rodada-neon/palpites") !== -1) {
+        url.searchParams.set("clientUserKey", userKey);
+        return url.pathname + url.search + url.hash;
+      }
+    } catch (error) {}
+
+    return input;
+  }
+
+  var originalFetch = window.fetch;
+
+  window.fetch = function (input, init) {
+    try {
+      var urlText = typeof input === "string" ? input : input && input.url ? input.url : "";
+
+      if (String(urlText).indexOf("/api/segunda-rodada-neon/palpites") !== -1) {
+        var userKey = getUserKey();
+        var nextInit = Object.assign({}, init || {});
+        var method = String(nextInit.method || "GET").toUpperCase();
+
+        if (method === "POST") {
+          var body = nextInit.body;
+
+          if (typeof body === "string") {
+            try {
+              var json = JSON.parse(body);
+              json.clientUserKey = userKey;
+              nextInit.body = JSON.stringify(json);
+            } catch (error) {}
+          }
+        }
+
+        if (method === "GET" || method === "DELETE") {
+          input = patchUrl(input, userKey);
+        }
+
+        return originalFetch.call(this, input, nextInit);
+      }
+    } catch (error) {}
+
+    return originalFetch.apply(this, arguments);
+  };
+
+  async function syncOldLocalKeys() {
+    var userKey = getUserKey();
+
+    if (!userKey || /^local-/i.test(userKey)) return;
+
+    var oldKeys = getOldLocalKeys();
+
+    if (!oldKeys.length) return;
+
+    var syncKey = OLD_KEYS_SYNCED + "_" + userKey;
+
+    try {
+      var already = localStorage.getItem(syncKey);
+
+      if (already === oldKeys.join("|")) return;
+    } catch (error) {}
+
+    for (var i = 0; i < oldKeys.length; i += 1) {
+      try {
+        await originalFetch("/api/segunda-rodada-neon/sincronizar-usuario", {
+          method: "POST",
+          credentials: "same-origin",
+          headers: {
+            "Content-Type": "application/json",
+            "Accept": "application/json"
+          },
+          body: JSON.stringify({
+            oldUserKey: oldKeys[i],
+            newUserKey: userKey
+          })
+        });
+      } catch (error) {}
+    }
+
+    try {
+      localStorage.setItem(syncKey, oldKeys.join("|"));
+    } catch (error) {}
+  }
+
+  window.solarGetUserKey2R = getUserKey;
+  window.solarSyncOld2RKeys = syncOldLocalKeys;
+
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", function () {
+      setTimeout(syncOldLocalKeys, 800);
+      setTimeout(syncOldLocalKeys, 2500);
+    });
+  } else {
+    setTimeout(syncOldLocalKeys, 800);
+    setTimeout(syncOldLocalKeys, 2500);
+  }
+})();
+</script>
+<!-- SOLAR_2R_USERKEY_GLOBAL_FRONTEND_END -->
+
+<script id="solar-2r-auto-vinculo-geral">
+// SOLAR_2R_AUTO_VINCULO_FRONTEND_START
+(function () {
+  if (window.__solar2rAutoVinculoGeralInstalado) return;
+  window.__solar2rAutoVinculoGeralInstalado = true;
+
+  function clean(value) {
+    return String(value == null ? "" : value).trim();
+  }
+
+  function digits(value) {
+    return clean(value).replace(/\D+/g, "");
+  }
+
+  function normalizePhone(value) {
+    var d = digits(value);
+
+    if (d.length === 13 && d.indexOf("55") === 0) {
+      d = d.slice(2);
+    }
+
+    return d;
+  }
+
+  function safeJson(value) {
+    try {
+      return JSON.parse(value);
+    } catch (_) {
+      return null;
+    }
+  }
+
+  function walkObject(obj, callback, depth) {
+    depth = depth || 0;
+
+    if (!obj || depth > 5) return;
+
+    if (typeof obj !== "object") return;
+
+    Object.keys(obj).forEach(function (key) {
+      var value = obj[key];
+
+      callback(key, value);
+
+      if (value && typeof value === "object") {
+        walkObject(value, callback, depth + 1);
+      }
+    });
+  }
+
+  function storageItems() {
+    var items = [];
+
+    [window.localStorage, window.sessionStorage].forEach(function (store) {
+      if (!store) return;
+
+      for (var i = 0; i < store.length; i += 1) {
+        var key = store.key(i);
+        var value = store.getItem(key);
+
+        items.push({
+          key: key,
+          value: value
+        });
+      }
+    });
+
+    items.push({
+      key: "cookie",
+      value: document.cookie || ""
+    });
+
+    return items;
+  }
+
+  function findLocalKeys() {
+    var found = [];
+
+    storageItems().forEach(function (item) {
+      var text = clean(item.key) + " " + clean(item.value);
+      var matches = text.match(/local-[a-z0-9][a-z0-9_-]*/gi) || [];
+
+      matches.forEach(function (match) {
+        if (/^local-/i.test(match)) {
+          found.push(match);
+        }
+      });
+    });
+
+    return Array.from(new Set(found));
+  }
+
+  function findIdentity() {
+    var candidates = [];
+    var names = [];
+
+    function pushPhone(value) {
+      var phone = normalizePhone(value);
+
+      if (phone.length >= 10 && phone.length <= 11) {
+        candidates.push(phone);
+      }
+    }
+
+    function pushName(value) {
+      value = clean(value);
+
+      if (value && value.length >= 3 && value.length <= 120 && !/local-/i.test(value)) {
+        names.push(value);
+      }
+    }
+
+    storageItems().forEach(function (item) {
+      var key = clean(item.key).toLowerCase();
+      var value = clean(item.value);
+
+      if (/phone|telefone|whatsapp|celular|mobile/.test(key)) {
+        pushPhone(value);
+      }
+
+      if (/nome|name|username|usuario/.test(key)) {
+        pushName(value);
+      }
+
+      var json = safeJson(value);
+
+      if (json) {
+        walkObject(json, function (k, v) {
+          var kk = clean(k).toLowerCase();
+
+          if (/phone|telefone|whatsapp|celular|mobile/.test(kk)) {
+            pushPhone(v);
+          }
+
+          if (/nome|name|username|usuario/.test(kk)) {
+            pushName(v);
+          }
+        });
+      } else {
+        var phones = value.match(/(?:55)?\d{10,11}/g) || [];
+        phones.forEach(pushPhone);
+      }
+    });
+
+    candidates = Array.from(new Set(candidates)).filter(function (value) {
+      return !/^0+$/.test(value);
+    });
+
+    names = Array.from(new Set(names));
+
+    return {
+      realUserKey: candidates[0] || "",
+      realPhone: candidates[0] || "",
+      realName: names[0] || ""
+    };
+  }
+
+  function enviarAutoVinculo() {
+    var localKeys = findLocalKeys();
+
+    if (!localKeys.length) return Promise.resolve(null);
+
+    var identity = findIdentity();
+
+    return fetch("/api/segunda-rodada-neon/auto-vincular-usuario", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      credentials: "same-origin",
+      body: JSON.stringify({
+        localUserKeys: localKeys,
+        realUserKey: identity.realUserKey,
+        realPhone: identity.realPhone,
+        realName: identity.realName,
+        source: "frontend-auto-vinculo"
+      })
+    })
+      .then(function (response) {
+        return response.json().catch(function () {
+          return {};
+        });
+      })
+      .then(function (json) {
+        if (json && json.vinculado) {
+          console.log("[2R AUTO VINCULO] vínculo criado:", json);
+        }
+
+        return json;
+      })
+      .catch(function (error) {
+        console.warn("[2R AUTO VINCULO] falha silenciosa:", error);
+        return null;
+      });
+  }
+
+  var originalFetch = window.fetch;
+
+  if (typeof originalFetch === "function" && !originalFetch.__solar2rAutoVinculoFetch) {
+    var patchedFetch = function (input, init) {
+      init = init || {};
+
+      try {
+        var url = typeof input === "string" ? input : input && input.url ? input.url : "";
+
+        if (
+          url &&
+          url.indexOf("/api/segunda-rodada-neon/palpites") !== -1 &&
+          String(init.method || "GET").toUpperCase() === "POST" &&
+          init.body &&
+          typeof init.body === "string"
+        ) {
+          var body = JSON.parse(init.body);
+          var identity = findIdentity();
+
+          if (identity.realUserKey && !/^local-/i.test(identity.realUserKey)) {
+            body.clientUserKey = identity.realUserKey;
+            body.clientUserPhone = identity.realPhone || identity.realUserKey;
+            body.realUserKey = identity.realUserKey;
+            body.realPhone = identity.realPhone || identity.realUserKey;
+
+            init = Object.assign({}, init, {
+              body: JSON.stringify(body)
+            });
+          }
+        }
+      } catch (_) {}
+
+      return originalFetch.call(this, input, init).then(function (response) {
+        try {
+          var url = typeof input === "string" ? input : input && input.url ? input.url : "";
+
+          if (url && url.indexOf("/api/segunda-rodada-neon/palpites") !== -1) {
+            setTimeout(enviarAutoVinculo, 300);
+          }
+        } catch (_) {}
+
+        return response;
+      });
+    };
+
+    patchedFetch.__solar2rAutoVinculoFetch = true;
+    window.fetch = patchedFetch;
+  }
+
+  function iniciar() {
+    enviarAutoVinculo();
+    setTimeout(enviarAutoVinculo, 1200);
+    setTimeout(enviarAutoVinculo, 4000);
+    setTimeout(enviarAutoVinculo, 10000);
+  }
+
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", iniciar);
+  } else {
+    iniciar();
+  }
+})();
+// SOLAR_2R_AUTO_VINCULO_FRONTEND_END
+</script>
+
+
+<script id="solar-2r-modal-identificacao-vinculo">
+(function () {
+  if (window.__solar2rModalIdentificacaoVinculo) return;
+  window.__solar2rModalIdentificacaoVinculo = true;
+
+  function clean(value) {
+    return String(value == null ? "" : value).trim();
+  }
+
+  function digits(value) {
+    return clean(value).replace(/\D+/g, "");
+  }
+
+  function normalizePhone(value) {
+    var d = digits(value);
+
+    if (d.length === 13 && d.indexOf("55") === 0) {
+      d = d.slice(2);
+    }
+
+    return d;
+  }
+
+  function validPhone(value) {
+    var d = normalizePhone(value);
+    return d.length >= 10 && d.length <= 11 ? d : "";
+  }
+
+  function allStorageText() {
+    var text = "";
+
+    [window.localStorage, window.sessionStorage].forEach(function (store) {
+      if (!store) return;
+
+      for (var i = 0; i < store.length; i += 1) {
+        var key = store.key(i);
+        var value = store.getItem(key);
+
+        text += " " + clean(key) + " " + clean(value);
+      }
+    });
+
+    text += " " + clean(document.cookie || "");
+
+    return text;
+  }
+
+  function findLocalKeys() {
+    var text = allStorageText();
+    var matches = text.match(/local-[a-z0-9][a-z0-9_-]*/gi) || [];
+
+    return Array.from(new Set(matches.filter(function (item) {
+      return /^local-/i.test(item);
+    })));
+  }
+
+  function findSavedPhone() {
+    var keys = [
+      "solar_user_phone",
+      "solar2rRealPhone",
+      "telefone",
+      "phone",
+      "whatsapp",
+      "celular",
+      "userPhone",
+      "clientUserPhone"
+    ];
+
+    for (var i = 0; i < keys.length; i += 1) {
+      var k = keys[i];
+
+      try {
+        var p1 = validPhone(localStorage.getItem(k));
+        if (p1) return p1;
+      } catch (_) {}
+
+      try {
+        var p2 = validPhone(sessionStorage.getItem(k));
+        if (p2) return p2;
+      } catch (_) {}
+    }
+
+    var text = allStorageText();
+    var phones = text.match(/(?:55)?\d{10,11}/g) || [];
+
+    for (var j = 0; j < phones.length; j += 1) {
+      var p = validPhone(phones[j]);
+      if (p) return p;
+    }
+
+    return "";
+  }
+
+  function savePhone(phone) {
+    phone = validPhone(phone);
+    if (!phone) return "";
+
+    try { localStorage.setItem("solar_user_phone", phone); } catch (_) {}
+    try { localStorage.setItem("solar2rRealPhone", phone); } catch (_) {}
+    try { sessionStorage.setItem("solar_user_phone", phone); } catch (_) {}
+
+    return phone;
+  }
+
+  function postVinculo(localKeys, phone, name) {
+    phone = validPhone(phone);
+
+    if (!localKeys.length || !phone) {
+      return Promise.resolve(null);
+    }
+
+    return fetch("/api/segunda-rodada-neon/auto-vincular-usuario", {
+      method: "POST",
+      credentials: "same-origin",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+        localUserKeys: localKeys,
+        realUserKey: phone,
+        realPhone: phone,
+        realName: clean(name),
+        source: "modal-identificacao-geral-2r"
+      })
+    }).then(function (r) {
+      return r.json().catch(function () { return {}; });
+    });
+  }
+
+  function createModal(localKeys) {
+    if (document.getElementById("solar2rIdentityModal")) return;
+
+    var wrap = document.createElement("div");
+    wrap.id = "solar2rIdentityModal";
+    wrap.innerHTML =
+      '<div style="position:fixed;inset:0;z-index:999999;background:rgba(0,0,0,.78);display:flex;align-items:center;justify-content:center;padding:18px;font-family:Inter,Arial,sans-serif;">' +
+        '<div style="width:min(440px,100%);background:#07140f;border:1px solid rgba(34,255,140,.55);box-shadow:0 0 36px rgba(34,255,140,.25);border-radius:22px;padding:22px;color:#fff;">' +
+          '<div style="font-size:18px;font-weight:900;margin-bottom:8px;color:#34ff94;">Atualizar classificação da 2ª rodada</div>' +
+          '<div style="font-size:13px;line-height:1.5;color:#d9ffe8;margin-bottom:16px;">Encontramos palpites salvos neste navegador. Informe o telefone usado no cadastro para somar os pontos automaticamente na tabela.</div>' +
+          '<input id="solar2rPhoneInput" inputmode="numeric" placeholder="Telefone com DDD" style="width:100%;box-sizing:border-box;border-radius:14px;border:1px solid rgba(34,255,140,.55);background:#020805;color:#fff;padding:14px 16px;font-size:16px;outline:none;margin-bottom:10px;">' +
+          '<input id="solar2rNameInput" placeholder="Nome, opcional" style="width:100%;box-sizing:border-box;border-radius:14px;border:1px solid rgba(255,255,255,.18);background:#020805;color:#fff;padding:14px 16px;font-size:16px;outline:none;margin-bottom:14px;">' +
+          '<button id="solar2rSaveIdentityBtn" style="width:100%;border:0;border-radius:14px;background:linear-gradient(135deg,#20ff86,#9dff45);color:#03150a;font-weight:900;padding:14px 16px;font-size:15px;cursor:pointer;">ATUALIZAR MEUS PONTOS</button>' +
+          '<div id="solar2rIdentityStatus" style="margin-top:12px;font-size:12px;color:#bfffd8;min-height:18px;"></div>' +
+        '</div>' +
+      '</div>';
+
+    document.body.appendChild(wrap);
+
+    var input = document.getElementById("solar2rPhoneInput");
+    var nameInput = document.getElementById("solar2rNameInput");
+    var btn = document.getElementById("solar2rSaveIdentityBtn");
+    var status = document.getElementById("solar2rIdentityStatus");
+
+    btn.addEventListener("click", function () {
+      var phone = validPhone(input.value);
+
+      if (!phone) {
+        status.textContent = "Digite um telefone válido com DDD.";
+        return;
+      }
+
+      savePhone(phone);
+
+      btn.disabled = true;
+      btn.textContent = "Atualizando...";
+      status.textContent = "Criando vínculo com seus palpites salvos...";
+
+      postVinculo(localKeys, phone, nameInput.value)
+        .then(function (json) {
+          if (json && json.vinculado) {
+            status.textContent = "Pontos vinculados com sucesso. A classificação já pode ser atualizada.";
+            btn.textContent = "CONCLUÍDO";
+
+            setTimeout(function () {
+              try { wrap.remove(); } catch (_) {}
+            }, 1800);
+          } else {
+            btn.disabled = false;
+            btn.textContent = "ATUALIZAR MEUS PONTOS";
+            status.textContent = (json && json.motivo) ? json.motivo : "Não foi possível criar o vínculo agora.";
+          }
+        })
+        .catch(function () {
+          btn.disabled = false;
+          btn.textContent = "ATUALIZAR MEUS PONTOS";
+          status.textContent = "Falha de conexão. Tente novamente.";
+        });
+    });
+  }
+
+  function run() {
+    var localKeys = findLocalKeys();
+
+    if (!localKeys.length) return;
+
+    var phone = findSavedPhone();
+
+    if (phone) {
+      savePhone(phone);
+
+      postVinculo(localKeys, phone, "")
+        .then(function (json) {
+          if (json && json.vinculado) {
+            console.log("[2R] vínculo automático criado:", json);
+          }
+        })
+        .catch(function () {});
+
+      return;
+    }
+
+    createModal(localKeys);
+  }
+
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", function () {
+      setTimeout(run, 600);
+      setTimeout(run, 2500);
+    });
+  } else {
+    setTimeout(run, 600);
+    setTimeout(run, 2500);
+  }
+})();
+
+
+// === RANKING VISUAL SEGUNDA RODADA START ===
+(function () {
+  const statusEl = document.getElementById("segundaRankingStatus");
+  const gridEl = document.getElementById("segundaRankingGrid");
+  const refreshBtn = document.getElementById("segundaRankingRefresh");
+  const titleEl = document.getElementById("rankingSegundaRodadaTitulo");
+
+  if (!statusEl || !gridEl) return;
+
+  if (titleEl) {
+    titleEl.textContent = "Ranking geral atualizado";
+  }
+
+  function escapeHtml(value) {
+    return String(value ?? "")
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;")
+      .replace(/"/g, "&quot;")
+      .replace(/'/g, "&#039;");
+  }
+
+  function firstValid() {
+    for (let i = 0; i < arguments.length; i += 1) {
+      const value = arguments[i];
+      if (value !== undefined && value !== null && value !== "") return value;
+    }
+    return "";
+  }
+
+  function toNumber(value) {
+    const number = Number(value);
+    return Number.isFinite(number) ? number : 0;
+  }
+
+  function formatUserName(item) {
+    const name = firstValid(
+      item.name,
+      item.displayName,
+      item.username,
+      item.nome,
+      item.userName,
+      item.userKey,
+      item.user_key,
+      "Usuário"
+    );
+
+    const raw = String(name || "Usuário").trim();
+
+    if (/^\d{10,13}$/.test(raw)) return "Usuário " + raw.slice(-4);
+
+    if (raw.startsWith("local-")) {
+      const parts = raw.split("-");
+      const suffix = parts[parts.length - 1] || raw;
+      return "Jogador " + suffix.slice(0, 6).toUpperCase();
+    }
+
+    if (raw.length > 34) return raw.slice(0, 22) + "..." + raw.slice(-6);
+
+    return raw;
+  }
+
+  function formatDate(value) {
+    if (!value) return "";
+    const date = new Date(value);
+    if (Number.isNaN(date.getTime())) return "";
+
+    return date.toLocaleString("pt-BR", {
+      day: "2-digit",
+      month: "2-digit",
+      hour: "2-digit",
+      minute: "2-digit"
+    });
+  }
+
+  function getTotalPoints(item) {
+    return toNumber(firstValid(
+      item.points,
+      item.totalPoints,
+      item.pontos,
+      item.total_pontos,
+      item.total_com_segunda_rodada,
+      item.pontuacao,
+      item.score
+    ));
+  }
+
+  function getFirstRoundPoints(item) {
+    return toNumber(firstValid(
+      item.pointsFirstRound,
+      item.pontos_primeira_rodada,
+      item.pontos_sem_segunda_rodada,
+      item.firstRoundPoints
+    ));
+  }
+
+  function getSecondRoundPoints(item) {
+    return toNumber(firstValid(
+      item.pointsSecondRound,
+      item.pontos_segunda_rodada,
+      item.pontos_2r,
+      item.secondRoundPoints
+    ));
+  }
+
+  function getSecondRoundPredictions(item) {
+    return toNumber(firstValid(
+      item.palpitesSegundaRodada,
+      item.palpites_segunda_rodada,
+      item.totalPalpites,
+      item.palpitesValidos,
+      item.palpites_salvos
+    ));
+  }
+
+  function getLastUpdate(item) {
+    return firstValid(
+      item.ultimoPalpite2R,
+      item.ultimo_palpite,
+      item.ultimoPalpiteEm,
+      item.lastPredictionAt,
+      item.updated_at
+    );
+  }
+
+  function renderRanking(rows, resumo) {
+    if (!Array.isArray(rows) || rows.length === 0) {
+      gridEl.hidden = true;
+      statusEl.hidden = false;
+      statusEl.className = "segunda-ranking-empty";
+      statusEl.textContent = "Ainda não há pontuação disponível para montar o ranking.";
+      return;
+    }
+
+    const totalJaPalpitaram = resumo && resumo.totalUsuariosQueJaPalpitaram2R
+      ? Number(resumo.totalUsuariosQueJaPalpitaram2R)
+      : rows.filter(function (item) {
+          return getSecondRoundPredictions(item) > 0;
+        }).length;
+
+    const header = `
+      <article class="segunda-ranking-row" style="background:#050505;color:#39ff14;">
+        <div class="segunda-ranking-pos">2R</div>
+        <div class="segunda-ranking-user">
+          <span class="segunda-ranking-name">${escapeHtml(totalJaPalpitaram)} participantes já palpitaram na 2ª rodada</span>
+          <span class="segunda-ranking-meta" style="color:rgba(57,255,20,.78);">
+            Ranking geral atualizado com pontuação acumulada.
+          </span>
+        </div>
+        <div class="segunda-ranking-score" style="background:#39ff14;color:#050505;">
+          ON
+          <small style="color:#050505;">ao vivo</small>
+        </div>
+      </article>
+    `;
+
+    const html = rows.map(function (item, index) {
+      const pos = toNumber(firstValid(item.position, item.posicao, index + 1)) || (index + 1);
+      const userName = formatUserName(item);
+
+      const totalPoints = getTotalPoints(item);
+      const firstRound = getFirstRoundPoints(item);
+      const secondRound = getSecondRoundPoints(item);
+      const secondPredictions = getSecondRoundPredictions(item);
+      const updated = formatDate(getLastUpdate(item));
+
+      const jaPalpitou = secondPredictions > 0;
+      const status2R = jaPalpitou ? "✅ já palpitou na 2ª rodada" : "⏳ ainda não palpitou na 2ª rodada";
+
+      return `
+        <article class="segunda-ranking-row">
+          <div class="segunda-ranking-pos">${escapeHtml(pos)}º</div>
+
+          <div class="segunda-ranking-user">
+            <span class="segunda-ranking-name">${escapeHtml(userName)}</span>
+            <span class="segunda-ranking-meta">
+              1ª rodada: ${escapeHtml(firstRound)} pts • 2ª rodada: ${escapeHtml(secondRound)} pts / ${escapeHtml(secondPredictions)} palpites • ${escapeHtml(status2R)}${updated ? " • atualizado em " + escapeHtml(updated) : ""}
+            </span>
+          </div>
+
+          <div class="segunda-ranking-score">
+            ${escapeHtml(totalPoints)}
+            <small>pts total</small>
+          </div>
+        </article>
+      `;
+    }).join("");
+
+    gridEl.innerHTML = header + html;
+    gridEl.hidden = false;
+    statusEl.hidden = true;
+  }
+
+  async function carregarRankingSegundaRodada() {
+    try {
+      statusEl.hidden = false;
+      statusEl.className = "segunda-ranking-loading";
+      statusEl.textContent = "Carregando ranking geral atualizado...";
+      gridEl.hidden = true;
+
+      const response = await fetch("/api/segunda-rodada-neon/ranking", {
+        method: "GET",
+        headers: {
+          "Accept": "application/json"
+        }
+      });
+
+      const data = await response.json().catch(function () {
+        return null;
+      });
+
+      if (!response.ok || !data || (data.ok !== true && data.success !== true)) {
+        throw new Error((data && (data.error || data.message)) || "Não foi possível carregar o ranking.");
+      }
+
+      renderRanking(data.ranking || data.leaderboard || [], data.resumo || {});
+    } catch (error) {
+      gridEl.hidden = true;
+      statusEl.hidden = false;
+      statusEl.className = "segunda-ranking-error";
+      statusEl.textContent = "Não foi possível carregar o ranking geral atualizado.";
+      console.error("Erro ao carregar ranking geral atualizado:", error);
+    }
+  }
+
+  if (refreshBtn) {
+    refreshBtn.textContent = "Atualizar ranking geral";
+    refreshBtn.addEventListener("click", carregarRankingSegundaRodada);
+  }
+
+  document.addEventListener("DOMContentLoaded", carregarRankingSegundaRodada);
+  carregarRankingSegundaRodada();
+
+  window.carregarRankingSegundaRodada = carregarRankingSegundaRodada;
+})();
+// === RANKING VISUAL SEGUNDA RODADA END ===
+
+</script>
+
 </body>
 </html>
+
+
+
+
 
 
 

@@ -4956,50 +4956,309 @@ app.get("/api/second-round-matches", async (req, res) => {
   }
 
   
-// === RANKING ATIVO SEGUNDA RODADA PALPITES START ===
+
+
+
+
+
+
+// === RANKING GERAL ACUMULADO COM SEGUNDA RODADA START ===
 app.get("/api/segunda-rodada-neon/ranking", async function (req, res) {
   try {
-    const result = await getPool().query(`
-      SELECT
-        COALESCE(NULLIF(TRIM(user_key), ''), 'sem_usuario') AS "userKey",
-        COUNT(*)::int AS "totalPalpites",
-        COUNT(*) FILTER (
-          WHERE home_score IS NOT NULL
-          AND away_score IS NOT NULL
-        )::int AS "palpitesValidos",
-        MIN(created_at) AS "primeiroPalpiteEm",
-        MAX(updated_at) AS "ultimoPalpiteEm"
-      FROM solar_segunda_rodada_palpites
-      WHERE game_id IS NOT NULL
-      GROUP BY COALESCE(NULLIF(TRIM(user_key), ''), 'sem_usuario')
-      ORDER BY
-        COUNT(*) FILTER (
-          WHERE home_score IS NOT NULL
-          AND away_score IS NOT NULL
-        ) DESC,
-        COUNT(*) DESC,
-        MAX(updated_at) ASC,
-        COALESCE(NULLIF(TRIM(user_key), ''), 'sem_usuario') ASC
+    await ensureTables();
+
+    await getPool().query(`
+      CREATE TABLE IF NOT EXISTS solar_2r_user_key_vinculos (
+        old_user_key TEXT PRIMARY KEY,
+        real_user_key TEXT NOT NULL,
+        real_phone TEXT,
+        real_name TEXT,
+        origem TEXT DEFAULT 'manual',
+        created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+        updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+      );
     `);
+
+    const primeiraRodada = await getPool().query(`
+      SELECT
+        u.id,
+        u.username,
+        u.first_name,
+        u.last_name,
+        u.phone,
+        u.activation_code,
+        u.activation_origin,
+        COALESCE(
+          NULLIF(TRIM(CONCAT_WS(' ', u.first_name, u.last_name)), ''),
+          NULLIF(TRIM(u.username), ''),
+          NULLIF(TRIM(u.phone), ''),
+          'Usuário ' || u.id::text
+        ) AS name,
+        COUNT(p.id)::int AS predictions_count,
+        COALESCE(SUM(
+          CASE
+            WHEN p.id IS NULL THEN 0
+            ELSE
+              1
+              +
+              CASE
+                WHEN r.home_score IS NULL OR r.away_score IS NULL THEN 0
+                WHEN SIGN(p.home_score - p.away_score) = SIGN(r.home_score - r.away_score) THEN 3
+                ELSE 0
+              END
+              +
+              CASE
+                WHEN r.home_score IS NULL OR r.away_score IS NULL THEN 0
+                WHEN p.home_score = r.home_score AND p.away_score = r.away_score THEN 2
+                ELSE 0
+              END
+          END
+        ), 0)::int AS pontos_primeira_rodada,
+        MAX(p.updated_at) AS ultimo_palpite_1r
+      FROM users u
+      LEFT JOIN predictions p
+        ON p.user_id = u.id
+      LEFT JOIN match_results r
+        ON r.match_id = p.match_id
+      GROUP BY
+        u.id,
+        u.username,
+        u.first_name,
+        u.last_name,
+        u.phone,
+        u.activation_code,
+        u.activation_origin
+    `);
+
+    const segundaRodada = await getPool().query(`
+      SELECT
+        COALESCE(v.real_user_key, p.user_key) AS user_key_classificacao,
+        COUNT(DISTINCT p.game_id)::int AS palpites_segunda_rodada,
+        COUNT(DISTINCT p.game_id)::int AS pontos_segunda_rodada,
+        CASE WHEN COUNT(DISTINCT p.game_id) >= 24 THEN TRUE ELSE FALSE END AS rodada_2_completa,
+        MIN(p.created_at) AS primeiro_palpite_2r,
+        MAX(p.updated_at) AS ultimo_palpite_2r,
+        ARRAY_AGG(DISTINCT p.user_key) AS chaves_origem_2r
+      FROM solar_segunda_rodada_palpites p
+      LEFT JOIN solar_2r_user_key_vinculos v
+        ON v.old_user_key = p.user_key
+      WHERE p.game_id IS NOT NULL
+      GROUP BY COALESCE(v.real_user_key, p.user_key)
+    `);
+
+    function digits(value) {
+      return String(value || "").replace(/\D/g, "");
+    }
+
+    function norm(value) {
+      return String(value || "").trim().toLowerCase();
+    }
+
+    const segundaMap = new Map();
+
+    segundaRodada.rows.forEach(function (row) {
+      const data = {
+        userKey: row.user_key_classificacao,
+        palpitesSegundaRodada: Number(row.palpites_segunda_rodada || 0),
+        pointsSecondRound: Number(row.pontos_segunda_rodada || 0),
+        rodada2Completa: Boolean(row.rodada_2_completa),
+        ultimoPalpite2R: row.ultimo_palpite_2r || null,
+        chavesOrigem2R: row.chaves_origem_2r || []
+      };
+
+      const keys = [
+        row.user_key_classificacao,
+        digits(row.user_key_classificacao)
+      ];
+
+      if (Array.isArray(row.chaves_origem_2r)) {
+        row.chaves_origem_2r.forEach(function (k) {
+          keys.push(k);
+          keys.push(digits(k));
+        });
+      }
+
+      keys.forEach(function (key) {
+        const clean = norm(key);
+        if (clean) segundaMap.set(clean, data);
+      });
+    });
+
+    const used2R = new Set();
+
+    const ranking = primeiraRodada.rows.map(function (user) {
+      const possibleKeys = [
+        user.phone,
+        digits(user.phone),
+        user.username,
+        user.id,
+        user.name
+      ].map(norm).filter(Boolean);
+
+      let found2R = null;
+
+      for (const key of possibleKeys) {
+        if (segundaMap.has(key)) {
+          found2R = segundaMap.get(key);
+          break;
+        }
+      }
+
+      if (found2R) {
+        used2R.add(norm(found2R.userKey));
+
+        if (Array.isArray(found2R.chavesOrigem2R)) {
+          found2R.chavesOrigem2R.forEach(function (k) {
+            used2R.add(norm(k));
+          });
+        }
+      }
+
+      const pointsFirstRound = Number(user.pontos_primeira_rodada || 0);
+      const pointsSecondRound = found2R ? Number(found2R.pointsSecondRound || 0) : 0;
+      const total = pointsFirstRound + pointsSecondRound;
+
+      return {
+        id: user.id,
+        userId: user.id,
+        username: user.username,
+        firstName: user.first_name,
+        lastName: user.last_name,
+        phone: user.phone,
+        activationCode: user.activation_code || "",
+        activationOrigin: user.activation_origin || "Público Instagram",
+        name: user.name,
+        displayName: user.name,
+        predictionsCount: Number(user.predictions_count || 0),
+        pointsFirstRound,
+        pointsSecondRound,
+        palpitesSegundaRodada: found2R ? Number(found2R.palpitesSegundaRodada || 0) : 0,
+        jaPalpitouSegundaRodada: found2R ? Number(found2R.palpitesSegundaRodada || 0) > 0 : false,
+        rodada2Completa: found2R ? Boolean(found2R.rodada2Completa) : false,
+        ultimoPalpite2R: found2R ? found2R.ultimoPalpite2R : null,
+        userKeySegundaRodada: found2R ? found2R.userKey : null,
+        chavesOrigem2R: found2R ? found2R.chavesOrigem2R : [],
+        points: total,
+        totalPoints: total,
+        pontos: total,
+        total_pontos: total,
+        pontos_primeira_rodada: pointsFirstRound,
+        pontos_segunda_rodada: pointsSecondRound,
+        total_com_segunda_rodada: total,
+        origemRanking: "usuario"
+      };
+    });
+
+    segundaRodada.rows.forEach(function (row) {
+      const key = norm(row.user_key_classificacao);
+      const origemKeys = Array.isArray(row.chaves_origem_2r) ? row.chaves_origem_2r.map(norm) : [];
+
+      const alreadyUsed =
+        used2R.has(key) ||
+        origemKeys.some(function (k) {
+          return used2R.has(k);
+        });
+
+      if (alreadyUsed) return;
+
+      const raw = String(row.user_key_classificacao || "").trim();
+
+      const name = raw.startsWith("local-")
+        ? "Jogador " + String(raw.split("-").pop() || raw).slice(0, 6).toUpperCase()
+        : raw || "Participante 2ª rodada";
+
+      const pointsSecondRound = Number(row.pontos_segunda_rodada || 0);
+
+      ranking.push({
+        id: "2r-" + raw,
+        userId: null,
+        username: name,
+        firstName: "",
+        lastName: "",
+        phone: "",
+        activationCode: "",
+        activationOrigin: "2ª rodada",
+        name,
+        displayName: name,
+        predictionsCount: 0,
+        pointsFirstRound: 0,
+        pointsSecondRound,
+        palpitesSegundaRodada: Number(row.palpites_segunda_rodada || 0),
+        jaPalpitouSegundaRodada: Number(row.palpites_segunda_rodada || 0) > 0,
+        rodada2Completa: Boolean(row.rodada_2_completa),
+        ultimoPalpite2R: row.ultimo_palpite_2r || null,
+        userKeySegundaRodada: raw,
+        chavesOrigem2R: row.chaves_origem_2r || [],
+        points: pointsSecondRound,
+        totalPoints: pointsSecondRound,
+        pontos: pointsSecondRound,
+        total_pontos: pointsSecondRound,
+        pontos_primeira_rodada: 0,
+        pontos_segunda_rodada: pointsSecondRound,
+        total_com_segunda_rodada: pointsSecondRound,
+        origemRanking: "somente_2r"
+      });
+    });
+
+    ranking.sort(function (a, b) {
+      if (Number(b.points) !== Number(a.points)) return Number(b.points) - Number(a.points);
+      if (Number(b.pointsSecondRound) !== Number(a.pointsSecondRound)) return Number(b.pointsSecondRound) - Number(a.pointsSecondRound);
+      if (Number(b.palpitesSegundaRodada) !== Number(a.palpitesSegundaRodada)) return Number(b.palpitesSegundaRodada) - Number(a.palpitesSegundaRodada);
+      return String(a.name || "").localeCompare(String(b.name || ""), "pt-BR");
+    });
+
+    ranking.forEach(function (row, index) {
+      row.position = index + 1;
+      row.posicao = index + 1;
+    });
+
+    const resumo = {
+      totalUsuarios: ranking.length,
+      totalUsuariosQueJaPalpitaram2R: ranking.filter(function (user) {
+        return Number(user.palpitesSegundaRodada || 0) > 0;
+      }).length,
+      totalUsuariosSomente2R: ranking.filter(function (user) {
+        return user.origemRanking === "somente_2r";
+      }).length,
+      totalPontosPrimeiraRodada: ranking.reduce(function (sum, user) {
+        return sum + Number(user.pointsFirstRound || 0);
+      }, 0),
+      totalPontosSegundaRodada: ranking.reduce(function (sum, user) {
+        return sum + Number(user.pointsSecondRound || 0);
+      }, 0),
+      totalPontosGeral: ranking.reduce(function (sum, user) {
+        return sum + Number(user.points || 0);
+      }, 0)
+    };
 
     return res.json({
       ok: true,
+      success: true,
       source: "neon",
-      roundCode: "segunda_rodada",
-      totalJogosDisponiveis: 24,
-      totalUsuarios: result.rows.length,
-      ranking: result.rows
+      rankingMode: "ranking_unico_soma_real_1r_2r",
+      roundCode: "geral",
+      resumo,
+      totalUsuarios: ranking.length,
+      totalUsuariosQueJaPalpitaram2R: resumo.totalUsuariosQueJaPalpitaram2R,
+      ranking,
+      leaderboard: ranking
     });
   } catch (error) {
-    console.error("Erro ao carregar ranking da segunda rodada:", error);
+    console.error("Erro ranking único soma real 1R + 2R:", error);
 
     return res.status(500).json({
       ok: false,
-      error: "Erro ao carregar ranking da segunda rodada."
+      success: false,
+      error: "Erro ao carregar ranking geral somado.",
+      details: String(error.message || error)
     });
   }
 });
-// === RANKING ATIVO SEGUNDA RODADA PALPITES END ===
+
+app.get("/api/ranking/segunda-rodada", async function (req, res) {
+  return res.redirect(307, "/api/segunda-rodada-neon/ranking");
+});
+// === RANKING GERAL ACUMULADO COM SEGUNDA RODADA END ===
 
 app.get("/api/segunda-rodada-neon/status", async function (req, res) {
     try {
@@ -5091,7 +5350,125 @@ app.get("/api/segunda-rodada-neon/status", async function (req, res) {
     }
   });
 
-  app.post("/api/segunda-rodada-neon/palpites", async function (req, res) {
+  
+// === 2R USUARIO REAL AUTOMATICO NO SALVAMENTO START ===
+app.use("/api/segunda-rodada-neon/palpites", async function solar2rUserKeyRealAutomatico(req, res, next) {
+  try {
+    if (!req || !req.body || typeof req.body !== "object") {
+      return next();
+    }
+
+    const method = String(req.method || "").toUpperCase();
+
+    if (method !== "POST" && method !== "DELETE") {
+      return next();
+    }
+
+    function onlyDigits(value) {
+      return String(value || "").replace(/\D/g, "");
+    }
+
+    function pickRealUserKeyFromSession() {
+      const sessionUser = req.session && req.session.user ? req.session.user : null;
+
+      if (!sessionUser) {
+        return "";
+      }
+
+      const phone = onlyDigits(sessionUser.phone || sessionUser.telefone || sessionUser.whatsapp);
+
+      if (phone) {
+        return phone;
+      }
+
+      if (sessionUser.username) {
+        return String(sessionUser.username).trim();
+      }
+
+      if (sessionUser.id) {
+        return String(sessionUser.id).trim();
+      }
+
+      return "";
+    }
+
+    const originalKey = String(
+      req.body.clientUserKey ||
+      req.body.userKey ||
+      req.body.user_key ||
+      ""
+    ).trim();
+
+    const realUserKey = pickRealUserKeyFromSession();
+
+    if (realUserKey) {
+      req.body.originalClientUserKey = originalKey || null;
+      req.body.clientUserKey = realUserKey;
+      req.body.userKey = realUserKey;
+      req.body.user_key = realUserKey;
+
+      if (
+        originalKey &&
+        originalKey !== realUserKey &&
+        /^(local|anon|guest)-/i.test(originalKey) &&
+        typeof getPool === "function"
+      ) {
+        try {
+          await getPool().query(`
+            CREATE TABLE IF NOT EXISTS solar_2r_user_key_vinculos (
+              old_user_key TEXT PRIMARY KEY,
+              real_user_key TEXT NOT NULL,
+              real_phone TEXT,
+              real_name TEXT,
+              origem TEXT DEFAULT 'auto-salvamento',
+              created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+              updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+            );
+          `);
+
+          const sessionUser = req.session && req.session.user ? req.session.user : {};
+          const realName =
+            [sessionUser.first_name, sessionUser.last_name].filter(Boolean).join(" ").trim() ||
+            sessionUser.username ||
+            realUserKey;
+
+          await getPool().query(
+            `
+              INSERT INTO solar_2r_user_key_vinculos (
+                old_user_key,
+                real_user_key,
+                real_phone,
+                real_name,
+                origem,
+                created_at,
+                updated_at
+              )
+              VALUES ($1, $2, $3, $4, 'auto-salvamento', NOW(), NOW())
+              ON CONFLICT (old_user_key)
+              DO UPDATE SET
+                real_user_key = EXCLUDED.real_user_key,
+                real_phone = EXCLUDED.real_phone,
+                real_name = EXCLUDED.real_name,
+                origem = EXCLUDED.origem,
+                updated_at = NOW()
+            `,
+            [originalKey, realUserKey, onlyDigits(realUserKey), realName]
+          );
+        } catch (vinculoError) {
+          console.warn("Aviso: não foi possível registrar vínculo automático 2R:", vinculoError.message);
+        }
+      }
+    }
+
+    return next();
+  } catch (error) {
+    console.warn("Aviso: middleware usuário real 2R falhou:", error.message);
+    return next();
+  }
+});
+// === 2R USUARIO REAL AUTOMATICO NO SALVAMENTO END ===
+
+app.post("/api/segunda-rodada-neon/palpites", async function (req, res) {
     try {
       await ensureTables();
 
@@ -5903,7 +6280,419 @@ app.get("/api/segunda-rodada-neon/status", async function (req, res) {
     }
   });
 
-  app.post("/api/admin/segunda-rodada-neon/recalcular-pontos", async function (req, res) {
+  
+// === VINCULO MANUAL 2R AO USUARIO REAL START ===
+app.get("/api/admin/segunda-rodada-neon/vinculos-diagnostico", async function (req, res) {
+  try {
+    await ensureTables();
+
+    await getPool().query(`
+      CREATE TABLE IF NOT EXISTS solar_2r_user_key_vinculos (
+        old_user_key TEXT PRIMARY KEY,
+        real_user_key TEXT NOT NULL,
+        real_phone TEXT,
+        real_name TEXT,
+        origem TEXT DEFAULT 'manual',
+        created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+        updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+      );
+    `);
+
+    const usuarios = await getPool().query(`
+      SELECT
+        id,
+        username,
+        first_name,
+        last_name,
+        phone,
+        COALESCE(username, CONCAT_WS(' ', first_name, last_name), phone, id::text) AS nome
+      FROM users
+      ORDER BY username ASC, first_name ASC, phone ASC
+    `);
+
+    const locais = await getPool().query(`
+      SELECT
+        p.user_key,
+        COUNT(DISTINCT p.game_id)::int AS palpites,
+        MIN(p.created_at) AS primeiro_palpite,
+        MAX(p.updated_at) AS ultimo_palpite,
+        v.real_user_key,
+        v.real_phone,
+        v.real_name
+      FROM solar_segunda_rodada_palpites p
+      LEFT JOIN solar_2r_user_key_vinculos v
+        ON v.old_user_key = p.user_key
+      WHERE p.user_key LIKE 'local-%'
+         OR p.user_key LIKE 'anon-%'
+         OR p.user_key LIKE 'guest-%'
+      GROUP BY
+        p.user_key,
+        v.real_user_key,
+        v.real_phone,
+        v.real_name
+      ORDER BY
+        COUNT(DISTINCT p.game_id) DESC,
+        MAX(p.updated_at) DESC
+    `);
+
+    return res.json({
+      ok: true,
+      success: true,
+      usuarios: usuarios.rows,
+      chavesLocais: locais.rows
+    });
+  } catch (error) {
+    console.error("Erro diagnóstico vínculos 2R:", error);
+
+    return res.status(500).json({
+      ok: false,
+      success: false,
+      message: error.message || "Erro no diagnóstico de vínculos."
+    });
+  }
+});
+
+app.post("/api/admin/segunda-rodada-neon/vincular-local", async function (req, res) {
+  try {
+    await ensureTables();
+
+    await getPool().query(`
+      CREATE TABLE IF NOT EXISTS solar_2r_user_key_vinculos (
+        old_user_key TEXT PRIMARY KEY,
+        real_user_key TEXT NOT NULL,
+        real_phone TEXT,
+        real_name TEXT,
+        origem TEXT DEFAULT 'manual',
+        created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+        updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+      );
+    `);
+
+    const oldUserKey = String(
+      (req.body && (req.body.oldUserKey || req.body.localUserKey || req.body.userKey)) || ""
+    ).trim();
+
+    const phone = String(
+      (req.body && (req.body.phone || req.body.realPhone || req.body.telefone)) || ""
+    ).replace(/\D/g, "");
+
+    if (!oldUserKey) {
+      return res.status(400).json({
+        ok: false,
+        success: false,
+        message: "Informe oldUserKey."
+      });
+    }
+
+    if (!phone) {
+      return res.status(400).json({
+        ok: false,
+        success: false,
+        message: "Informe phone."
+      });
+    }
+
+    const userResult = await getPool().query(
+      `
+        SELECT
+          id,
+          username,
+          first_name,
+          last_name,
+          phone
+        FROM users
+        WHERE regexp_replace(COALESCE(phone, ''), '\\D', '', 'g') = $1
+        LIMIT 1
+      `,
+      [phone]
+    );
+
+    if (!userResult.rows.length) {
+      return res.status(404).json({
+        ok: false,
+        success: false,
+        message: "Usuário real não encontrado pelo telefone informado."
+      });
+    }
+
+    const user = userResult.rows[0];
+    const realName = [user.first_name, user.last_name].filter(Boolean).join(" ").trim() || user.username || user.phone || String(user.id);
+
+    const existePalpite = await getPool().query(
+      `
+        SELECT COUNT(DISTINCT game_id)::int AS total
+        FROM solar_segunda_rodada_palpites
+        WHERE user_key = $1
+      `,
+      [oldUserKey]
+    );
+
+    if (!Number(existePalpite.rows[0].total || 0)) {
+      return res.status(404).json({
+        ok: false,
+        success: false,
+        message: "Essa chave local não possui palpites da 2ª rodada."
+      });
+    }
+
+    await getPool().query(
+      `
+        INSERT INTO solar_2r_user_key_vinculos (
+          old_user_key,
+          real_user_key,
+          real_phone,
+          real_name,
+          origem,
+          created_at,
+          updated_at
+        )
+        VALUES ($1, $2, $3, $4, 'manual-admin', NOW(), NOW())
+        ON CONFLICT (old_user_key)
+        DO UPDATE SET
+          real_user_key = EXCLUDED.real_user_key,
+          real_phone = EXCLUDED.real_phone,
+          real_name = EXCLUDED.real_name,
+          origem = EXCLUDED.origem,
+          updated_at = NOW()
+      `,
+      [oldUserKey, phone, phone, realName]
+    );
+
+    if (typeof recalcularPontos2R === "function") {
+      await recalcularPontos2R();
+    }
+
+    return res.json({
+      ok: true,
+      success: true,
+      message: "Chave local vinculada ao usuário real.",
+      oldUserKey,
+      realUserKey: phone,
+      realPhone: phone,
+      realName,
+      palpitesVinculados: Number(existePalpite.rows[0].total || 0)
+    });
+  } catch (error) {
+    console.error("Erro vínculo manual 2R:", error);
+
+    return res.status(500).json({
+      ok: false,
+      success: false,
+      message: error.message || "Erro ao vincular chave local."
+    });
+  }
+});
+// === VINCULO MANUAL 2R AO USUARIO REAL END ===
+
+
+// === AUTO VINCULAR 2R IDENTIFICAVEIS START ===
+app.post("/api/admin/segunda-rodada-neon/vincular-identificaveis", async function (req, res) {
+  try {
+    await ensureTables();
+
+    await getPool().query(`
+      CREATE TABLE IF NOT EXISTS solar_2r_user_key_vinculos (
+        old_user_key TEXT PRIMARY KEY,
+        real_user_key TEXT NOT NULL,
+        real_phone TEXT,
+        real_name TEXT,
+        origem TEXT DEFAULT 'auto-identificavel',
+        created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+        updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+      );
+    `);
+
+    const identificaveis = await getPool().query(`
+      WITH usuarios AS (
+        SELECT
+          id,
+          username,
+          first_name,
+          last_name,
+          regexp_replace(COALESCE(phone, ''), '\\D', '', 'g') AS phone_digits,
+          COALESCE(
+            NULLIF(TRIM(CONCAT_WS(' ', first_name, last_name)), ''),
+            NULLIF(TRIM(username), ''),
+            NULLIF(TRIM(phone), ''),
+            id::text
+          ) AS real_name
+        FROM users
+      ),
+      palpites AS (
+        SELECT
+          user_key,
+          COUNT(DISTINCT game_id)::int AS palpites
+        FROM solar_segunda_rodada_palpites
+        WHERE game_id IS NOT NULL
+        GROUP BY user_key
+      ),
+      matches AS (
+        SELECT
+          p.user_key AS old_user_key,
+          u.phone_digits AS real_user_key,
+          u.phone_digits AS real_phone,
+          u.real_name,
+          p.palpites,
+          CASE
+            WHEN regexp_replace(COALESCE(p.user_key, ''), '\\D', '', 'g') <> ''
+             AND regexp_replace(COALESCE(p.user_key, ''), '\\D', '', 'g') = u.phone_digits
+              THEN 'telefone'
+            WHEN LOWER(TRIM(p.user_key)) = LOWER(TRIM(u.username))
+              THEN 'username'
+            WHEN LOWER(TRIM(p.user_key)) = LOWER(TRIM(u.id::text))
+              THEN 'id'
+            ELSE 'sem-match'
+          END AS match_type
+        FROM palpites p
+        JOIN usuarios u
+          ON (
+            regexp_replace(COALESCE(p.user_key, ''), '\\D', '', 'g') <> ''
+            AND regexp_replace(COALESCE(p.user_key, ''), '\\D', '', 'g') = u.phone_digits
+          )
+          OR LOWER(TRIM(p.user_key)) = LOWER(TRIM(u.username))
+          OR LOWER(TRIM(p.user_key)) = LOWER(TRIM(u.id::text))
+        WHERE p.user_key !~* '^(local|anon|guest)-'
+          AND u.phone_digits <> ''
+      )
+      SELECT *
+      FROM matches
+      ORDER BY palpites DESC, old_user_key ASC
+    `);
+
+    let vinculados = [];
+
+    for (const row of identificaveis.rows) {
+      await getPool().query(
+        `
+          INSERT INTO solar_2r_user_key_vinculos (
+            old_user_key,
+            real_user_key,
+            real_phone,
+            real_name,
+            origem,
+            created_at,
+            updated_at
+          )
+          VALUES ($1, $2, $3, $4, $5, NOW(), NOW())
+          ON CONFLICT (old_user_key)
+          DO UPDATE SET
+            real_user_key = EXCLUDED.real_user_key,
+            real_phone = EXCLUDED.real_phone,
+            real_name = EXCLUDED.real_name,
+            origem = EXCLUDED.origem,
+            updated_at = NOW()
+        `,
+        [
+          row.old_user_key,
+          row.real_user_key,
+          row.real_phone,
+          row.real_name,
+          "auto-identificavel-" + row.match_type
+        ]
+      );
+
+      vinculados.push(row);
+    }
+
+    if (typeof recalcularPontos2R === "function") {
+      await recalcularPontos2R();
+    }
+
+    const pendentes = await getPool().query(`
+      SELECT
+        p.user_key,
+        COUNT(DISTINCT p.game_id)::int AS palpites,
+        MIN(p.created_at) AS primeiro_palpite,
+        MAX(p.updated_at) AS ultimo_palpite
+      FROM solar_segunda_rodada_palpites p
+      LEFT JOIN solar_2r_user_key_vinculos v
+        ON v.old_user_key = p.user_key
+      WHERE p.game_id IS NOT NULL
+        AND v.old_user_key IS NULL
+        AND (
+          p.user_key ~* '^(local|anon|guest)-'
+          OR p.user_key IS NULL
+          OR TRIM(p.user_key) = ''
+        )
+      GROUP BY p.user_key
+      ORDER BY COUNT(DISTINCT p.game_id) DESC, MAX(p.updated_at) DESC
+    `);
+
+    const resumo = await getPool().query(`
+      SELECT
+        COUNT(*)::int AS total_vinculos
+      FROM solar_2r_user_key_vinculos
+    `);
+
+    return res.json({
+      ok: true,
+      success: true,
+      message: "Auto vínculo seguro concluído. Chaves locais sem identificação continuam pendentes.",
+      vinculadosAutomaticamente: vinculados.length,
+      vinculados,
+      pendentesLocais: pendentes.rows,
+      totalPendentesLocais: pendentes.rows.length,
+      resumo: resumo.rows[0]
+    });
+  } catch (error) {
+    console.error("Erro auto vínculo identificáveis 2R:", error);
+
+    return res.status(500).json({
+      ok: false,
+      success: false,
+      message: error.message || "Erro ao vincular identificáveis."
+    });
+  }
+});
+
+app.get("/api/admin/segunda-rodada-neon/pendentes-vinculo", async function (req, res) {
+  try {
+    await ensureTables();
+
+    await getPool().query(`
+      CREATE TABLE IF NOT EXISTS solar_2r_user_key_vinculos (
+        old_user_key TEXT PRIMARY KEY,
+        real_user_key TEXT NOT NULL,
+        real_phone TEXT,
+        real_name TEXT,
+        origem TEXT DEFAULT 'manual',
+        created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+        updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+      );
+    `);
+
+    const pendentes = await getPool().query(`
+      SELECT
+        p.user_key,
+        COUNT(DISTINCT p.game_id)::int AS palpites,
+        MIN(p.created_at) AS primeiro_palpite,
+        MAX(p.updated_at) AS ultimo_palpite
+      FROM solar_segunda_rodada_palpites p
+      LEFT JOIN solar_2r_user_key_vinculos v
+        ON v.old_user_key = p.user_key
+      WHERE p.game_id IS NOT NULL
+        AND v.old_user_key IS NULL
+      GROUP BY p.user_key
+      ORDER BY COUNT(DISTINCT p.game_id) DESC, MAX(p.updated_at) DESC
+    `);
+
+    return res.json({
+      ok: true,
+      success: true,
+      totalPendentes: pendentes.rows.length,
+      pendentes: pendentes.rows
+    });
+  } catch (error) {
+    return res.status(500).json({
+      ok: false,
+      success: false,
+      message: error.message || "Erro ao listar pendentes."
+    });
+  }
+});
+// === AUTO VINCULAR 2R IDENTIFICAVEIS END ===
+
+app.post("/api/admin/segunda-rodada-neon/recalcular-pontos", async function (req, res) {
     try {
       await recalcularPontos2R();
 
@@ -6323,130 +7112,17 @@ app.get("/api/segunda-rodada-neon/status", async function (req, res) {
 // SOLAR_2R_AUTO_VINCULO_GERAL_END
 
 
-// === RANKING SEGUNDA RODADA NEON START ===
-const { Pool: SegundaRodadaRankingPool } = require("pg");
-
-let segundaRodadaRankingPool = null;
-
-function getSegundaRodadaRankingPool() {
-  if (!process.env.DATABASE_URL) {
-    return null;
-  }
-
-  if (!segundaRodadaRankingPool) {
-    segundaRodadaRankingPool = new SegundaRodadaRankingPool({
-      connectionString: process.env.DATABASE_URL,
-      ssl: {
-        rejectUnauthorized: false
-      }
-    });
-  }
-
-  return segundaRodadaRankingPool;
-}
-
-app.get("/api/segunda-rodada-neon/ranking", async function (req, res) {
-  try {
-    const pool = getSegundaRodadaRankingPool();
-
-    if (!pool) {
-      return res.status(503).json({
-        ok: false,
-        error: "DATABASE_URL não configurada."
-      });
-    }
-
-    const sql = `
-      SELECT
-        user_key AS "userKey",
-        COUNT(*)::int AS "totalPalpites",
-        COUNT(*) FILTER (
-          WHERE home_score IS NOT NULL
-          AND away_score IS NOT NULL
-        )::int AS "palpitesValidos",
-        MIN(created_at) AS "primeiroPalpiteEm",
-        MAX(updated_at) AS "ultimoPalpiteEm"
-      FROM solar_segunda_rodada_palpites
-      WHERE game_id IS NOT NULL
-      GROUP BY user_key
-      ORDER BY
-        COUNT(*) DESC,
-        MAX(updated_at) ASC,
-        user_key ASC
-    `;
-
-    const result = await pool.query(sql);
-
-    return res.json({
-      ok: true,
-      roundCode: "segunda_rodada",
-      totalJogosDisponiveis: 24,
-      totalUsuarios: result.rows.length,
-      ranking: result.rows
-    });
-  } catch (error) {
-    console.error("Erro ao carregar ranking da segunda rodada:", error);
-
-    return res.status(500).json({
-      ok: false,
-      error: "Erro ao carregar ranking da segunda rodada."
-    });
-  }
-});
-
-app.get("/api/ranking/segunda-rodada", async function (req, res) {
-  try {
-    const pool = getSegundaRodadaRankingPool();
-
-    if (!pool) {
-      return res.status(503).json({
-        ok: false,
-        error: "DATABASE_URL não configurada."
-      });
-    }
-
-    const sql = `
-      SELECT
-        user_key AS "userKey",
-        COUNT(*)::int AS "totalPalpites",
-        COUNT(*) FILTER (
-          WHERE home_score IS NOT NULL
-          AND away_score IS NOT NULL
-        )::int AS "palpitesValidos",
-        MIN(created_at) AS "primeiroPalpiteEm",
-        MAX(updated_at) AS "ultimoPalpiteEm"
-      FROM solar_segunda_rodada_palpites
-      WHERE game_id IS NOT NULL
-      GROUP BY user_key
-      ORDER BY
-        COUNT(*) DESC,
-        MAX(updated_at) ASC,
-        user_key ASC
-    `;
-
-    const result = await pool.query(sql);
-
-    return res.json({
-      ok: true,
-      roundCode: "segunda_rodada",
-      totalJogosDisponiveis: 24,
-      totalUsuarios: result.rows.length,
-      ranking: result.rows
-    });
-  } catch (error) {
-    console.error("Erro ao carregar ranking da segunda rodada:", error);
-
-    return res.status(500).json({
-      ok: false,
-      error: "Erro ao carregar ranking da segunda rodada."
-    });
-  }
-});
-// === RANKING SEGUNDA RODADA NEON END ===
 
 app.listen(PORT, () => {
   console.log(`Servidor rodando em http://localhost:${PORT}`);
 });
+
+
+
+
+
+
+
 
 
 
