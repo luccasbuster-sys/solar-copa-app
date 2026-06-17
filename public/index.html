@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="pt-BR">
 <head>
   <meta charset="UTF-8" />
@@ -5516,6 +5516,55 @@
   }
 </style>
 
+
+<!-- SOLAR_SEGUNDA_RODADA_STYLE_START -->
+<style>
+  #btnSegundaRodadaNativa.solar-segunda-rodada-btn {
+    width: min(1060px, calc(100% - 60px)) !important;
+    min-height: 46px !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    margin: 12px 30px 10px !important;
+    padding: 12px 24px !important;
+    border: 3px solid #000000 !important;
+    border-radius: 999px !important;
+    background: #ccff00 !important;
+    color: #000000 !important;
+    box-shadow: 8px 7px 0 #000000 !important;
+    font-family: inherit !important;
+    font-size: 14px !important;
+    font-weight: 900 !important;
+    line-height: 1.1 !important;
+    letter-spacing: .08em !important;
+    text-transform: uppercase !important;
+    text-align: center !important;
+    cursor: pointer !important;
+    appearance: none !important;
+  }
+
+  #btnSegundaRodadaNativa.solar-segunda-rodada-btn:hover {
+    filter: brightness(1.02);
+    transform: translateY(-1px);
+  }
+
+  #btnSegundaRodadaNativa.solar-segunda-rodada-btn:active {
+    transform: translate(3px, 3px);
+    box-shadow: 5px 4px 0 #000000 !important;
+  }
+
+  @media (max-width: 640px) {
+    #btnSegundaRodadaNativa.solar-segunda-rodada-btn {
+      width: calc(100% - 24px) !important;
+      margin-left: 12px !important;
+      margin-right: 12px !important;
+      font-size: 12px !important;
+      padding: 12px 16px !important;
+      box-shadow: 5px 5px 0 #000000 !important;
+    }
+  }
+</style>
+<!-- SOLAR_SEGUNDA_RODADA_STYLE_END -->
 </head>
 
 <body class="intro-active">
@@ -5682,7 +5731,13 @@
           Ver jogos da 1ª rodada
         </button>
 
-        <section id="secaoPrimeiraRodadaNativa">
+        <button id="btnSegundaRodadaNativa" type="button" class="btn solar-segunda-rodada-btn">VER JOGOS DA 2ª RODADA</button>
+
+        
+<section id="secaoSegundaRodadaNativa" class="solar-2r-final-section" hidden>
+  <div id="solarSegundaRodadaNativaConteudo"></div>
+</section>
+<section id="secaoPrimeiraRodadaNativa">
           <div class="primeira-rodada-nativa-head">
             <strong>Jogos da 1ª rodada</strong>
             <span id="contadorPrimeiraRodadaNativa">Carregando...</span>
@@ -14574,8 +14629,1006 @@ function renderLoggedContent() {
   }
 }
 </style>
+
+<!-- SOLAR_2R_FORMATO_CORRETO_SEM_TRAVAR_START -->
+<style>
+  #secaoSegundaRodadaNativa[hidden] {
+    display: none !important;
+  }
+
+  .solar-2r-final-section {
+    width: min(1180px, calc(100% - 24px));
+    margin: 28px auto 42px;
+  }
+
+  .solar-2r-final-shell {
+    display: grid;
+    gap: 20px;
+  }
+
+  .solar-2r-final-header {
+    position: relative;
+    overflow: hidden;
+    padding: 20px;
+    border: 5px solid #000;
+    border-radius: 28px;
+    background:
+      radial-gradient(circle at 12% 15%, rgba(255,255,255,.42), transparent 28%),
+      linear-gradient(135deg, #ccff00 0%, #a8ff00 45%, #00ff88 100%);
+    color: #000;
+    box-shadow: 10px 10px 0 #000;
+  }
+
+  .solar-2r-final-header strong {
+    display: block;
+    font-size: clamp(22px, 4vw, 36px);
+    line-height: .95;
+    font-weight: 1000;
+    letter-spacing: -.04em;
+    text-transform: uppercase;
+  }
+
+  .solar-2r-final-header span {
+    display: block;
+    margin-top: 8px;
+    max-width: 760px;
+    font-size: 13px;
+    font-weight: 900;
+    line-height: 1.35;
+  }
+
+  .solar-2r-final-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(310px, 1fr));
+    gap: 20px;
+  }
+
+  .solar-2r-final-card {
+    position: relative;
+    overflow: hidden;
+    display: grid;
+    gap: 13px;
+    padding: 16px;
+    border: 5px solid #000;
+    border-radius: 28px;
+    background:
+      linear-gradient(180deg, rgba(255,255,255,.96), rgba(245,245,245,.96));
+    color: #000;
+    box-shadow: 9px 9px 0 #000;
+  }
+
+  .solar-2r-final-card::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    height: 8px;
+    background: linear-gradient(90deg, #ccff00, #00ff88, #00d4ff);
+  }
+
+  .solar-2r-final-meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 7px;
+    padding-top: 4px;
+  }
+
+  .solar-2r-final-pill {
+    display: inline-flex;
+    align-items: center;
+    min-height: 28px;
+    padding: 5px 9px;
+    border: 3px solid #000;
+    border-radius: 999px;
+    background: #ccff00;
+    color: #000;
+    box-shadow: 3px 3px 0 #000;
+    font-size: 10px;
+    font-weight: 1000;
+    text-transform: uppercase;
+    line-height: 1;
+  }
+
+  .solar-2r-final-location {
+    padding: 10px 12px;
+    border: 3px solid #000;
+    border-radius: 16px;
+    background: #111;
+    color: #ccff00;
+    box-shadow: 4px 4px 0 #000;
+    font-size: 12px;
+    font-weight: 900;
+    line-height: 1.3;
+  }
+
+  .solar-2r-final-match {
+    display: grid;
+    gap: 12px;
+  }
+
+  .solar-2r-final-team {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 64px;
+    align-items: center;
+    gap: 12px;
+    padding: 10px;
+    border: 4px solid #000;
+    border-radius: 20px;
+    background: #fff;
+    box-shadow: 5px 5px 0 rgba(0,0,0,.92);
+  }
+
+  .solar-2r-final-team-main {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    min-width: 0;
+  }
+
+  .solar-2r-final-flag {
+    display: grid;
+    place-items: center;
+    flex: 0 0 auto;
+    width: 38px;
+    height: 38px;
+    border: 3px solid #000;
+    border-radius: 999px;
+    background: #f4f4f4;
+    box-shadow: 3px 3px 0 #000;
+    font-size: 24px;
+  }
+
+  .solar-2r-final-team-name {
+    min-width: 0;
+    font-size: 15px;
+    font-weight: 1000;
+    line-height: 1.05;
+    text-transform: uppercase;
+  }
+
+  .solar-2r-final-score {
+    width: 64px;
+    min-height: 48px;
+    border: 4px solid #000;
+    border-radius: 16px;
+    background: #ccff00;
+    color: #000;
+    text-align: center;
+    font-size: 20px;
+    font-weight: 1000;
+    box-shadow: 4px 4px 0 #000;
+    outline: none;
+  }
+
+  .solar-2r-final-score:focus {
+    background: #fff;
+    box-shadow: 0 0 0 4px #ccff00, 5px 5px 0 #000;
+  }
+
+  .solar-2r-final-vs {
+    justify-self: center;
+    margin: -3px 0;
+    padding: 4px 12px;
+    border: 3px solid #000;
+    border-radius: 999px;
+    background: #000;
+    color: #ccff00;
+    font-size: 11px;
+    font-weight: 1000;
+    letter-spacing: .08em;
+  }
+
+  .solar-2r-lock-message,
+  .solar-2r-neon-message {
+    padding: 10px 12px;
+    border: 3px solid #000;
+    border-radius: 16px;
+    box-shadow: 4px 4px 0 #000;
+    font-size: 11px;
+    font-weight: 1000;
+    line-height: 1.28;
+  }
+
+  .solar-2r-lock-message {
+    background: #ccff00;
+    color: #000;
+  }
+
+  .solar-2r-lock-message.is-locked,
+  .solar-2r-neon-message.is-error {
+    background: #ff1d13;
+    color: #fff;
+  }
+
+  .solar-2r-neon-message {
+    background: #eaffad;
+    color: #000;
+    text-transform: uppercase;
+  }
+
+  .solar-2r-neon-message.is-saving {
+    background: #ffe600;
+  }
+
+  .solar-2r-neon-message.is-saved {
+    background: #00ff88;
+  }
+
+  .solar-2r-final-actions {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+  }
+
+  .solar-2r-final-save,
+  .solar-2r-final-reset {
+    flex: 1;
+    min-height: 46px;
+    padding: 10px 14px;
+    border: 4px solid #000;
+    border-radius: 999px;
+    box-shadow: 5px 5px 0 #000;
+    font-size: 12px;
+    font-weight: 1000;
+    text-transform: uppercase;
+    cursor: pointer;
+  }
+
+  .solar-2r-final-save {
+    background: #ccff00;
+    color: #000;
+  }
+
+  .solar-2r-final-reset {
+    background: #fff;
+    color: #000;
+  }
+
+  .solar-2r-final-save:hover,
+  .solar-2r-final-reset:hover {
+    transform: translateY(-1px);
+    filter: brightness(1.03);
+  }
+
+  .solar-2r-final-save:active,
+  .solar-2r-final-reset:active {
+    transform: translate(3px, 3px);
+    box-shadow: 2px 2px 0 #000;
+  }
+
+  .solar-2r-final-save:disabled,
+  .solar-2r-final-reset:disabled,
+  .solar-2r-final-score:disabled {
+    opacity: .46;
+    cursor: not-allowed;
+    filter: grayscale(.3);
+  }
+
+  .solar-2r-final-status {
+    min-height: 18px;
+    color: #000;
+    font-size: 12px;
+    font-weight: 1000;
+  }
+
+  #solarFechar2RodadaFinalWrap {
+    display: flex;
+    justify-content: center;
+    margin: 28px 0 34px;
+  }
+
+  #btnFecharSegundaRodadaFinal {
+    width: min(560px, 100%);
+    min-height: 54px;
+    padding: 13px 22px;
+    border: 5px solid #000;
+    border-radius: 999px;
+    background: #000;
+    color: #ccff00;
+    box-shadow: 8px 8px 0 #ccff00;
+    font-size: 13px;
+    font-weight: 1000;
+    letter-spacing: .06em;
+    text-transform: uppercase;
+    cursor: pointer;
+  }
+
+  #btnFecharSegundaRodadaFinal:hover {
+    color: #fff;
+  }
+
+  @media (max-width: 560px) {
+    .solar-2r-final-section {
+      width: min(100% - 18px, 1180px);
+    }
+
+    .solar-2r-final-grid {
+      grid-template-columns: 1fr;
+    }
+
+    .solar-2r-final-card {
+      padding: 13px;
+      border-radius: 22px;
+    }
+
+    .solar-2r-final-team {
+      grid-template-columns: minmax(0, 1fr) 58px;
+      gap: 8px;
+    }
+
+    .solar-2r-final-score {
+      width: 58px;
+    }
+
+    .solar-2r-final-actions {
+      flex-direction: column;
+      align-items: stretch;
+    }
+
+    .solar-2r-final-save,
+    .solar-2r-final-reset,
+    #btnFecharSegundaRodadaFinal {
+      width: 100%;
+    }
+  }
+</style>
+
+<script>
+(function () {
+  "use strict";
+
+  var API = "/api/segunda-rodada-neon/palpites";
+  var LOCK_MINUTES = 15;
+  var rendered = false;
+  var loadedNeon = false;
+
+  var games = [
+    ["18-06-2026-a-tchequia-x-africa-do-sul", "18/06/2026", "13:00", "12:00 local", "Grupo A", "Atlanta", "Tchéquia", "África do Sul", "🇨🇿", "🇿🇦", "2026-06-18T13:00:00-03:00"],
+    ["18-06-2026-b-suica-x-bosnia-e-herzegovina", "18/06/2026", "16:00", "12:00 local", "Grupo B", "Los Angeles", "Suíça", "Bósnia e Herzegovina", "🇨🇭", "🇧🇦", "2026-06-18T16:00:00-03:00"],
+    ["18-06-2026-b-canada-x-catar", "18/06/2026", "19:00", "12:00 local", "Grupo B", "Vancouver", "Canadá", "Catar", "🇨🇦", "🇶🇦", "2026-06-18T19:00:00-03:00"],
+    ["18-06-2026-a-mexico-x-coreia-do-sul", "18/06/2026", "22:00", "19:00 local", "Grupo A", "Guadalajara", "México", "Coreia do Sul", "🇲🇽", "🇰🇷", "2026-06-18T22:00:00-03:00"],
+
+    ["19-06-2026-d-estados-unidos-x-australia", "19/06/2026", "16:00", "12:00 local", "Grupo D", "Seattle", "Estados Unidos", "Austrália", "🇺🇸", "🇦🇺", "2026-06-19T16:00:00-03:00"],
+    ["19-06-2026-c-escocia-x-marrocos", "19/06/2026", "19:00", "18:00 local", "Grupo C", "Boston", "Escócia", "Marrocos", "🏴", "🇲🇦", "2026-06-19T19:00:00-03:00"],
+    ["19-06-2026-c-brasil-x-haiti", "19/06/2026", "21:30", "20:30 local", "Grupo C", "Philadelphia", "Brasil", "Haiti", "🇧🇷", "🇭🇹", "2026-06-19T21:30:00-03:00"],
+    ["20-06-2026-d-turquia-x-paraguai", "20/06/2026", "00:00", "20:00 local do dia 19/06", "Grupo D", "San Francisco Bay Area", "Turquia", "Paraguai", "🇹🇷", "🇵🇾", "2026-06-20T00:00:00-03:00"],
+
+    ["20-06-2026-f-holanda-x-suecia", "20/06/2026", "14:00", "12:00 local", "Grupo F", "Houston", "Holanda", "Suécia", "🇳🇱", "🇸🇪", "2026-06-20T14:00:00-03:00"],
+    ["20-06-2026-e-alemanha-x-costa-do-marfim", "20/06/2026", "17:00", "16:00 local", "Grupo E", "Toronto", "Alemanha", "Costa do Marfim", "🇩🇪", "🇨🇮", "2026-06-20T17:00:00-03:00"],
+    ["20-06-2026-e-equador-x-curacao", "20/06/2026", "21:00", "19:00 local", "Grupo E", "Kansas City", "Equador", "Curaçao", "🇪🇨", "🇨🇼", "2026-06-20T21:00:00-03:00"],
+    ["21-06-2026-f-tunisia-x-japao", "21/06/2026", "01:00", "22:00 local do dia 20/06", "Grupo F", "Monterrey", "Tunísia", "Japão", "🇹🇳", "🇯🇵", "2026-06-21T01:00:00-03:00"],
+
+    ["21-06-2026-h-espanha-x-arabia-saudita", "21/06/2026", "13:00", "12:00 local", "Grupo H", "Atlanta", "Espanha", "Arábia Saudita", "🇪🇸", "🇸🇦", "2026-06-21T13:00:00-03:00"],
+    ["21-06-2026-g-belgica-x-ira", "21/06/2026", "16:00", "12:00 local", "Grupo G", "Los Angeles", "Bélgica", "Irã", "🇧🇪", "🇮🇷", "2026-06-21T16:00:00-03:00"],
+    ["21-06-2026-h-uruguai-x-cabo-verde", "21/06/2026", "19:00", "18:00 local", "Grupo H", "Miami", "Uruguai", "Cabo Verde", "🇺🇾", "🇨🇻", "2026-06-21T19:00:00-03:00"],
+    ["21-06-2026-g-nova-zelandia-x-egito", "21/06/2026", "22:00", "18:00 local", "Grupo G", "Vancouver", "Nova Zelândia", "Egito", "🇳🇿", "🇪🇬", "2026-06-21T22:00:00-03:00"],
+
+    ["22-06-2026-j-argentina-x-austria", "22/06/2026", "14:00", "12:00 local", "Grupo J", "Dallas", "Argentina", "Áustria", "🇦🇷", "🇦🇹", "2026-06-22T14:00:00-03:00"],
+    ["22-06-2026-i-franca-x-iraque", "22/06/2026", "18:00", "17:00 local", "Grupo I", "Philadelphia", "França", "Iraque", "🇫🇷", "🇮🇶", "2026-06-22T18:00:00-03:00"],
+    ["22-06-2026-i-noruega-x-senegal", "22/06/2026", "21:00", "20:00 local", "Grupo I", "New York/New Jersey", "Noruega", "Senegal", "🇳🇴", "🇸🇳", "2026-06-22T21:00:00-03:00"],
+    ["23-06-2026-j-jordania-x-argelia", "23/06/2026", "00:00", "20:00 local do dia 22/06", "Grupo J", "San Francisco Bay Area", "Jordânia", "Argélia", "🇯🇴", "🇩🇿", "2026-06-23T00:00:00-03:00"],
+
+    ["23-06-2026-k-portugal-x-uzbequistao", "23/06/2026", "14:00", "12:00 local", "Grupo K", "Houston", "Portugal", "Uzbequistão", "🇵🇹", "🇺🇿", "2026-06-23T14:00:00-03:00"],
+    ["23-06-2026-l-inglaterra-x-gana", "23/06/2026", "17:00", "16:00 local", "Grupo L", "Boston", "Inglaterra", "Gana", "🏴", "🇬🇭", "2026-06-23T17:00:00-03:00"],
+    ["23-06-2026-l-panama-x-croacia", "23/06/2026", "20:00", "16:00 local", "Grupo L", "Toronto", "Panamá", "Croácia", "🇵🇦", "🇭🇷", "2026-06-23T20:00:00-03:00"],
+    ["23-06-2026-k-colombia-x-rd-congo", "23/06/2026", "23:00", "20:00 local", "Grupo K", "Guadalajara", "Colômbia", "RD Congo", "🇨🇴", "🇨🇩", "2026-06-23T23:00:00-03:00"]
+  ];
+
+  function $(id) {
+    return document.getElementById(id);
+  }
+
+  function section() {
+    return $("secaoSegundaRodadaNativa");
+  }
+
+  function content() {
+    return $("solarSegundaRodadaNativaConteudo");
+  }
+
+  function escapeHtml(value) {
+    return String(value).replace(/[&<>"']/g, function (char) {
+      return {
+        "&": "&amp;",
+        "<": "&lt;",
+        ">": "&gt;",
+        '"': "&quot;",
+        "'": "&#039;"
+      }[char];
+    });
+  }
+
+  function getUserKey() {
+    var key = localStorage.getItem("solar_copa_neon_2r_user_key");
+
+    if (!key) {
+      key = "local-" + Date.now() + "-" + Math.random().toString(16).slice(2);
+      localStorage.setItem("solar_copa_neon_2r_user_key", key);
+    }
+
+    return key;
+  }
+
+  function cutoff(game) {
+    var start = new Date(game[10]);
+    return new Date(start.getTime() - LOCK_MINUTES * 60 * 1000);
+  }
+
+  function locked(game) {
+    return new Date().getTime() >= cutoff(game).getTime();
+  }
+
+  function formatBR(date) {
+    try {
+      return date.toLocaleString("pt-BR", {
+        timeZone: "America/Sao_Paulo",
+        day: "2-digit",
+        month: "2-digit",
+        year: "numeric",
+        hour: "2-digit",
+        minute: "2-digit"
+      });
+    } catch (e) {
+      return date.toLocaleString("pt-BR");
+    }
+  }
+
+  function fetchTimeout(url, options, ms) {
+    var controller = new AbortController();
+    var timer = setTimeout(function () {
+      controller.abort();
+    }, ms || 7000);
+
+    options = options || {};
+    options.signal = controller.signal;
+
+    return fetch(url, options).finally(function () {
+      clearTimeout(timer);
+    });
+  }
+
+  function render() {
+    if (rendered) return;
+
+    var root = content();
+    if (!root) return;
+
+    var html = "";
+    html += "<div class='solar-2r-final-shell'>";
+    html += "<div class='solar-2r-final-header'>";
+    html += "<strong>Jogos da 2ª rodada</strong>";
+    html += "<span>Apostas, alterações e reset ficam disponíveis somente até 15 minutos antes do início de cada jogo no horário de Brasília.</span>";
+    html += "</div>";
+    html += "<div class='solar-2r-final-grid'>";
+
+    games.forEach(function (g) {
+      var isLocked = locked(g);
+      var disabled = isLocked ? " disabled" : "";
+      var lockClass = isLocked ? " solar-2r-card-bloqueado" : "";
+      var lockText = isLocked
+        ? "Aposta bloqueada<br><small>Prazo encerrado em " + escapeHtml(formatBR(cutoff(g))) + ", 15 minutos antes do jogo.</small>"
+        : "Aposta liberada<br><small>Você pode apostar, alterar ou resetar até " + escapeHtml(formatBR(cutoff(g))) + ".</small>";
+
+      html += "<article class='solar-2r-final-card" + lockClass + "' data-game-card='" + escapeHtml(g[0]) + "'>";
+      html += "<div class='solar-2r-final-meta'>";
+      html += "<span class='solar-2r-final-pill'>" + escapeHtml(g[1]) + "</span>";
+      html += "<span class='solar-2r-final-pill'>" + escapeHtml(g[2]) + " Brasília</span>";
+      html += "<span class='solar-2r-final-pill'>" + escapeHtml(g[4]) + "</span>";
+      html += "</div>";
+
+      html += "<div class='solar-2r-final-location'>" + escapeHtml(g[5]) + " · " + escapeHtml(g[3]) + "</div>";
+
+      html += "<div class='solar-2r-final-match'>";
+      html += "<div class='solar-2r-final-team'>";
+      html += "<div class='solar-2r-final-team-main'><span class='solar-2r-final-flag'>" + escapeHtml(g[8]) + "</span><span class='solar-2r-final-team-name'>" + escapeHtml(g[6]) + "</span></div>";
+      html += "<input class='solar-2r-final-score' type='number' min='0' max='99' inputmode='numeric'" + disabled + ">";
+      html += "</div>";
+
+      html += "<div class='solar-2r-final-vs'>VS</div>";
+
+      html += "<div class='solar-2r-final-team'>";
+      html += "<div class='solar-2r-final-team-main'><span class='solar-2r-final-flag'>" + escapeHtml(g[9]) + "</span><span class='solar-2r-final-team-name'>" + escapeHtml(g[7]) + "</span></div>";
+      html += "<input class='solar-2r-final-score' type='number' min='0' max='99' inputmode='numeric'" + disabled + ">";
+      html += "</div>";
+      html += "</div>";
+
+      html += "<div class='solar-2r-lock-message" + (isLocked ? " is-locked" : "") + "'>" + lockText + "</div>";
+      html += "";
+
+      html += "<div class='solar-2r-final-actions'>";
+      html += "<button type='button' class='solar-2r-final-save'" + disabled + ">Salvar palpite</button>";
+      html += "<button type='button' class='solar-2r-final-reset'" + disabled + ">Resetar placar</button>";
+      html += "</div>";
+
+      html += "<div class='solar-2r-final-status'></div>";
+      html += "</article>";
+    });
+
+    html += "</div>";
+    html += "<div id='solarFechar2RodadaFinalWrap'><button id='btnFecharSegundaRodadaFinal' type='button'>FECHAR JOGOS DA 2ª RODADA</button></div>";
+    html += "</div>";
+
+    root.innerHTML = html;
+    rendered = true;
+
+    loadFromNeon();
+  }
+
+  function getGame(card) {
+    var id = card.getAttribute("data-game-card");
+
+    for (var i = 0; i < games.length; i += 1) {
+      if (games[i][0] === id) return games[i];
+    }
+
+    return null;
+  }
+
+  function inputs(card) {
+    return Array.prototype.slice.call(card.querySelectorAll(".solar-2r-final-score"));
+  }
+
+  function setStatus(card, text) {
+    var el = card.querySelector(".solar-2r-final-status");
+    if (el) el.textContent = text || "";
+  }
+
+  function setNeon(card, state, text) {
+    var el = card.querySelector(".solar-2r-neon-message");
+    if (!el) return;
+
+    el.className = "solar-2r-neon-message" + (state ? " " + state : "");
+    el.innerHTML = text;
+  }
+
+  async function loadFromNeon() {
+    if (loadedNeon) return;
+    loadedNeon = true;
+
+    try {
+      var res = await fetchTimeout(API + "?clientUserKey=" + encodeURIComponent(getUserKey()), {
+        method: "GET",
+        credentials: "same-origin",
+        headers: { "Accept": "application/json" }
+      }, 7000);
+
+      var data = await res.json().catch(function () { return {}; });
+
+      if (!res.ok || !data.ok) {
+        throw new Error(data.message || "Neon não retornou confirmação.");
+      }
+
+      var map = {};
+      (data.palpites || []).forEach(function (p) {
+        if (p && p.game_id) map[p.game_id] = p;
+      });
+
+      Array.prototype.forEach.call(document.querySelectorAll(".solar-2r-final-card"), function (card) {
+        var id = card.getAttribute("data-game-card");
+        var p = map[id];
+
+        if (!p) return;
+
+        var field = inputs(card);
+
+        if (field.length >= 2) {
+          field[0].value = p.home_score;
+          field[1].value = p.away_score;
+        }
+
+        setNeon(card, "is-saved", "Salvo no Neon<br><small>Palpite carregado do banco.</small>");
+      });
+    } catch (error) {
+      Array.prototype.forEach.call(document.querySelectorAll(".solar-2r-final-card"), function (card) {
+        setNeon(card, "is-error", "Neon indisponível<br><small>" + escapeHtml(error.message || error) + "</small>");
+      });
+    }
+  }
+
+  async function save(card) {
+    var g = getGame(card);
+    if (!g) return;
+
+    if (locked(g)) {
+      setStatus(card, "Aposta bloqueada: prazo encerrado.");
+      return;
+    }
+
+    var field = inputs(card);
+    var a = field[0] ? String(field[0].value || "").trim() : "";
+    var b = field[1] ? String(field[1].value || "").trim() : "";
+
+    if (a === "" || b === "") {
+      setStatus(card, "Informe os dois placares.");
+      return;
+    }
+
+    setNeon(card, "is-saving", "Salvando no Neon<br><small>Aguarde...</small>");
+    setStatus(card, "Salvando...");
+
+    try {
+      var res = await fetchTimeout(API, {
+        method: "POST",
+        credentials: "same-origin",
+        headers: {
+          "Content-Type": "application/json",
+          "Accept": "application/json"
+        },
+        body: JSON.stringify({
+          clientUserKey: getUserKey(),
+          gameId: g[0],
+          homeScore: Number(a),
+          awayScore: Number(b),
+          gameDate: g[1],
+          group: g[4].replace("Grupo ", ""),
+          homeTeam: g[6],
+          awayTeam: g[7]
+        })
+      }, 7000);
+
+      var data = await res.json().catch(function () { return {}; });
+
+      if (!res.ok || !data.ok) {
+        throw new Error(data.message || "Erro ao salvar no Neon.");
+      }
+
+      setNeon(card, "is-saved", "Salvo no Neon<br><small>Palpite confirmado no banco.</small>");
+      setStatus(card, "Palpite salvo.");
+    } catch (error) {
+      setNeon(card, "is-error", "Erro no Neon<br><small>" + escapeHtml(error.message || error) + "</small>");
+      setStatus(card, "Não foi possível confirmar o palpite.");
+    }
+  }
+
+  async function reset(card) {
+    var g = getGame(card);
+    if (!g) return;
+
+    if (locked(g)) {
+      setStatus(card, "Reset bloqueado: prazo encerrado.");
+      return;
+    }
+
+    setNeon(card, "is-saving", "Resetando no Neon<br><small>Aguarde...</small>");
+    setStatus(card, "Resetando...");
+
+    try {
+      var res = await fetchTimeout(API + "/" + encodeURIComponent(g[0]) + "?clientUserKey=" + encodeURIComponent(getUserKey()), {
+        method: "DELETE",
+        credentials: "same-origin",
+        headers: { "Accept": "application/json" }
+      }, 7000);
+
+      var data = await res.json().catch(function () { return {}; });
+
+      if (!res.ok || !data.ok) {
+        throw new Error(data.message || "Erro ao resetar no Neon.");
+      }
+
+      inputs(card).forEach(function (input) {
+        input.value = "";
+      });
+
+      setNeon(card, "is-saved", "Resetado no Neon<br><small>Palpite removido do banco.</small>");
+      setStatus(card, "Palpite resetado.");
+    } catch (error) {
+      setNeon(card, "is-error", "Erro no Neon<br><small>" + escapeHtml(error.message || error) + "</small>");
+      setStatus(card, "Não foi possível resetar o palpite.");
+    }
+  }
+
+  function openSecondRound(event) {
+    if (event) {
+      event.preventDefault();
+      event.stopPropagation();
+    }
+
+    var sec = section();
+    if (!sec) return false;
+
+    sec.hidden = false;
+    sec.removeAttribute("hidden");
+    sec.style.removeProperty("display");
+
+    render();
+
+    var btn = $("btnSegundaRodadaNativa");
+    if (btn) btn.textContent = "JOGOS DA 2ª RODADA";
+
+    sec.scrollIntoView({ behavior: "smooth", block: "start" });
+
+    return false;
+  }
+
+  function closeSecondRound(event) {
+    if (event) {
+      event.preventDefault();
+      event.stopPropagation();
+    }
+
+    var sec = section();
+
+    if (sec) {
+      sec.hidden = true;
+      sec.setAttribute("hidden", "");
+      sec.style.display = "none";
+    }
+
+    var btn = $("btnSegundaRodadaNativa");
+
+    if (btn) {
+      btn.textContent = "VER JOGOS DA 2ª RODADA";
+      btn.scrollIntoView({ behavior: "smooth", block: "center" });
+    }
+
+    return false;
+  }
+
+  document.addEventListener("click", function (event) {
+    var target = event.target;
+
+    if (!target || !target.closest) return;
+
+    if (target.closest("#btnSegundaRodadaNativa")) {
+      return openSecondRound(event);
+    }
+
+    if (target.closest("#btnFecharSegundaRodadaFinal")) {
+      return closeSecondRound(event);
+    }
+
+    var card = target.closest(".solar-2r-final-card");
+
+    if (!card) return;
+
+    if (target.closest(".solar-2r-final-save")) {
+      event.preventDefault();
+      save(card);
+      return false;
+    }
+
+    if (target.closest(".solar-2r-final-reset")) {
+      event.preventDefault();
+      reset(card);
+      return false;
+    }
+  });
+
+  function init() {
+    var btn = $("btnSegundaRodadaNativa");
+
+    if (btn) {
+      btn.removeAttribute("onclick");
+      btn.type = "button";
+      btn.textContent = "VER JOGOS DA 2ª RODADA";
+    }
+
+    var sec = section();
+
+    if (sec) {
+      sec.hidden = true;
+      sec.setAttribute("hidden", "");
+      sec.style.display = "none";
+    }
+  }
+
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", init);
+  } else {
+    init();
+  }
+})();
+</script>
+<!-- SOLAR_2R_FORMATO_CORRETO_SEM_TRAVAR_END -->
+
+<!-- SOLAR_2R_BANDEIRAS_REAIS_SEM_NEON_START -->
+<style>
+  .solar-2r-neon-message {
+    display: none !important;
+  }
+
+  .solar-2r-final-flag {
+    overflow: hidden;
+    background: #ffffff;
+  }
+
+  .solar-2r-final-flag img {
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+
+  .solar-2r-final-flag .solar-2r-flag-fallback {
+    display: grid;
+    place-items: center;
+    width: 100%;
+    height: 100%;
+    font-size: 23px;
+    line-height: 1;
+  }
+</style>
+
+<script>
+(function () {
+  "use strict";
+
+  var FLAGS = {
+    "18-06-2026-a-tchequia-x-africa-do-sul": [
+      ["Tchéquia", "https://flagcdn.com/w80/cz.png", "🇨🇿"],
+      ["África do Sul", "https://flagcdn.com/w80/za.png", "🇿🇦"]
+    ],
+    "18-06-2026-b-suica-x-bosnia-e-herzegovina": [
+      ["Suíça", "https://flagcdn.com/w80/ch.png", "🇨🇭"],
+      ["Bósnia e Herzegovina", "https://flagcdn.com/w80/ba.png", "🇧🇦"]
+    ],
+    "18-06-2026-b-canada-x-catar": [
+      ["Canadá", "https://flagcdn.com/w80/ca.png", "🇨🇦"],
+      ["Catar", "https://flagcdn.com/w80/qa.png", "🇶🇦"]
+    ],
+    "18-06-2026-a-mexico-x-coreia-do-sul": [
+      ["México", "https://flagcdn.com/w80/mx.png", "🇲🇽"],
+      ["Coreia do Sul", "https://flagcdn.com/w80/kr.png", "🇰🇷"]
+    ],
+
+    "19-06-2026-d-estados-unidos-x-australia": [
+      ["Estados Unidos", "https://flagcdn.com/w80/us.png", "🇺🇸"],
+      ["Austrália", "https://flagcdn.com/w80/au.png", "🇦🇺"]
+    ],
+    "19-06-2026-c-escocia-x-marrocos": [
+      ["Escócia", "https://upload.wikimedia.org/wikipedia/commons/1/10/Flag_of_Scotland.svg", "🏴"],
+      ["Marrocos", "https://flagcdn.com/w80/ma.png", "🇲🇦"]
+    ],
+    "19-06-2026-c-brasil-x-haiti": [
+      ["Brasil", "https://flagcdn.com/w80/br.png", "🇧🇷"],
+      ["Haiti", "https://flagcdn.com/w80/ht.png", "🇭🇹"]
+    ],
+    "20-06-2026-d-turquia-x-paraguai": [
+      ["Turquia", "https://flagcdn.com/w80/tr.png", "🇹🇷"],
+      ["Paraguai", "https://flagcdn.com/w80/py.png", "🇵🇾"]
+    ],
+
+    "20-06-2026-f-holanda-x-suecia": [
+      ["Holanda", "https://flagcdn.com/w80/nl.png", "🇳🇱"],
+      ["Suécia", "https://flagcdn.com/w80/se.png", "🇸🇪"]
+    ],
+    "20-06-2026-e-alemanha-x-costa-do-marfim": [
+      ["Alemanha", "https://flagcdn.com/w80/de.png", "🇩🇪"],
+      ["Costa do Marfim", "https://flagcdn.com/w80/ci.png", "🇨🇮"]
+    ],
+    "20-06-2026-e-equador-x-curacao": [
+      ["Equador", "https://flagcdn.com/w80/ec.png", "🇪🇨"],
+      ["Curaçao", "https://flagcdn.com/w80/cw.png", "🇨🇼"]
+    ],
+    "21-06-2026-f-tunisia-x-japao": [
+      ["Tunísia", "https://flagcdn.com/w80/tn.png", "🇹🇳"],
+      ["Japão", "https://flagcdn.com/w80/jp.png", "🇯🇵"]
+    ],
+
+    "21-06-2026-h-espanha-x-arabia-saudita": [
+      ["Espanha", "https://flagcdn.com/w80/es.png", "🇪🇸"],
+      ["Arábia Saudita", "https://flagcdn.com/w80/sa.png", "🇸🇦"]
+    ],
+    "21-06-2026-g-belgica-x-ira": [
+      ["Bélgica", "https://flagcdn.com/w80/be.png", "🇧🇪"],
+      ["Irã", "https://flagcdn.com/w80/ir.png", "🇮🇷"]
+    ],
+    "21-06-2026-h-uruguai-x-cabo-verde": [
+      ["Uruguai", "https://flagcdn.com/w80/uy.png", "🇺🇾"],
+      ["Cabo Verde", "https://flagcdn.com/w80/cv.png", "🇨🇻"]
+    ],
+    "21-06-2026-g-nova-zelandia-x-egito": [
+      ["Nova Zelândia", "https://flagcdn.com/w80/nz.png", "🇳🇿"],
+      ["Egito", "https://flagcdn.com/w80/eg.png", "🇪🇬"]
+    ],
+
+    "22-06-2026-j-argentina-x-austria": [
+      ["Argentina", "https://flagcdn.com/w80/ar.png", "🇦🇷"],
+      ["Áustria", "https://flagcdn.com/w80/at.png", "🇦🇹"]
+    ],
+    "22-06-2026-i-franca-x-iraque": [
+      ["França", "https://flagcdn.com/w80/fr.png", "🇫🇷"],
+      ["Iraque", "https://flagcdn.com/w80/iq.png", "🇮🇶"]
+    ],
+    "22-06-2026-i-noruega-x-senegal": [
+      ["Noruega", "https://flagcdn.com/w80/no.png", "🇳🇴"],
+      ["Senegal", "https://flagcdn.com/w80/sn.png", "🇸🇳"]
+    ],
+    "23-06-2026-j-jordania-x-argelia": [
+      ["Jordânia", "https://flagcdn.com/w80/jo.png", "🇯🇴"],
+      ["Argélia", "https://flagcdn.com/w80/dz.png", "🇩🇿"]
+    ],
+
+    "23-06-2026-k-portugal-x-uzbequistao": [
+      ["Portugal", "https://flagcdn.com/w80/pt.png", "🇵🇹"],
+      ["Uzbequistão", "https://flagcdn.com/w80/uz.png", "🇺🇿"]
+    ],
+    "23-06-2026-l-inglaterra-x-gana": [
+      ["Inglaterra", "https://upload.wikimedia.org/wikipedia/en/b/be/Flag_of_England.svg", "🏴"],
+      ["Gana", "https://flagcdn.com/w80/gh.png", "🇬🇭"]
+    ],
+    "23-06-2026-l-panama-x-croacia": [
+      ["Panamá", "https://flagcdn.com/w80/pa.png", "🇵🇦"],
+      ["Croácia", "https://flagcdn.com/w80/hr.png", "🇭🇷"]
+    ],
+    "23-06-2026-k-colombia-x-rd-congo": [
+      ["Colômbia", "https://flagcdn.com/w80/co.png", "🇨🇴"],
+      ["RD Congo", "https://flagcdn.com/w80/cd.png", "🇨🇩"]
+    ]
+  };
+
+  function fallbackMarkup(emoji, name) {
+    return "<span class='solar-2r-flag-fallback' aria-label='Bandeira de " +
+      String(name).replace(/'/g, "&#039;") +
+      "'>" +
+      emoji +
+      "</span>";
+  }
+
+  function applyFlag(slot, flagData) {
+    if (!slot || !flagData) return;
+
+    var name = flagData[0];
+    var src = flagData[1];
+    var emoji = flagData[2];
+
+    slot.innerHTML = "";
+
+    var img = document.createElement("img");
+    img.src = src;
+    img.alt = "Bandeira de " + name;
+    img.loading = "lazy";
+    img.decoding = "async";
+
+    img.onerror = function () {
+      slot.innerHTML = fallbackMarkup(emoji, name);
+    };
+
+    slot.appendChild(img);
+  }
+
+  function applyRealFlagsAndHideNeon() {
+    Array.prototype.forEach.call(document.querySelectorAll(".solar-2r-neon-message"), function (item) {
+      item.remove();
+    });
+
+    Array.prototype.forEach.call(document.querySelectorAll(".solar-2r-final-card"), function (card) {
+      var id = card.getAttribute("data-game-card");
+      var flags = FLAGS[id];
+
+      if (!flags) return;
+
+      var slots = card.querySelectorAll(".solar-2r-final-flag");
+
+      applyFlag(slots[0], flags[0]);
+      applyFlag(slots[1], flags[1]);
+    });
+  }
+
+  document.addEventListener("click", function (event) {
+    var target = event.target;
+
+    if (!target || !target.closest) return;
+
+    if (target.closest("#btnSegundaRodadaNativa")) {
+      window.setTimeout(applyRealFlagsAndHideNeon, 30);
+      window.setTimeout(applyRealFlagsAndHideNeon, 180);
+      window.setTimeout(applyRealFlagsAndHideNeon, 500);
+    }
+  }, false);
+
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", function () {
+      window.setTimeout(applyRealFlagsAndHideNeon, 200);
+    });
+  } else {
+    window.setTimeout(applyRealFlagsAndHideNeon, 200);
+  }
+})();
+</script>
+<!-- SOLAR_2R_BANDEIRAS_REAIS_SEM_NEON_END -->
 </body>
 </html>
+
 
 
 
