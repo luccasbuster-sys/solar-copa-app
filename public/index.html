@@ -5565,6 +5565,41 @@
   }
 </style>
 <!-- SOLAR_SEGUNDA_RODADA_STYLE_END -->
+
+<!-- SOLAR_DESATIVAR_RANKING_ANTIGO_ORIGEM START -->
+<style>
+  #leaderboard,
+  #leaderboardSection,
+  #rankingSection,
+  #rankingContainer,
+  #rankingList,
+  #leaderboardList,
+  .leaderboard-section,
+  .ranking-section,
+  .ranking-container,
+  .ranking-list,
+  .classification-section,
+  .classification-container,
+  .leaderboard-card,
+  .ranking-card,
+  [data-section="ranking"],
+  [data-tab-content="ranking"],
+  [data-ranking-antigo="true"],
+  .solar-ranking-antigo-desativado {
+    display: none !important;
+    visibility: hidden !important;
+    opacity: 0 !important;
+    pointer-events: none !important;
+    height: 0 !important;
+    max-height: 0 !important;
+    overflow: hidden !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    border: 0 !important;
+  }
+</style>
+<!-- SOLAR_DESATIVAR_RANKING_ANTIGO_ORIGEM END -->
+
 </head>
 
 <body class="intro-active">
@@ -17317,8 +17352,158 @@ function renderLoggedContent() {
 
 </script>
 
+<!-- SOLAR_DESATIVAR_RANKING_ANTIGO_ORIGEM SCRIPT START -->
+<script>
+(function () {
+  function normalizar(value) {
+    return String(value || "")
+      .normalize("NFD")
+      .replace(/[\u0300-\u036f]/g, "")
+      .replace(/\s+/g, " ")
+      .trim()
+      .toUpperCase();
+  }
+
+  function contemRankingAntigo(texto) {
+    var clean = normalizar(texto);
+
+    var temTituloAntigo =
+      clean.includes("CLASSIFICACAO DOS USUARIOS") ||
+      clean.includes("ATUALIZAR CLASSIFICACAO");
+
+    var temPremios =
+      clean.includes("PREMIO 01") ||
+      clean.includes("PREMIO 02") ||
+      clean.includes("PREMIO 03") ||
+      clean.includes("PREMIO 04") ||
+      clean.includes("PREMIO 05") ||
+      clean.includes("PREMIO 06") ||
+      clean.includes("PREMIO 07") ||
+      clean.includes("PREMIO 08") ||
+      clean.includes("PREMIO 09") ||
+      clean.includes("PREMIO 10");
+
+    var temPontuacaoAntiga =
+      clean.includes("PTS") &&
+      (clean.includes("PALPITE") || clean.includes("PALPITES")) &&
+      temPremios;
+
+    return temTituloAntigo || temPontuacaoAntiga;
+  }
+
+  function protegerTelaPrincipal(el) {
+    var texto = normalizar(el.innerText || el.textContent || "");
+
+    return (
+      texto.includes("SEJA BEM-VINDO") ||
+      texto.includes("PRIMEIRA RODADA") ||
+      texto.includes("JOGO DE ABERTURA") ||
+      texto.includes("BOLAO SOLAR") ||
+      texto.includes("BOLÃO SOLAR") ||
+      texto.includes("SEGUNDA RODADA")
+    );
+  }
+
+  function removerRankingAntigo() {
+    var elementos = Array.from(document.querySelectorAll("section, article, main, div"));
+
+    elementos.forEach(function (el) {
+      if (!el || el === document.body || el === document.documentElement) return;
+
+      var texto = el.innerText || el.textContent || "";
+
+      if (!contemRankingAntigo(texto)) return;
+      if (protegerTelaPrincipal(el)) return;
+
+      var rect = el.getBoundingClientRect();
+      var clean = normalizar(texto);
+
+      if (clean.length > 15000) return;
+      if (rect.height > window.innerHeight * 1.8) return;
+
+      el.classList.add("solar-ranking-antigo-desativado");
+      el.setAttribute("data-ranking-antigo", "true");
+    });
+
+    // Remove cards individuais caso o container pai não tenha sido identificado.
+    Array.from(document.querySelectorAll("body *")).forEach(function (el) {
+      if (!el || el === document.body || el === document.documentElement) return;
+
+      var texto = normalizar(el.innerText || el.textContent || "");
+
+      var ehCard =
+        texto.includes("PREMIO") &&
+        texto.includes("PTS") &&
+        texto.includes("PALPITE") &&
+        texto.length < 1000;
+
+      if (!ehCard) return;
+      if (protegerTelaPrincipal(el)) return;
+
+      var rect = el.getBoundingClientRect();
+
+      if (rect.width < 250) return;
+      if (rect.height < 30 || rect.height > 180) return;
+
+      el.classList.add("solar-ranking-antigo-desativado");
+      el.setAttribute("data-ranking-antigo", "card");
+    });
+  }
+
+  function desativarFuncoesAntigas() {
+    var nomes = [
+      "loadLeaderboard",
+      "loadRanking",
+      "renderLeaderboard",
+      "renderRanking",
+      "updateLeaderboard",
+      "updateRanking",
+      "carregarClassificacao",
+      "atualizarClassificacao"
+    ];
+
+    nomes.forEach(function (nome) {
+      if (typeof window[nome] === "function" && !String(window[nome]).includes("segundaRodada")) {
+        try {
+          window[nome] = function () {
+            return null;
+          };
+        } catch (e) {}
+      }
+    });
+  }
+
+  function executar() {
+    desativarFuncoesAntigas();
+    removerRankingAntigo();
+  }
+
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", executar);
+  } else {
+    executar();
+  }
+
+  window.addEventListener("load", executar);
+  document.addEventListener("click", function () {
+    setTimeout(executar, 80);
+    setTimeout(executar, 400);
+  });
+
+  setInterval(executar, 1000);
+
+  window.solarDesativarRankingAntigo = executar;
+})();
+</script>
+<!-- SOLAR_DESATIVAR_RANKING_ANTIGO_ORIGEM SCRIPT END -->
+
 </body>
 </html>
+
+
+
+
+
 
 
 
