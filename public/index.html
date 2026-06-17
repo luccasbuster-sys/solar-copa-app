@@ -5738,14 +5738,14 @@
   <div class="segunda-ranking-head">
     <div>
       <span class="segunda-ranking-kicker">🏆 Ranking ao vivo</span>
-      <h2 id="rankingSegundaRodadaTitulo" class="segunda-ranking-title">Ranking geral atualizado</h2>
+      <h2 id="rankingSegundaRodadaTitulo" class="segunda-ranking-title">Top 10 do ranking geral</h2>
       <p class="segunda-ranking-subtitle">
-        Ranking geral atualizado atualizado, somando a 1ª rodada e mostrando quem já palpitou na 2ª rodada.
+        Top 10 do ranking geral atualizado, somando a 1ª rodada e mostrando quem já palpitou na 2ª rodada.
       </p>
     </div>
 
     <button id="segundaRankingRefresh" class="segunda-ranking-refresh" type="button">
-      Atualizar ranking geral
+      Atualizar Top 10
     </button>
   </div>
 
@@ -17084,7 +17084,7 @@ function renderLoggedContent() {
   if (!statusEl || !gridEl) return;
 
   if (titleEl) {
-    titleEl.textContent = "Ranking geral atualizado";
+    titleEl.textContent = "Top 10 do ranking geral";
   }
 
   function escapeHtml(value) {
@@ -17208,6 +17208,10 @@ function renderLoggedContent() {
       return;
     }
 
+    // SOLAR_TOP10_RANKING_PUBLICO
+    // A API pode trazer o ranking completo, mas a tela pública mostra somente os 10 primeiros.
+    rows = rows.slice(0, 10);
+
     const totalJaPalpitaram = resumo && resumo.totalUsuariosQueJaPalpitaram2R
       ? Number(resumo.totalUsuariosQueJaPalpitaram2R)
       : rows.filter(function (item) {
@@ -17220,7 +17224,7 @@ function renderLoggedContent() {
         <div class="segunda-ranking-user">
           <span class="segunda-ranking-name">${escapeHtml(totalJaPalpitaram)} participantes já palpitaram na 2ª rodada</span>
           <span class="segunda-ranking-meta" style="color:rgba(57,255,20,.78);">
-            Ranking geral atualizado com pontuação acumulada.
+            Top 10 do ranking geral com pontuação acumulada.
           </span>
         </div>
         <div class="segunda-ranking-score" style="background:#39ff14;color:#050505;">
@@ -17300,7 +17304,7 @@ function renderLoggedContent() {
   }
 
   if (refreshBtn) {
-    refreshBtn.textContent = "Atualizar ranking geral";
+    refreshBtn.textContent = "Atualizar Top 10";
     refreshBtn.addEventListener("click", carregarRankingSegundaRodada);
   }
 
@@ -17315,6 +17319,7 @@ function renderLoggedContent() {
 
 </body>
 </html>
+
 
 
 
