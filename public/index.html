@@ -15098,6 +15098,13 @@ function renderLoggedContent() {
   }
 
   function getUserKey() {
+    var globalKey = localStorage.getItem("solar_copa_2r_user_key_global");
+
+    if (globalKey && String(globalKey).trim() !== "") {
+      localStorage.setItem("solar_copa_neon_2r_user_key", globalKey);
+      return globalKey;
+    }
+
     var key = localStorage.getItem("solar_copa_neon_2r_user_key");
 
     if (!key) {
@@ -15210,7 +15217,9 @@ function renderLoggedContent() {
     root.innerHTML = html;
     rendered = true;
 
-    loadFromNeon();
+    setTimeout(function () {
+      loadFromNeon();
+    }, 300);
   }
 
   function getGame(card) {
@@ -15276,6 +15285,14 @@ function renderLoggedContent() {
         }
 
         setNeon(card, "is-saved", "Salvo no Neon<br><small>Palpite carregado do banco.</small>");
+        card.setAttribute("data-saved","true");
+
+        var saveBtnLoaded = card.querySelector(".solar-2r-final-save");
+        if (saveBtnLoaded) {
+          saveBtnLoaded.style.display = "none";
+        }
+
+        setStatus(card, "Palpite salvo.");
       });
     } catch (error) {
       Array.prototype.forEach.call(document.querySelectorAll(".solar-2r-final-card"), function (card) {
@@ -15332,6 +15349,14 @@ function renderLoggedContent() {
       }
 
       setNeon(card, "is-saved", "Salvo no Neon<br><small>Palpite confirmado no banco.</small>");
+
+      card.setAttribute("data-saved","true");
+
+      var saveBtnSaved = card.querySelector(".solar-2r-final-save");
+      if (saveBtnSaved) {
+        saveBtnSaved.style.display = "none";
+      }
+
       setStatus(card, "Palpite salvo.");
     } catch (error) {
       setNeon(card, "is-error", "Erro no Neon<br><small>" + escapeHtml(error.message || error) + "</small>");
@@ -15369,6 +15394,14 @@ function renderLoggedContent() {
       });
 
       setNeon(card, "is-saved", "Resetado no Neon<br><small>Palpite removido do banco.</small>");
+
+      card.removeAttribute("data-saved");
+
+      var saveBtnReset = card.querySelector(".solar-2r-final-save");
+      if (saveBtnReset) {
+        saveBtnReset.style.display = "";
+      }
+
       setStatus(card, "Palpite resetado.");
     } catch (error) {
       setNeon(card, "is-error", "Erro no Neon<br><small>" + escapeHtml(error.message || error) + "</small>");
@@ -15376,7 +15409,31 @@ function renderLoggedContent() {
     }
   }
 
-  function openSecondRound(event) {
+  
+// === SOLAR_2R_REATIVAR_SALVAR START ===
+document.addEventListener("input", function(e){
+
+  if (!e.target.classList.contains("solar-2r-final-score")) {
+    return;
+  }
+
+  var card = e.target.closest(".solar-2r-final-card");
+  if (!card) {
+    return;
+  }
+
+  card.removeAttribute("data-saved");
+
+  var saveBtn = card.querySelector(".solar-2r-final-save");
+
+  if (saveBtn) {
+    saveBtn.style.display = "";
+  }
+
+});
+// === SOLAR_2R_REATIVAR_SALVAR END ===
+
+function openSecondRound(event) {
     if (event) {
       event.preventDefault();
       event.stopPropagation();
@@ -17497,8 +17554,204 @@ function renderLoggedContent() {
 </script>
 <!-- SOLAR_DESATIVAR_RANKING_ANTIGO_ORIGEM SCRIPT END -->
 
+<!-- SOLAR_BANNER_ABERTURA_CARD_EXATO_START -->
+<style>
+  .solar-banner-abertura-card-exato {
+    width: min(940px, calc(100% - 32px));
+    margin: 22px auto 34px;
+    position: relative;
+    isolation: isolate;
+    border: 4px solid #050505;
+    border-radius: 30px;
+    background:
+      radial-gradient(circle at 12% 18%, rgba(0, 240, 255, .34), transparent 30%),
+      radial-gradient(circle at 88% 16%, rgba(61, 104, 255, .32), transparent 28%),
+      linear-gradient(120deg, #dfff22 0%, #fff4cf 48%, #ffbeb7 100%);
+    box-shadow: 10px 10px 0 #050505;
+    overflow: hidden;
+    padding: clamp(24px, 4.4vw, 48px);
+    min-height: 250px;
+    display: grid;
+    align-items: center;
+  }
+
+  .solar-banner-abertura-card-exato::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background-image:
+      linear-gradient(rgba(5,5,5,.07) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(5,5,5,.07) 1px, transparent 1px);
+    background-size: 34px 34px;
+    opacity: .55;
+    z-index: -2;
+  }
+
+  .solar-banner-abertura-card-exato::after {
+    content: "";
+    position: absolute;
+    right: -54px;
+    top: -54px;
+    width: 180px;
+    height: 180px;
+    border-radius: 50%;
+    background: #3868ff;
+    box-shadow: -70px 132px 0 #ff5f5f;
+    opacity: .8;
+    z-index: -1;
+  }
+
+  .solar-banner-abertura-card-exato__kicker {
+    display: inline-flex;
+    width: fit-content;
+    align-items: center;
+    justify-content: center;
+    padding: 9px 16px;
+    margin-bottom: 16px;
+    border: 3px solid #050505;
+    border-radius: 999px;
+    background: #00f0ff;
+    color: #050505;
+    box-shadow: 5px 5px 0 #050505;
+    font: 1000 12px/1 "Segoe UI", Arial, Helvetica, sans-serif;
+    letter-spacing: .04em;
+    text-transform: uppercase;
+  }
+
+  .solar-banner-abertura-card-exato__title {
+    margin: 0;
+    color: #050505;
+    font: 1000 clamp(34px, 7vw, 76px)/.86 "Segoe UI", Arial, Helvetica, sans-serif;
+    letter-spacing: -.07em;
+    text-transform: uppercase;
+    max-width: 800px;
+  }
+
+  .solar-banner-abertura-card-exato__text {
+    margin: 16px 0 0;
+    color: rgba(5,5,5,.78);
+    font: 900 clamp(14px, 2vw, 19px)/1.2 "Segoe UI", Arial, Helvetica, sans-serif;
+    max-width: 720px;
+  }
+
+  .solar-banner-abertura-card-exato__actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    margin-top: 24px;
+  }
+
+  .solar-banner-abertura-card-exato__btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 44px;
+    padding: 12px 18px;
+    border: 3px solid #050505;
+    border-radius: 999px;
+    background: #050505;
+    color: #ffffff;
+    text-decoration: none;
+    font: 1000 13px/1 "Segoe UI", Arial, Helvetica, sans-serif;
+    text-transform: uppercase;
+    box-shadow: 5px 5px 0 rgba(5,5,5,.24);
+  }
+
+  .solar-banner-abertura-card-exato__btn--ghost {
+    background: #ffffff;
+    color: #050505;
+  }
+
+  @media (max-width: 640px) {
+    .solar-banner-abertura-card-exato {
+      width: min(92vw, 560px);
+      min-height: 220px;
+      border-radius: 24px;
+      box-shadow: 7px 7px 0 #050505;
+    }
+
+    .solar-banner-abertura-card-exato__actions {
+      flex-direction: column;
+      align-items: stretch;
+    }
+  }
+</style>
+
+<script>
+(function () {
+  function normalizarSolarAbertura(texto) {
+    return String(texto || "")
+      .normalize("NFD")
+      .replace(/[\u0300-\u036f]/g, "")
+      .replace(/\s+/g, " ")
+      .trim()
+      .toUpperCase();
+  }
+
+  function criarBannerSolarAbertura() {
+    var banner = document.createElement("section");
+    banner.className = "solar-banner-abertura-card-exato";
+    banner.setAttribute("aria-label", "Banner Bolão Solar Copa 2026");
+
+    banner.innerHTML = [
+      '<div>',
+        '<div class="solar-banner-abertura-card-exato__kicker">Bolão Solar Copa 2026</div>',
+        '<h2 class="solar-banner-abertura-card-exato__title">A Copa começou no Bolão Solar</h2>',
+        '<p class="solar-banner-abertura-card-exato__text">Faça seus palpites, acompanhe sua pontuação e dispute o Top 10 do ranking geral.</p>',
+        '<div class="solar-banner-abertura-card-exato__actions">',
+          '<a class="solar-banner-abertura-card-exato__btn" href="#segunda-rodada">Ver 2ª rodada</a>',
+          '<a class="solar-banner-abertura-card-exato__btn solar-banner-abertura-card-exato__btn--ghost" href="#ranking">Ver ranking</a>',
+        '</div>',
+      '</div>'
+    ].join("");
+
+    return banner;
+  }
+
+  function trocarCardAberturaPorBanner() {
+    if (document.querySelector(".solar-banner-abertura-card-exato")) return;
+
+    var cards = Array.prototype.slice.call(document.querySelectorAll("article.match-card"));
+
+    for (var i = 0; i < cards.length; i++) {
+      var card = cards[i];
+      var texto = normalizarSolarAbertura(card.innerText || card.textContent || "");
+
+      var ehCardAbertura =
+        texto.indexOf("ABERTURA DA COPA 2026") !== -1 &&
+        texto.indexOf("MEXICO X AFRICA DO SUL") !== -1 &&
+        texto.indexOf("RESETAR PALPITE") !== -1;
+
+      if (ehCardAbertura) {
+        var banner = criarBannerSolarAbertura();
+        card.parentNode.insertBefore(banner, card);
+        card.remove();
+        console.info("[Solar] Card de abertura substituído por banner.");
+        return;
+      }
+    }
+
+    console.warn("[Solar] Card article.match-card do jogo de abertura não encontrado.");
+  }
+
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", trocarCardAberturaPorBanner);
+  } else {
+    trocarCardAberturaPorBanner();
+  }
+
+  window.addEventListener("load", trocarCardAberturaPorBanner);
+})();
+</script>
+<!-- SOLAR_BANNER_ABERTURA_CARD_EXATO_END -->
+
 </body>
 </html>
+
+
+
+
+
 
 
 
