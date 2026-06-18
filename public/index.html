@@ -5433,7 +5433,7 @@
 </style>
 
 
-<style id="ocultar-primeira-rodada-inline-index">
+<style id="ocultar-segunda-rodada-inline-index">
   #primeiraRodadaBolao {
     display: none !important;
   }
@@ -5455,8 +5455,8 @@
 
 
 
-<style id="primeira-rodada-abaixo-abertura-style">
-  .primeira-rodada-abaixo-abertura-wrap {
+<style id="segunda-rodada-abaixo-abertura-style">
+  .segunda-rodada-abaixo-abertura-wrap {
     width: min(1120px, calc(100% - 24px)) !important;
     margin: 14px auto 22px !important;
   }
@@ -5504,7 +5504,7 @@
   }
 
   @media (max-width: 760px) {
-    .primeira-rodada-abaixo-abertura-wrap,
+    .segunda-rodada-abaixo-abertura-wrap,
     #secaoPrimeiraRodadaAbaixoAbertura {
       width: calc(100% - 20px) !important;
     }
@@ -5632,7 +5632,7 @@
           <span class="eyebrow"><span class="pulse-dot"></span> Experiência Solar para a Copa do Mundo 2026</span>
           <h1>
             SEJA BEM-VINDO À
-            <span class="gradient-text">PRIMEIRA RODADA</span>
+            <span class="gradient-text">SEGUNDA RODADA</span>
           </h1>
           
           <div class="hero-actions">
@@ -5798,14 +5798,14 @@
   <div id="solarSegundaRodadaNativaConteudo"></div>
 </section>
 <section id="secaoPrimeiraRodadaNativa">
-          <div class="primeira-rodada-nativa-head">
+          <div class="segunda-rodada-nativa-head">
             <strong>Jogos da 1ª rodada</strong>
             <span id="contadorPrimeiraRodadaNativa">Carregando...</span>
           </div>
 
-          <div id="filtrosPrimeiraRodadaNativa" class="filtros-primeira-rodada-nativa"></div>
-          <div id="listaPrimeiraRodadaNativa" class="lista-primeira-rodada-nativa">
-            <div class="estado-primeira-rodada-nativa">Carregando jogos...</div>
+          <div id="filtrosPrimeiraRodadaNativa" class="filtros-segunda-rodada-nativa"></div>
+          <div id="listaPrimeiraRodadaNativa" class="lista-segunda-rodada-nativa">
+            <div class="estado-segunda-rodada-nativa">Carregando jogos...</div>
           </div>
         </section>
       </section>
@@ -5844,7 +5844,7 @@
       <section class="section reveal" id="jogos">
         <div class="section-head">
           <div>
-            <span class="section-kicker">Primeira rodada</span>
+            <span class="section-kicker">SEGUNDA RODADA</span>
             <h2>JOGOS POR GRUPO + SIMULADOR DE PLACAR</h2>
             <p>
               Escolha um grupo, simule os placares dos jogos e salve seus palpites no banco antes do início da partida.
@@ -6298,7 +6298,7 @@
       { title: "Brasil x Marrocos", text: "Confronto forte do Grupo C logo na estreia.", teams: ["Brasil", "Marrocos"] },
       { title: "Países Baixos x Japão", text: "Duas seleções técnicas abrindo o Grupo F.", teams: ["Países Baixos", "Japão"] },
       { title: "França x Senegal", text: "Jogo de alto interesse competitivo no Grupo I.", teams: ["França", "Senegal"] },
-      { title: "Inglaterra x Croácia", text: "Um dos grandes duelos da primeira rodada.", teams: ["Inglaterra", "Croácia"] }
+      { title: "Inglaterra x Croácia", text: "Um dos grandes duelos da SEGUNDA RODADA.", teams: ["Inglaterra", "Croácia"] }
     ];
 
     const state = {
@@ -6402,10 +6402,10 @@ function renderRegisteredState() {
       : state.user.username || "usuário";
 
     if (heroTitle) {
-      heroTitle.innerHTML = `SEJA BEM-VINDO À <span class="gradient-text">PRIMEIRA RODADA</span>`;
+      heroTitle.innerHTML = `SEJA BEM-VINDO À <span class="gradient-text">SEGUNDA RODADA</span>`;
     }
 
-    $("#heroLead").textContent = `Olá, ${displayName}! Seja bem-vindo à primeira rodada. Código vinculado: ${state.user.activationOrigin || "não informado"}. Veja os jogos do dia e salve seus palpites antes do início das partidas.`;
+    $("#heroLead").textContent = `Olá, ${displayName}! Seja bem-vindo à segunda rodada. Código vinculado: ${state.user.activationOrigin || "não informado"}. Veja os jogos do dia e salve seus palpites antes do início das partidas.`;
   } else {
     document.body.classList.remove("is-registered");
 
@@ -6418,10 +6418,10 @@ function renderRegisteredState() {
     }
 
     if (heroTitle) {
-      heroTitle.innerHTML = `SEJA BEM-VINDO À <span class="gradient-text">PRIMEIRA RODADA</span>`;
+      heroTitle.innerHTML = `SEJA BEM-VINDO À <span class="gradient-text">SEGUNDA RODADA</span>`;
     }
 
-    $("#heroLead").textContent = "Entre com seu telefone e senha para acessar a primeira rodada e salvar seus palpites.";
+    $("#heroLead").textContent = "Entre com seu telefone e senha para acessar a SEGUNDA RODADA e salvar seus palpites.";
   }
 }
 
@@ -7600,7 +7600,7 @@ function renderDailyMatches() {
     
 function getRoundStartDate() {
   /*
-    Início da primeira rodada.
+    Início da SEGUNDA RODADA.
     Enquanto estivermos testando, pode alterar essa data.
     Quando chegar o dia real, o navegador vai comparar automaticamente.
   */
@@ -13741,7 +13741,7 @@ function renderLoggedContent() {
 
 
 
-<script id="primeira-rodada-abaixo-abertura-script">
+<script id="segunda-rodada-abaixo-abertura-script">
   (() => {
     function normalizar(texto) {
       return String(texto || "")
@@ -13776,7 +13776,7 @@ function renderLoggedContent() {
     }
 
     function removerSeExistir() {
-      document.querySelectorAll(".primeira-rodada-abaixo-abertura-wrap, #secaoPrimeiraRodadaAbaixoAbertura").forEach(el => el.remove());
+      document.querySelectorAll(".segunda-rodada-abaixo-abertura-wrap, #secaoPrimeiraRodadaAbaixoAbertura").forEach(el => el.remove());
     }
 
     function instalar() {
@@ -13793,7 +13793,7 @@ function renderLoggedContent() {
       if (!abertura) return;
 
       const wrap = document.createElement("div");
-      wrap.className = "primeira-rodada-abaixo-abertura-wrap";
+      wrap.className = "segunda-rodada-abaixo-abertura-wrap";
 
       const btn = document.createElement("button");
       btn.id = "btnPrimeiraRodadaAbaixoAbertura";
@@ -13815,8 +13815,8 @@ function renderLoggedContent() {
           return;
         }
 
-        if (iframe && iframe.getAttribute("src") !== "/primeira-rodada.html") {
-          iframe.setAttribute("src", "/primeira-rodada.html");
+        if (iframe && iframe.getAttribute("src") !== "/segunda-rodada.html") {
+          iframe.setAttribute("src", "/segunda-rodada.html");
         }
 
         secao.classList.add("is-open");
@@ -13849,7 +13849,7 @@ function renderLoggedContent() {
 </script>
 
 
-<style id="primeira-rodada-nativa-style">
+<style id="segunda-rodada-nativa-style">
   #btnPrimeiraRodadaNativa {
     width: 100%;
     min-height: 52px;
@@ -13878,16 +13878,16 @@ function renderLoggedContent() {
     display: block;
   }
 
-  .primeira-rodada-nativa-head,
-  .filtros-primeira-rodada-nativa {
+  .segunda-rodada-nativa-head,
+  .filtros-segunda-rodada-nativa {
     display: flex;
     gap: 8px;
     flex-wrap: wrap;
     margin-bottom: 12px;
   }
 
-  .filtros-primeira-rodada-nativa button,
-  .lista-primeira-rodada-nativa button {
+  .filtros-segunda-rodada-nativa button,
+  .lista-segunda-rodada-nativa button {
     border: 3px solid #050505;
     border-radius: 999px;
     background: #fff;
@@ -13895,12 +13895,12 @@ function renderLoggedContent() {
     cursor: pointer;
   }
 
-  .filtros-primeira-rodada-nativa button.ativo,
-  .lista-primeira-rodada-nativa button.salvo {
+  .filtros-segunda-rodada-nativa button.ativo,
+  .lista-segunda-rodada-nativa button.salvo {
     background: #d6ff00;
   }
 
-  .primeira-rodada-jogo {
+  .segunda-rodada-jogo {
     margin-bottom: 14px;
     padding: 14px;
     border: 4px solid #050505;
@@ -13909,21 +13909,21 @@ function renderLoggedContent() {
     box-shadow: 4px 4px 0 #050505;
   }
 
-  .primeira-rodada-times {
+  .segunda-rodada-times {
     display: grid;
     grid-template-columns: 1fr auto 1fr;
     gap: 10px;
     align-items: center;
   }
 
-  .primeira-rodada-placar {
+  .segunda-rodada-placar {
     display: flex;
     align-items: center;
     gap: 6px;
     font-weight: 1000;
   }
 
-  .primeira-rodada-placar input {
+  .segunda-rodada-placar input {
     width: 48px;
     height: 42px;
     border: 3px solid #050505;
@@ -13932,32 +13932,32 @@ function renderLoggedContent() {
     font-weight: 1000;
   }
 
-  .primeira-rodada-away {
+  .segunda-rodada-away {
     text-align: right;
   }
 
   @media (max-width: 760px) {
-    .primeira-rodada-times {
+    .segunda-rodada-times {
       grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr) !important;
     }
 
-    .primeira-rodada-away {
+    .segunda-rodada-away {
       justify-content: flex-end !important;
       text-align: right !important;
     }
 
-    .primeira-rodada-placar {
+    .segunda-rodada-placar {
       justify-content: center;
     }
   }
 
-  .primeira-rodada-abaixo-abertura-wrap,
+  .segunda-rodada-abaixo-abertura-wrap,
   #secaoPrimeiraRodadaAbaixoAbertura {
     display: none !important;
   }
 </style>
 
-<script id="primeira-rodada-nativa-script">
+<script id="segunda-rodada-nativa-script">
   (() => {
     let jogosPrimeiraRodada = [];
     let grupoPrimeiraRodada = "TODOS";
@@ -13990,11 +13990,11 @@ function renderLoggedContent() {
       contador.textContent = jogosPrimeiraRodada.length + " jogos";
 
       lista.innerHTML = exibidos.map(jogo => `
-        <article class="primeira-rodada-jogo">
+        <article class="segunda-rodada-jogo">
           <small>${jogo.kickoffTimeBR || "--:--"} · ${formatarDataPrimeiraRodada(jogo.matchDate)}</small>
 
-          <div class="primeira-rodada-times">
-            <div class="primeira-rodada-time-info">
+          <div class="segunda-rodada-times">
+            <div class="segunda-rodada-time-info">
               ${typeof flagImage === "function" && typeof getTeam === "function" ? flagImage(getTeam(jogo.homeTeam || "")) : ""}
               <div>
                 <strong>${jogo.homeTeam || "-"}</strong><br>
@@ -14002,13 +14002,13 @@ function renderLoggedContent() {
               </div>
             </div>
 
-            <div class="primeira-rodada-placar">
+            <div class="segunda-rodada-placar">
               <input type="text" inputmode="numeric" pattern="[0-9]*" maxlength="2" id="nativa-home-${jogo.id}" value="${palpitesPrimeiraRodada[jogo.id]?.home ?? ""}">
               <span>x</span>
               <input type="text" inputmode="numeric" pattern="[0-9]*" maxlength="2" id="nativa-away-${jogo.id}" value="${palpitesPrimeiraRodada[jogo.id]?.away ?? ""}">
             </div>
 
-            <div class="primeira-rodada-time-info primeira-rodada-away">
+            <div class="segunda-rodada-time-info segunda-rodada-away">
               ${typeof flagImage === "function" && typeof getTeam === "function" ? flagImage(getTeam(jogo.awayTeam || "")) : ""}
               <div>
                 <strong>${jogo.awayTeam || "-"}</strong><br>
@@ -14017,7 +14017,7 @@ function renderLoggedContent() {
             </div>
           </div>
 
-          <div class="primeira-rodada-acoes">
+          <div class="segunda-rodada-acoes">
             <button
               data-primeira-save="${jogo.id}"
               class="${palpitesPrimeiraRodada[jogo.id] ? "salvo" : ""}"
@@ -14025,7 +14025,7 @@ function renderLoggedContent() {
             >
               ${palpitesPrimeiraRodada[jogo.id] ? "Palpite salvo" : "Salvar palpite"}
             </button>
-            <button class="primeira-rodada-reset-btn" data-primeira-reset="${jogo.id}">Resetar</button>
+            <button class="segunda-rodada-reset-btn" data-primeira-reset="${jogo.id}">Resetar</button>
           </div>
         </article>
       `).join("");
@@ -14077,7 +14077,7 @@ function renderLoggedContent() {
         });
         renderPrimeiraRodadaNativa();
       } catch (error) {
-        if (lista) lista.innerHTML = '<div class="estado-primeira-rodada-nativa">Erro ao carregar jogos da 1ª rodada.</div>';
+        if (lista) lista.innerHTML = '<div class="estado-segunda-rodada-nativa">Erro ao carregar jogos da 1ª rodada.</div>';
       }
     }
 
@@ -14211,20 +14211,20 @@ function renderLoggedContent() {
   })();
 </script>
 
-<style id="primeira-rodada-nativa-bandeiras-style">
-  .primeira-rodada-time-info {
+<style id="segunda-rodada-nativa-bandeiras-style">
+  .segunda-rodada-time-info {
     display: flex;
     align-items: center;
     gap: 10px;
     min-width: 0;
   }
 
-  .primeira-rodada-away {
+  .segunda-rodada-away {
     justify-content: flex-end;
     text-align: right;
   }
 
-  .primeira-rodada-time-info .flag {
+  .segunda-rodada-time-info .flag {
     width: 46px !important;
     height: 46px !important;
     min-width: 46px !important;
@@ -14235,24 +14235,24 @@ function renderLoggedContent() {
     box-shadow: 2px 2px 0 #050505 !important;
   }
 
-  .primeira-rodada-time-info .flag-img {
+  .segunda-rodada-time-info .flag-img {
     width: 100% !important;
     height: 100% !important;
     object-fit: cover !important;
     display: block !important;
   }
 
-  .primeira-rodada-time-info .flag-fallback {
+  .segunda-rodada-time-info .flag-fallback {
     display: none !important;
   }
 
   @media (max-width: 760px) {
-    .primeira-rodada-away {
+    .segunda-rodada-away {
       justify-content: flex-start;
       text-align: left;
     }
 
-    .primeira-rodada-time-info .flag {
+    .segunda-rodada-time-info .flag {
       width: 40px !important;
       height: 40px !important;
       min-width: 40px !important;
@@ -14260,128 +14260,128 @@ function renderLoggedContent() {
   }
 </style>
 
-<style id="primeira-rodada-mobile-final-style">
+<style id="segunda-rodada-mobile-final-style">
   @media (max-width: 760px) {
-    .primeira-rodada-jogo {
+    .segunda-rodada-jogo {
       padding: 12px !important;
     }
 
-    .primeira-rodada-times {
+    .segunda-rodada-times {
       grid-template-columns: 1fr auto 1fr !important;
       gap: 8px !important;
       align-items: center !important;
     }
 
-    .primeira-rodada-time-info {
+    .segunda-rodada-time-info {
       gap: 6px !important;
       align-items: center !important;
     }
 
-    .primeira-rodada-away {
+    .segunda-rodada-away {
       justify-content: flex-end !important;
       text-align: right !important;
     }
 
-    .primeira-rodada-time-info .flag {
+    .segunda-rodada-time-info .flag {
       width: 34px !important;
       height: 34px !important;
       min-width: 34px !important;
     }
 
-    .primeira-rodada-time-info strong {
+    .segunda-rodada-time-info strong {
       font-size: 12px !important;
       line-height: 1 !important;
       white-space: nowrap !important;
     }
 
-    .primeira-rodada-time-info small {
+    .segunda-rodada-time-info small {
       font-size: 8px !important;
       line-height: 1 !important;
       white-space: nowrap !important;
     }
 
-    .primeira-rodada-placar {
+    .segunda-rodada-placar {
       justify-content: center !important;
       gap: 4px !important;
     }
 
-    .primeira-rodada-placar input {
+    .segunda-rodada-placar input {
       width: 34px !important;
       height: 34px !important;
       font-size: 16px !important;
       border-radius: 9px !important;
     }
 
-    .primeira-rodada-placar span {
+    .segunda-rodada-placar span {
       font-size: 12px !important;
       font-weight: 1000 !important;
     }
   }
 </style>
 
-<style id="primeira-rodada-mobile-3-colunas-forcado">
+<style id="segunda-rodada-mobile-3-colunas-forcado">
   @media (max-width: 760px) {
-    #secaoPrimeiraRodadaNativa .primeira-rodada-times {
+    #secaoPrimeiraRodadaNativa .segunda-rodada-times {
       display: grid !important;
       grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr) !important;
       gap: 6px !important;
       align-items: center !important;
     }
 
-    #secaoPrimeiraRodadaNativa .primeira-rodada-time-info {
+    #secaoPrimeiraRodadaNativa .segunda-rodada-time-info {
       display: flex !important;
       align-items: center !important;
       gap: 6px !important;
       min-width: 0 !important;
     }
 
-    #secaoPrimeiraRodadaNativa .primeira-rodada-away {
+    #secaoPrimeiraRodadaNativa .segunda-rodada-away {
       justify-content: flex-end !important;
       text-align: right !important;
     }
 
-    #secaoPrimeiraRodadaNativa .primeira-rodada-away .flag {
+    #secaoPrimeiraRodadaNativa .segunda-rodada-away .flag {
       order: 2 !important;
     }
 
-    #secaoPrimeiraRodadaNativa .primeira-rodada-away > div {
+    #secaoPrimeiraRodadaNativa .segunda-rodada-away > div {
       order: 1 !important;
     }
 
-    #secaoPrimeiraRodadaNativa .primeira-rodada-time-info strong,
-    #secaoPrimeiraRodadaNativa .primeira-rodada-time-info small {
+    #secaoPrimeiraRodadaNativa .segunda-rodada-time-info strong,
+    #secaoPrimeiraRodadaNativa .segunda-rodada-time-info small {
       white-space: nowrap !important;
     }
 
-    #secaoPrimeiraRodadaNativa .primeira-rodada-time-info .flag {
+    #secaoPrimeiraRodadaNativa .segunda-rodada-time-info .flag {
       width: 34px !important;
       height: 34px !important;
       min-width: 34px !important;
     }
 
-    #secaoPrimeiraRodadaNativa .primeira-rodada-placar input {
+    #secaoPrimeiraRodadaNativa .segunda-rodada-placar input {
       width: 34px !important;
       height: 34px !important;
     }
   }
 </style>
 
-<style id="primeira-rodada-reset-nativo-style">
-  .primeira-rodada-acoes {
+<style id="segunda-rodada-reset-nativo-style">
+  .segunda-rodada-acoes {
     display: flex;
     gap: 8px;
     flex-wrap: wrap;
     margin-top: 8px;
   }
 
-  .primeira-rodada-acoes button {
+  .segunda-rodada-acoes button {
     min-height: 32px;
     padding: 0 12px;
   }
 </style>
 
-<style id="primeira-rodada-reset-visivel-final">
-  #secaoPrimeiraRodadaNativa .primeira-rodada-acoes {
+<style id="segunda-rodada-reset-visivel-final">
+  #secaoPrimeiraRodadaNativa .segunda-rodada-acoes {
     display: flex !important;
     gap: 8px !important;
     flex-wrap: wrap !important;
@@ -14389,7 +14389,7 @@ function renderLoggedContent() {
     width: 100% !important;
   }
 
-  #secaoPrimeiraRodadaNativa .primeira-rodada-acoes button {
+  #secaoPrimeiraRodadaNativa .segunda-rodada-acoes button {
     display: inline-flex !important;
     align-items: center !important;
     justify-content: center !important;
@@ -14413,15 +14413,15 @@ function renderLoggedContent() {
   }
 </style>
 
-<style id="primeira-rodada-reset-final-definitivo">
-  #secaoPrimeiraRodadaNativa .primeira-rodada-acoes {
+<style id="segunda-rodada-reset-final-definitivo">
+  #secaoPrimeiraRodadaNativa .segunda-rodada-acoes {
     display: grid !important;
     grid-template-columns: 1fr 1fr !important;
     gap: 8px !important;
     margin-top: 10px !important;
   }
 
-  #secaoPrimeiraRodadaNativa .primeira-rodada-acoes button {
+  #secaoPrimeiraRodadaNativa .segunda-rodada-acoes button {
     width: 100% !important;
     min-height: 34px !important;
     border: 3px solid #050505 !important;
@@ -14439,14 +14439,14 @@ function renderLoggedContent() {
     color: #050505 !important;
   }
 
-  #secaoPrimeiraRodadaNativa .primeira-rodada-reset-btn {
+  #secaoPrimeiraRodadaNativa .segunda-rodada-reset-btn {
     background: #ffffff !important;
     color: #050505 !important;
   }
 </style>
 
-<style id="primeira-rodada-input-visivel-final">
-  #secaoPrimeiraRodadaNativa .primeira-rodada-placar input {
+<style id="segunda-rodada-input-visivel-final">
+  #secaoPrimeiraRodadaNativa .segunda-rodada-placar input {
     background: #fffdf2 !important;
     color: #050505 !important;
     -webkit-text-fill-color: #050505 !important;
@@ -14458,15 +14458,15 @@ function renderLoggedContent() {
     appearance: textfield !important;
   }
 
-  #secaoPrimeiraRodadaNativa .primeira-rodada-placar input:focus {
+  #secaoPrimeiraRodadaNativa .segunda-rodada-placar input:focus {
     background: #d6ff00 !important;
     color: #050505 !important;
     -webkit-text-fill-color: #050505 !important;
   }
 </style>
 
-<style id="primeira-rodada-input-text-final">
-  #secaoPrimeiraRodadaNativa .primeira-rodada-placar input {
+<style id="segunda-rodada-input-text-final">
+  #secaoPrimeiraRodadaNativa .segunda-rodada-placar input {
     color: #050505 !important;
     -webkit-text-fill-color: #050505 !important;
     background: #fffdf2 !important;
@@ -14477,13 +14477,13 @@ function renderLoggedContent() {
   }
 </style>
 
-<style id="primeira-rodada-mobile-definitivo-final">
+<style id="segunda-rodada-mobile-definitivo-final">
   @media (max-width: 760px) {
-    #secaoPrimeiraRodadaNativa .primeira-rodada-jogo {
+    #secaoPrimeiraRodadaNativa .segunda-rodada-jogo {
       padding: 14px !important;
     }
 
-    #secaoPrimeiraRodadaNativa .primeira-rodada-times {
+    #secaoPrimeiraRodadaNativa .segunda-rodada-times {
       display: grid !important;
       grid-template-columns: 1fr 1fr !important;
       grid-template-areas:
@@ -14493,23 +14493,23 @@ function renderLoggedContent() {
       align-items: center !important;
     }
 
-    #secaoPrimeiraRodadaNativa .primeira-rodada-time-info:first-child {
+    #secaoPrimeiraRodadaNativa .segunda-rodada-time-info:first-child {
       grid-area: home !important;
     }
 
-    #secaoPrimeiraRodadaNativa .primeira-rodada-away {
+    #secaoPrimeiraRodadaNativa .segunda-rodada-away {
       grid-area: away !important;
       justify-content: flex-end !important;
       text-align: right !important;
     }
 
-    #secaoPrimeiraRodadaNativa .primeira-rodada-placar {
+    #secaoPrimeiraRodadaNativa .segunda-rodada-placar {
       grid-area: score !important;
       justify-content: center !important;
       margin-top: 4px !important;
     }
 
-    #secaoPrimeiraRodadaNativa .primeira-rodada-time-info strong {
+    #secaoPrimeiraRodadaNativa .segunda-rodada-time-info strong {
       display: block !important;
       max-width: 120px !important;
       font-size: 14px !important;
@@ -14519,12 +14519,12 @@ function renderLoggedContent() {
       text-overflow: ellipsis !important;
     }
 
-    #secaoPrimeiraRodadaNativa .primeira-rodada-time-info small {
+    #secaoPrimeiraRodadaNativa .segunda-rodada-time-info small {
       font-size: 9px !important;
       white-space: nowrap !important;
     }
 
-    #secaoPrimeiraRodadaNativa .primeira-rodada-placar input {
+    #secaoPrimeiraRodadaNativa .segunda-rodada-placar input {
       width: 48px !important;
       height: 54px !important;
       padding: 0 !important;
@@ -14542,12 +14542,12 @@ function renderLoggedContent() {
       -webkit-appearance: none !important;
     }
 
-    #secaoPrimeiraRodadaNativa .primeira-rodada-placar input:focus {
+    #secaoPrimeiraRodadaNativa .segunda-rodada-placar input:focus {
       background: #d6ff00 !important;
       outline: none !important;
     }
 
-    #secaoPrimeiraRodadaNativa .primeira-rodada-acoes {
+    #secaoPrimeiraRodadaNativa .segunda-rodada-acoes {
       grid-template-columns: 1fr 1fr !important;
       margin-top: 12px !important;
     }
@@ -17199,7 +17199,7 @@ function renderLoggedContent() {
   function getFirstRoundPoints(item) {
     return toNumber(firstValid(
       item.pointsFirstRound,
-      item.pontos_primeira_rodada,
+      item.pontos_segunda_rodada,
       item.pontos_sem_segunda_rodada,
       item.firstRoundPoints
     ));
@@ -17396,7 +17396,7 @@ function renderLoggedContent() {
 
     return (
       texto.includes("SEJA BEM-VINDO") ||
-      texto.includes("PRIMEIRA RODADA") ||
+      texto.includes("SEGUNDA RODADA") ||
       texto.includes("JOGO DE ABERTURA") ||
       texto.includes("BOLAO SOLAR") ||
       texto.includes("BOLÃO SOLAR") ||
@@ -17499,6 +17499,8 @@ function renderLoggedContent() {
 
 </body>
 </html>
+
+
 
 
 
