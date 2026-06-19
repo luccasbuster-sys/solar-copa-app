@@ -4533,59 +4533,32 @@ app.get("/api/second-round-matches", async (req, res) => {
       byGroup.get(group).push(match);
     }
 
-    const secondRound = [];
-
-    for (const [group, matches] of byGroup.entries()) {
-      const ordered = matches.sort((a, b) => {
-        const dateA = new Date(a.kickoff_at).getTime();
-        const dateB = new Date(b.kickoff_at).getTime();
-
-        if (dateA !== dateB) return dateA - dateB;
-
-        return String(a.id).localeCompare(String(b.id));
-      });
-
-      ordered.slice(2, 4).forEach((match) => {
-        secondRound.push(match);
-      });
-    }
-
-    secondRound.sort((a, b) => {
-      const dateA = new Date(a.kickoff_at).getTime();
-      const dateB = new Date(b.kickoff_at).getTime();
-
-      if (dateA !== dateB) return dateA - dateB;
-
-      return String(a.id).localeCompare(String(b.id));
-    });
-
-    const matches = secondRound.map((match) => {
-      const kickoffDate = parseMatchDateTime(match);
-
-      const kickoffTimeBR = kickoffDate
-        ? kickoffDate.toLocaleTimeString("pt-BR", {
-            timeZone: "America/Sao_Paulo",
-            hour: "2-digit",
-            minute: "2-digit",
-            hour12: false
-          })
-        : match.kickoff_time_br;
-
-      const kickoffAt = kickoffDate
-        ? kickoffDate.toISOString()
-        : match.kickoff_at;
-
-      return {
-        id: match.id,
-        groupName: match.group_name,
-        homeTeam: match.home_team,
-        awayTeam: match.away_team,
-        matchDate: match.match_date,
-        kickoffTimeBR,
-        kickoffAt,
-        timezone: "America/Sao_Paulo"
-      };
-    });
+    const matches = [
+      { id:"18-06-2026-a-tchequia-x-africa-do-sul", groupName:"A", homeTeam:"Tchéquia", awayTeam:"África do Sul", matchDate:"2026-06-18", kickoffTimeBR:"13:00" },
+      { id:"18-06-2026-b-suica-x-bosnia-e-herzegovina", groupName:"B", homeTeam:"Suíça", awayTeam:"Bósnia e Herzegovina", matchDate:"2026-06-18", kickoffTimeBR:"16:00" },
+      { id:"18-06-2026-b-canada-x-catar", groupName:"B", homeTeam:"Canadá", awayTeam:"Catar", matchDate:"2026-06-18", kickoffTimeBR:"19:00" },
+      { id:"18-06-2026-a-mexico-x-coreia-do-sul", groupName:"A", homeTeam:"México", awayTeam:"Coreia do Sul", matchDate:"2026-06-18", kickoffTimeBR:"22:00" },
+      { id:"19-06-2026-d-estados-unidos-x-australia", groupName:"D", homeTeam:"Estados Unidos", awayTeam:"Austrália", matchDate:"2026-06-19", kickoffTimeBR:"16:00" },
+      { id:"19-06-2026-c-escocia-x-marrocos", groupName:"C", homeTeam:"Escócia", awayTeam:"Marrocos", matchDate:"2026-06-19", kickoffTimeBR:"19:00" },
+      { id:"19-06-2026-c-brasil-x-haiti", groupName:"C", homeTeam:"Brasil", awayTeam:"Haiti", matchDate:"2026-06-19", kickoffTimeBR:"21:30" },
+      { id:"20-06-2026-d-turquia-x-paraguai", groupName:"D", homeTeam:"Turquia", awayTeam:"Paraguai", matchDate:"2026-06-20", kickoffTimeBR:"00:00" },
+      { id:"20-06-2026-f-holanda-x-suecia", groupName:"F", homeTeam:"Holanda", awayTeam:"Suécia", matchDate:"2026-06-20", kickoffTimeBR:"14:00" },
+      { id:"20-06-2026-e-alemanha-x-costa-do-marfim", groupName:"E", homeTeam:"Alemanha", awayTeam:"Costa do Marfim", matchDate:"2026-06-20", kickoffTimeBR:"17:00" },
+      { id:"20-06-2026-e-equador-x-curacao", groupName:"E", homeTeam:"Equador", awayTeam:"Curaçao", matchDate:"2026-06-20", kickoffTimeBR:"21:00" },
+      { id:"21-06-2026-f-tunisia-x-japao", groupName:"F", homeTeam:"Tunísia", awayTeam:"Japão", matchDate:"2026-06-21", kickoffTimeBR:"01:00" },
+      { id:"21-06-2026-h-espanha-x-arabia-saudita", groupName:"H", homeTeam:"Espanha", awayTeam:"Arábia Saudita", matchDate:"2026-06-21", kickoffTimeBR:"13:00" },
+      { id:"21-06-2026-g-belgica-x-ira", groupName:"G", homeTeam:"Bélgica", awayTeam:"Irã", matchDate:"2026-06-21", kickoffTimeBR:"16:00" },
+      { id:"21-06-2026-h-uruguai-x-cabo-verde", groupName:"H", homeTeam:"Uruguai", awayTeam:"Cabo Verde", matchDate:"2026-06-21", kickoffTimeBR:"19:00" },
+      { id:"21-06-2026-g-nova-zelandia-x-egito", groupName:"G", homeTeam:"Nova Zelândia", awayTeam:"Egito", matchDate:"2026-06-21", kickoffTimeBR:"22:00" },
+      { id:"22-06-2026-j-argentina-x-austria", groupName:"J", homeTeam:"Argentina", awayTeam:"Áustria", matchDate:"2026-06-22", kickoffTimeBR:"14:00" },
+      { id:"22-06-2026-i-franca-x-iraque", groupName:"I", homeTeam:"França", awayTeam:"Iraque", matchDate:"2026-06-22", kickoffTimeBR:"18:00" },
+      { id:"22-06-2026-i-noruega-x-senegal", groupName:"I", homeTeam:"Noruega", awayTeam:"Senegal", matchDate:"2026-06-22", kickoffTimeBR:"21:00" },
+      { id:"23-06-2026-j-jordania-x-argelia", groupName:"J", homeTeam:"Jordânia", awayTeam:"Argélia", matchDate:"2026-06-23", kickoffTimeBR:"00:00" },
+      { id:"23-06-2026-k-portugal-x-uzbequistao", groupName:"K", homeTeam:"Portugal", awayTeam:"Uzbequistão", matchDate:"2026-06-23", kickoffTimeBR:"14:00" },
+      { id:"23-06-2026-l-inglaterra-x-gana", groupName:"L", homeTeam:"Inglaterra", awayTeam:"Gana", matchDate:"2026-06-23", kickoffTimeBR:"17:00" },
+      { id:"23-06-2026-l-panama-x-croacia", groupName:"L", homeTeam:"Panamá", awayTeam:"Croácia", matchDate:"2026-06-23", kickoffTimeBR:"20:00" },
+      { id:"23-06-2026-k-colombia-x-rd-congo", groupName:"K", homeTeam:"Colômbia", awayTeam:"RD Congo", matchDate:"2026-06-23", kickoffTimeBR:"23:00" }
+    ];
 
     return res.json({
       success: true,
@@ -7116,6 +7089,8 @@ app.post("/api/admin/segunda-rodada-neon/recalcular-pontos", async function (req
 app.listen(PORT, () => {
   console.log(`Servidor rodando em http://localhost:${PORT}`);
 });
+
+
 
 
 

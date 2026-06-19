@@ -15040,6 +15040,14 @@ function renderLoggedContent() {
   var LOCK_MINUTES = 15;
   var rendered = false;
   var loadedNeon = false;
+  // SOLAR_2R_DIAGNOSTICO_MOBILE
+  try {
+    console.log("[SOLAR 2R] neonKey =", localStorage.getItem("solar_copa_neon_2r_user_key"));
+    console.log("[SOLAR 2R] globalKey =", localStorage.getItem("solar_copa_2r_user_key_global"));
+  } catch (e) {
+    console.warn("[SOLAR 2R] diagnostico falhou", e);
+  }
+
 
   var games = [
     ["18-06-2026-a-tchequia-x-africa-do-sul", "18/06/2026", "13:00", "12:00 local", "Grupo A", "Atlanta", "Tchéquia", "África do Sul", "🇨🇿", "🇿🇦", "2026-06-18T13:00:00-03:00"],
@@ -15266,7 +15274,19 @@ function renderLoggedContent() {
         throw new Error(data.message || "Neon não retornou confirmação.");
       }
 
-      var map = {};
+      console.log("[2R] loadFromNeon iniciado");
+
+var map = {};
+
+console.log(
+  "[2R] cards:",
+  document.querySelectorAll(".solar-2r-final-card").length
+);
+
+console.log(
+  "[2R] palpites recebidos:",
+  (data.palpites || []).length
+);
       (data.palpites || []).forEach(function (p) {
         if (p && p.game_id) map[p.game_id] = p;
       });
@@ -16539,6 +16559,15 @@ function openSecondRound(event) {
   }
 
   function getUserKey() {
+    try {
+      var globalKey = localStorage.getItem("solar_copa_2r_user_key_global");
+
+      if (globalKey && String(globalKey).trim() !== "") {
+        localStorage.setItem(STORAGE_KEY, globalKey);
+        return String(globalKey).trim();
+      }
+    } catch (error) {}
+
     var local = readStorage(window.localStorage);
     var session = readStorage(window.sessionStorage);
     var identity = local.identity || session.identity;
@@ -17747,6 +17776,9 @@ function openSecondRound(event) {
 
 </body>
 </html>
+
+
+
 
 
 
