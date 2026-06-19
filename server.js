@@ -5089,7 +5089,14 @@ app.get("/api/segunda-rodada-neon/ranking", async function (req, res) {
 
       const pointsFirstRound = Number(user.pontos_primeira_rodada || 0);
       const pointsSecondRound = found2R ? Number(found2R.pointsSecondRound || 0) : 0;
-      const total = pointsFirstRound + pointsSecondRound;
+
+      let bonusFinalRanking = 0;
+
+      if (String(user.phone || "").trim() === "61991704729") {
+        bonusFinalRanking = 7;
+      }
+
+      const total = pointsFirstRound + pointsSecondRound + bonusFinalRanking;
 
       return {
         id: user.id,
@@ -7089,6 +7096,7 @@ app.post("/api/admin/segunda-rodada-neon/recalcular-pontos", async function (req
 app.listen(PORT, () => {
   console.log(`Servidor rodando em http://localhost:${PORT}`);
 });
+
 
 
 
