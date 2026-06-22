@@ -12487,7 +12487,7 @@ function renderLoggedContent() {
   (() => {
     const officialCodes = {
       OUTLET2026: "Outlet 2026",
-      TRANSPORTE2026: "Transporte 2026"
+      TRANSPORTE2026: "Transporte 2026",
     
       ADM2026: "Administrativo 2026",
     };
@@ -15040,6 +15040,7 @@ function renderLoggedContent() {
   var LOCK_MINUTES = 15;
   var rendered = false;
   var loadedNeon = false;
+var fixedNeonUserKey = null;
   // SOLAR_2R_DIAGNOSTICO_MOBILE
   try {
     console.log("[SOLAR 2R] neonKey =", localStorage.getItem("solar_copa_neon_2r_user_key"));
@@ -15240,9 +15241,16 @@ function renderLoggedContent() {
     root.innerHTML = html;
     rendered = true;
 
+    loadedNeon = false;
+
     setTimeout(function () {
       loadFromNeon();
     }, 300);
+
+    setTimeout(function () {
+      loadedNeon = false;
+      loadFromNeon();
+    }, 2000);
   }
 
   function getGame(card) {
@@ -15277,7 +15285,12 @@ function renderLoggedContent() {
     loadedNeon = true;
 
     try {
-      var res = await fetchTimeout(API + "?clientUserKey=" + encodeURIComponent(getUserKey()), {
+      if (!fixedNeonUserKey) {
+  fixedNeonUserKey = getUserKey();
+  console.log("[2R] fixedNeonUserKey =", fixedNeonUserKey);
+}
+
+var res = await fetchTimeout(API + "?clientUserKey=" + encodeURIComponent(fixedNeonUserKey), {
         method: "GET",
         credentials: "same-origin",
         headers: { "Accept": "application/json" }
@@ -15302,8 +15315,18 @@ console.log(
   "[2R] palpites recebidos:",
   (data.palpites || []).length
 );
+      function normalizeGameId(v) {
+        return String(v || "")
+          .trim()
+          .toLowerCase()
+          .normalize("NFD")
+          .replace(/[\u0300-\u036f]/g, "");
+      }
+
       (data.palpites || []).forEach(function (p) {
-        if (p && p.game_id) map[p.game_id] = p;
+        if (p && p.game_id) {
+          map[normalizeGameId(p.game_id)] = p;
+        }
       });
 
       if (!document.querySelectorAll(".solar-2r-final-card").length) {
@@ -15317,7 +15340,12 @@ console.log(
 
       Array.prototype.forEach.call(document.querySelectorAll(".solar-2r-final-card"), function (card) {
         var id = card.getAttribute("data-game-card");
-        var p = map[id];
+        var p = map[normalizeGameId(id)];
+
+        console.log("[2R] card id =", id);
+        console.log("[2R] map keys =", Object.keys(map));
+        console.log("[2R] procurando =", id);
+        console.log("[2R] palpite encontrado =", !!p);
 
         if (!p) return;
 
@@ -16700,6 +16728,9 @@ function openSecondRound(event) {
 
       if (String(urlText).indexOf("/api/segunda-rodada-neon/palpites") !== -1) {
         var userKey = getUserKey();
+
+console.log("[2R] USERKEY USADA =", userKey);
+console.log("[2R] GLOBAL =", localStorage.getItem("solar_copa_2r_user_key_global"));
         var nextInit = Object.assign({}, init || {});
         var method = String(nextInit.method || "GET").toUpperCase();
 
@@ -16728,6 +16759,9 @@ function openSecondRound(event) {
 
   async function syncOldLocalKeys() {
     var userKey = getUserKey();
+
+console.log("[2R] USERKEY USADA =", userKey);
+console.log("[2R] GLOBAL =", localStorage.getItem("solar_copa_2r_user_key_global"));
 
     if (!userKey || /^local-/i.test(userKey)) return;
 
@@ -17860,6 +17894,19 @@ function openSecondRound(event) {
 
 </body>
 </html>
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
