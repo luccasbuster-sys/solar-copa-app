@@ -1,4 +1,4 @@
-﻿require("dotenv").config();
+require("dotenv").config();
 const express = require("express");
 const bcrypt = require("bcrypt");
 const session = require("express-session");
@@ -5007,7 +5007,7 @@ app.get("/api/segunda-rodada-neon/ranking", async function (req, res) {
       SELECT
         COALESCE(v.real_user_key, p.user_key) AS user_key_classificacao,
         COUNT(DISTINCT p.game_id)::int AS palpites_segunda_rodada,
-        COUNT(DISTINCT p.game_id)::int AS pontos_segunda_rodada,
+        COALESCE(MAX(sp.pontos_segunda_rodada),0)::int AS pontos_segunda_rodada,
         CASE WHEN COUNT(DISTINCT p.game_id) >= 24 THEN TRUE ELSE FALSE END AS rodada_2_completa,
         MIN(p.created_at) AS primeiro_palpite_2r,
         MAX(p.updated_at) AS ultimo_palpite_2r,
@@ -5015,6 +5015,8 @@ app.get("/api/segunda-rodada-neon/ranking", async function (req, res) {
       FROM solar_segunda_rodada_palpites p
       LEFT JOIN solar_2r_user_key_vinculos v
         ON v.old_user_key = p.user_key
+      LEFT JOIN solar_segunda_rodada_pontos sp
+        ON sp.user_key = COALESCE(v.real_user_key, p.user_key)
       WHERE p.game_id IS NOT NULL
       GROUP BY COALESCE(v.real_user_key, p.user_key)
     `);
@@ -6045,33 +6047,124 @@ app.post("/api/segunda-rodada-neon/palpites", async function (req, res) {
   async function recalcularPontos2R() {
     await ensureTables();
 
+    const GAME_MAP = {
+      "18-06-2026-a-tchequia-x-africa-do-sul": "A-03",
+      "18-06-2026-a-mexico-x-coreia-do-sul": "A-04",
+      "18-06-2026-b-suica-x-bosnia-e-herzegovina": "B-03",
+      "18-06-2026-b-canada-x-catar": "B-04",
+      "19-06-2026-c-escocia-x-marrocos": "C-03",
+      "19-06-2026-c-brasil-x-haiti": "C-04",
+      "19-06-2026-d-estados-unidos-x-australia": "D-03",
+      "20-06-2026-d-turquia-x-paraguai": "D-04",
+      "20-06-2026-e-alemanha-x-costa-do-marfim": "E-03",
+      "20-06-2026-e-equador-x-curacao": "E-04",
+      "20-06-2026-f-holanda-x-suecia": "F-03",
+      "21-06-2026-f-tunisia-x-japao": "F-04",
+      "21-06-2026-g-belgica-x-ira": "G-03",
+      "21-06-2026-g-nova-zelandia-x-egito": "G-04",
+      "21-06-2026-h-espanha-x-arabia-saudita": "H-03",
+      "21-06-2026-h-uruguai-x-cabo-verde": "H-04",
+      "22-06-2026-i-franca-x-iraque": "I-03",
+      "22-06-2026-i-noruega-x-senegal": "I-04",
+      "22-06-2026-j-argentina-x-austria": "J-03",
+      "23-06-2026-j-jordania-x-argelia": "J-04",
+      "23-06-2026-k-portugal-x-uzbequistao": "K-03",
+      "23-06-2026-k-colombia-x-rd-congo": "K-04",
+      "23-06-2026-l-inglaterra-x-gana": "L-03",
+      "23-06-2026-l-panama-x-croacia": "L-04"
+    };
+
     await getPool().query(`DELETE FROM solar_segunda_rodada_pontos`);
 
-    await getPool().query(`
-      INSERT INTO solar_segunda_rodada_pontos (
-        user_key,
-        palpites_salvos,
-        pontos_segunda_rodada,
-        rodada_completa,
-        total_jogos,
-        primeiro_palpite,
-        ultimo_palpite,
-        updated_at
-      )
-      SELECT
-        COALESCE(v.real_user_key, p.user_key) AS user_key,
-        COUNT(DISTINCT p.game_id)::int AS palpites_salvos,
-        COUNT(DISTINCT p.game_id)::int AS pontos_segunda_rodada,
-        CASE WHEN COUNT(DISTINCT p.game_id) = 24 THEN TRUE ELSE FALSE END AS rodada_completa,
-        24 AS total_jogos,
-        MIN(p.created_at) AS primeiro_palpite,
-        MAX(p.updated_at) AS ultimo_palpite,
-        NOW() AS updated_at
-      FROM solar_segunda_rodada_palpites p
-      LEFT JOIN solar_2r_user_key_vinculos v
-        ON v.old_user_key = p.user_key
-      GROUP BY COALESCE(v.real_user_key, p.user_key)
+    const resultados = await getPool().query(`
+      SELECT match_id, home_score, away_score
+      FROM match_results
     `);
+
+    const resultMap = new Map();
+
+    for (const r of resultados.rows) {
+      resultMap.set(String(r.match_id), r);
+    }
+
+    const palpites = await getPool().query(`
+      SELECT *
+      FROM solar_segunda_rodada_palpites
+      ORDER BY user_key
+    `);
+
+    const users = new Map();
+
+    for (const p of palpites.rows) {
+
+      const userKey = String(p.user_key);
+      const resultId = GAME_MAP[p.game_id];
+
+      let pontosJogo = 1;
+
+      if (resultId && resultMap.has(resultId)) {
+
+        const r = resultMap.get(resultId);
+
+        const predHome = Number(p.home_score);
+        const predAway = Number(p.away_score);
+
+        const realHome = Number(r.home_score);
+        const realAway = Number(r.away_score);
+
+        const predResult = Math.sign(predHome - predAway);
+        const realResult = Math.sign(realHome - realAway);
+
+        if (predResult === realResult) {
+          pontosJogo += 3;
+        }
+
+        if (predHome === realHome && predAway === realAway) {
+          pontosJogo += 2;
+        }
+      }
+
+      if (!users.has(userKey)) {
+        users.set(userKey, {
+          palpites: 0,
+          pontos: 0,
+          primeiro: p.created_at,
+          ultimo: p.updated_at
+        });
+      }
+
+      const u = users.get(userKey);
+
+      u.palpites += 1;
+      u.pontos += pontosJogo;
+      u.ultimo = p.updated_at;
+    }
+
+    for (const [userKey, u] of users.entries()) {
+
+      await getPool().query(`
+        INSERT INTO solar_segunda_rodada_pontos (
+          user_key,
+          palpites_salvos,
+          pontos_segunda_rodada,
+          rodada_completa,
+          total_jogos,
+          primeiro_palpite,
+          ultimo_palpite,
+          updated_at
+        )
+        VALUES (
+          $1,$2,$3,$4,24,$5,$6,NOW()
+        )
+      `, [
+        userKey,
+        u.palpites,
+        u.pontos,
+        u.palpites === 24,
+        u.primeiro,
+        u.ultimo
+      ]);
+    }
   }
 
   async function vincularLocalKeys(localKeys, identity, origem) {
@@ -6823,12 +6916,14 @@ app.post("/api/admin/segunda-rodada-neon/recalcular-pontos", async function (req
       SELECT
         COALESCE(v.real_user_key, p.user_key) AS user_key_classificacao,
         COUNT(DISTINCT p.game_id)::int AS palpites_salvos,
-        COUNT(DISTINCT p.game_id)::int AS pontos_segunda_rodada,
+        COALESCE(MAX(sp.pontos_segunda_rodada),0)::int AS pontos_segunda_rodada,
         CASE WHEN COUNT(DISTINCT p.game_id) = 24 THEN TRUE ELSE FALSE END AS rodada_completa,
         ARRAY_AGG(DISTINCT p.user_key) AS chaves_origem
       FROM solar_segunda_rodada_palpites p
       LEFT JOIN solar_2r_user_key_vinculos v
         ON v.old_user_key = p.user_key
+      LEFT JOIN solar_segunda_rodada_pontos sp
+        ON sp.user_key = COALESCE(v.real_user_key, p.user_key)
       GROUP BY COALESCE(v.real_user_key, p.user_key)
     `);
 
@@ -7096,6 +7191,7 @@ app.post("/api/admin/segunda-rodada-neon/recalcular-pontos", async function (req
 app.listen(PORT, () => {
   console.log(`Servidor rodando em http://localhost:${PORT}`);
 });
+
 
 
 
