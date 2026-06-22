@@ -5114,7 +5114,7 @@ app.get("/api/segunda-rodada-neon/ranking", async function (req, res) {
         displayName: user.name,
         predictionsCount: Number(user.predictions_count || 0),
         pointsFirstRound,
-        pointsSecondRound,
+        pointsSecondRound: pointsSecondRoundFinal,
         palpitesSegundaRodada: found2R ? Number(found2R.palpitesSegundaRodada || 0) : 0,
         jaPalpitouSegundaRodada: found2R ? Number(found2R.palpitesSegundaRodada || 0) > 0 : false,
         rodada2Completa: found2R ? Boolean(found2R.rodada2Completa) : false,
@@ -5126,7 +5126,7 @@ app.get("/api/segunda-rodada-neon/ranking", async function (req, res) {
         pontos: total,
         total_pontos: total,
         pontos_primeira_rodada: pointsFirstRound,
-        pontos_segunda_rodada: pointsSecondRound,
+        pontos_segunda_rodada: pointsSecondRound: pointsSecondRoundFinal,
         total_com_segunda_rodada: total,
         origemRanking: "usuario"
       };
@@ -5165,20 +5165,20 @@ app.get("/api/segunda-rodada-neon/ranking", async function (req, res) {
         displayName: name,
         predictionsCount: 0,
         pointsFirstRound: 0,
-        pointsSecondRound,
+        pointsSecondRound: pointsSecondRoundFinal,
         palpitesSegundaRodada: Number(row.palpites_segunda_rodada || 0),
         jaPalpitouSegundaRodada: Number(row.palpites_segunda_rodada || 0) > 0,
         rodada2Completa: Boolean(row.rodada_2_completa),
         ultimoPalpite2R: row.ultimo_palpite_2r || null,
         userKeySegundaRodada: raw,
         chavesOrigem2R: row.chaves_origem_2r || [],
-        points: pointsSecondRound,
-        totalPoints: pointsSecondRound,
-        pontos: pointsSecondRound,
-        total_pontos: pointsSecondRound,
+        points: pointsSecondRound: pointsSecondRoundFinal,
+        totalPoints: pointsSecondRound: pointsSecondRoundFinal,
+        pontos: pointsSecondRound: pointsSecondRoundFinal,
+        total_pontos: pointsSecondRound: pointsSecondRoundFinal,
         pontos_primeira_rodada: 0,
-        pontos_segunda_rodada: pointsSecondRound,
-        total_com_segunda_rodada: pointsSecondRound,
+        pontos_segunda_rodada: pointsSecondRound: pointsSecondRoundFinal,
+        total_com_segunda_rodada: pointsSecondRound: pointsSecondRoundFinal,
         origemRanking: "somente_2r"
       });
     });
@@ -7192,6 +7192,7 @@ app.post("/api/admin/segunda-rodada-neon/recalcular-pontos", async function (req
 app.listen(PORT, () => {
   console.log(`Servidor rodando em http://localhost:${PORT}`);
 });
+
 
 
 
