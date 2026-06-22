@@ -15106,12 +15106,27 @@ function renderLoggedContent() {
   }
 
   function getUserKey() {
-    var globalKey = localStorage.getItem("solar_copa_2r_user_key_global");
+    try {
+      var globalKey = localStorage.getItem("solar_copa_2r_user_key_global");
 
-    if (globalKey && String(globalKey).trim() !== "") {
-      localStorage.setItem("solar_copa_neon_2r_user_key", globalKey);
-      return globalKey;
-    }
+      if (globalKey && String(globalKey).trim() !== "") {
+        localStorage.setItem("solar_copa_neon_2r_user_key", globalKey);
+        return String(globalKey).trim();
+      }
+
+      var identity =
+        localStorage.getItem("identity") ||
+        sessionStorage.getItem("identity");
+
+      if (
+        identity &&
+        String(identity).trim() !== "" &&
+        !/^local-/i.test(identity)
+      ) {
+        localStorage.setItem("solar_copa_neon_2r_user_key", identity);
+        return String(identity).trim();
+      }
+    } catch (e) {}
 
     var key = localStorage.getItem("solar_copa_neon_2r_user_key");
 
@@ -15290,6 +15305,15 @@ console.log(
       (data.palpites || []).forEach(function (p) {
         if (p && p.game_id) map[p.game_id] = p;
       });
+
+      if (!document.querySelectorAll(".solar-2r-final-card").length) {
+        setTimeout(function () {
+          loadedNeon = false;
+          loadFromNeon();
+        }, 1500);
+
+        return;
+      }
 
       Array.prototype.forEach.call(document.querySelectorAll(".solar-2r-final-card"), function (card) {
         var id = card.getAttribute("data-game-card");
@@ -16560,6 +16584,56 @@ function openSecondRound(event) {
 
   function getUserKey() {
     try {
+      var userJson = localStorage.getItem("solarCopa2026User");
+
+      if (userJson) {
+        var user = JSON.parse(userJson);
+
+        var realIdentity =
+          user.phone ||
+          user.telefone ||
+          user.whatsapp ||
+          user.celular ||
+          user.id;
+
+        if (realIdentity) {
+          realIdentity = String(realIdentity).replace(/\D/g,"");
+
+          if (realIdentity) {
+            localStorage.setItem("solar_copa_2r_user_key_global", realIdentity);
+            localStorage.setItem(STORAGE_KEY, realIdentity);
+            return realIdentity;
+          }
+        }
+      }
+    } catch (error) {}
+
+    try {
+      var userJson = localStorage.getItem("solarCopa2026User");
+
+      if (userJson) {
+        var user = JSON.parse(userJson);
+
+        var realIdentity =
+          user.phone ||
+          user.telefone ||
+          user.whatsapp ||
+          user.celular ||
+          user.id;
+
+        if (realIdentity) {
+          realIdentity = String(realIdentity).replace(/\D/g,"");
+
+          if (realIdentity) {
+            localStorage.setItem("solar_copa_2r_user_key_global", realIdentity);
+            localStorage.setItem(STORAGE_KEY, realIdentity);
+            return realIdentity;
+          }
+        }
+      }
+    } catch (error) {}
+
+    try {
       var globalKey = localStorage.getItem("solar_copa_2r_user_key_global");
 
       if (globalKey && String(globalKey).trim() !== "") {
@@ -17786,6 +17860,10 @@ function openSecondRound(event) {
 
 </body>
 </html>
+
+
+
+
 
 
 
