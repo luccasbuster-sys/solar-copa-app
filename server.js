@@ -5172,13 +5172,13 @@ app.get("/api/segunda-rodada-neon/ranking", async function (req, res) {
         ultimoPalpite2R: row.ultimo_palpite_2r || null,
         userKeySegundaRodada: raw,
         chavesOrigem2R: row.chaves_origem_2r || [],
-        points: pointsSecondRound: pointsSecondRoundFinal,
-        totalPoints: pointsSecondRound: pointsSecondRoundFinal,
-        pontos: pointsSecondRound: pointsSecondRoundFinal,
-        total_pontos: pointsSecondRound: pointsSecondRoundFinal,
+        points: pointsSecondRoundFinal,
+        totalPoints: pointsSecondRoundFinal,
+        pontos: pointsSecondRoundFinal,
+        total_pontos: pointsSecondRoundFinal,
         pontos_primeira_rodada: 0,
         pontos_segunda_rodada: pointsSecondRoundFinal,
-        total_com_segunda_rodada: pointsSecondRound: pointsSecondRoundFinal,
+        total_com_segunda_rodada: pointsSecondRoundFinal,
         origemRanking: "somente_2r"
       });
     });
@@ -7192,6 +7192,7 @@ app.post("/api/admin/segunda-rodada-neon/recalcular-pontos", async function (req
 app.listen(PORT, () => {
   console.log(`Servidor rodando em http://localhost:${PORT}`);
 });
+
 
 
 
