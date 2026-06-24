@@ -1,4 +1,4 @@
-﻿require("dotenv").config();
+require("dotenv").config();
 const express = require("express");
 const bcrypt = require("bcrypt");
 const session = require("express-session");
@@ -4745,6 +4745,18 @@ app.get("/api/second-round-matches", async (req, res) => {
       CREATE INDEX IF NOT EXISTS idx_solar_2r_palpites_game_id
       ON solar_segunda_rodada_palpites (game_id);
     `);
+    await getPool().query(`
+      CREATE TABLE IF NOT EXISTS solar_ranking_oficial_snapshot (
+        position INTEGER NOT NULL,
+        name TEXT NOT NULL,
+        phone TEXT,
+        points INTEGER NOT NULL,
+        points_first_round INTEGER,
+        points_second_round INTEGER,
+        palpites_segunda_rodada INTEGER,
+        created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+      );
+    `);
 
     tablesReady = true;
   }
@@ -4845,88 +4857,39 @@ app.get("/api/second-round-matches", async (req, res) => {
   }
 
   async function refreshPointsForUser(userKey) {
-    await ensureTables();
+  await ensureTables();
 
-    const key = clean(userKey);
-    if (!key) return null;
-
-    await getPool().query(
-      `DELETE FROM solar_segunda_rodada_pontos WHERE user_key = $1`,
-      [key]
-    );
-
-    const result = await getPool().query(
-      `
-        INSERT INTO solar_segunda_rodada_pontos (
-          user_key,
-          palpites_salvos,
-          pontos_segunda_rodada,
-          rodada_completa,
-          total_jogos,
-          primeiro_palpite,
-          ultimo_palpite,
-          updated_at
-        )
-        SELECT
-          user_key,
-          COUNT(DISTINCT game_id)::int AS palpites_salvos,
-          COUNT(DISTINCT game_id)::int AS pontos_segunda_rodada,
-          CASE WHEN COUNT(DISTINCT game_id) = 24 THEN TRUE ELSE FALSE END AS rodada_completa,
-          24 AS total_jogos,
-          MIN(created_at) AS primeiro_palpite,
-          MAX(updated_at) AS ultimo_palpite,
-          NOW() AS updated_at
-        FROM solar_segunda_rodada_palpites
-        WHERE user_key = $1
-          AND game_id = ANY($2::text[])
-        GROUP BY user_key
-        RETURNING *
-      `,
-      [key, GAME_IDS]
-    );
-
-    return result.rows[0] || {
-      user_key: key,
-      palpites_salvos: 0,
-      pontos_segunda_rodada: 0,
-      rodada_completa: false,
-      total_jogos: 24
-    };
+  if (typeof recalcularPontos2R === "function") {
+    await recalcularPontos2R();
   }
+
+  const key = clean(userKey);
+
+  if (!key) {
+    return null;
+  }
+
+  const result = await getPool().query(
+    `SELECT * FROM solar_segunda_rodada_pontos WHERE user_key = $1`,
+    [key]
+  );
+
+  return result.rows[0] || {
+    user_key: key,
+    palpites_salvos: 0,
+    pontos_segunda_rodada: 0,
+    rodada_completa: false,
+    total_jogos: 24
+  };
+}
 
   async function refreshAllPoints() {
-    await ensureTables();
+  await ensureTables();
 
-    await getPool().query(`DELETE FROM solar_segunda_rodada_pontos`);
-
-    await getPool().query(
-      `
-        INSERT INTO solar_segunda_rodada_pontos (
-          user_key,
-          palpites_salvos,
-          pontos_segunda_rodada,
-          rodada_completa,
-          total_jogos,
-          primeiro_palpite,
-          ultimo_palpite,
-          updated_at
-        )
-        SELECT
-          user_key,
-          COUNT(DISTINCT game_id)::int AS palpites_salvos,
-          COUNT(DISTINCT game_id)::int AS pontos_segunda_rodada,
-          CASE WHEN COUNT(DISTINCT game_id) = 24 THEN TRUE ELSE FALSE END AS rodada_completa,
-          24 AS total_jogos,
-          MIN(created_at) AS primeiro_palpite,
-          MAX(updated_at) AS ultimo_palpite,
-          NOW() AS updated_at
-        FROM solar_segunda_rodada_palpites
-        WHERE game_id = ANY($1::text[])
-        GROUP BY user_key
-      `,
-      [GAME_IDS]
-    );
+  if (typeof recalcularPontos2R === "function") {
+    await recalcularPontos2R();
   }
+}
 
   
 
@@ -4938,306 +4901,30 @@ app.get("/api/second-round-matches", async (req, res) => {
 // === RANKING GERAL ACUMULADO COM SEGUNDA RODADA START ===
 app.get("/api/segunda-rodada-neon/ranking", async function (req, res) {
   try {
-    await ensureTables();
+    const fs = require("fs");
+    const path = require("path");
 
-    await getPool().query(`
-      CREATE TABLE IF NOT EXISTS solar_2r_user_key_vinculos (
-        old_user_key TEXT PRIMARY KEY,
-        real_user_key TEXT NOT NULL,
-        real_phone TEXT,
-        real_name TEXT,
-        origem TEXT DEFAULT 'manual',
-        created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-        updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
-      );
-    `);
+    const rankingFile = path.join(__dirname, "ranking.json");
 
-    const primeiraRodada = await getPool().query(`
-      SELECT
-        u.id,
-        u.username,
-        u.first_name,
-        u.last_name,
-        u.phone,
-        u.activation_code,
-        u.activation_origin,
-        COALESCE(
-          NULLIF(TRIM(CONCAT_WS(' ', u.first_name, u.last_name)), ''),
-          NULLIF(TRIM(u.username), ''),
-          NULLIF(TRIM(u.phone), ''),
-          'Usuário ' || u.id::text
-        ) AS name,
-        COUNT(p.id)::int AS predictions_count,
-        COALESCE(SUM(
-          CASE
-            WHEN p.id IS NULL THEN 0
-            ELSE
-              1
-              +
-              CASE
-                WHEN r.home_score IS NULL OR r.away_score IS NULL THEN 0
-                WHEN SIGN(p.home_score - p.away_score) = SIGN(r.home_score - r.away_score) THEN 3
-                ELSE 0
-              END
-              +
-              CASE
-                WHEN r.home_score IS NULL OR r.away_score IS NULL THEN 0
-                WHEN p.home_score = r.home_score AND p.away_score = r.away_score THEN 2
-                ELSE 0
-              END
-          END
-        ), 0)::int AS pontos_primeira_rodada,
-        MAX(p.updated_at) AS ultimo_palpite_1r
-      FROM users u
-      LEFT JOIN predictions p
-        ON p.user_id = u.id
-      LEFT JOIN match_results r
-        ON r.match_id = p.match_id
-      GROUP BY
-        u.id,
-        u.username,
-        u.first_name,
-        u.last_name,
-        u.phone,
-        u.activation_code,
-        u.activation_origin
-    `);
-
-    const segundaRodada = await getPool().query(`
-      SELECT
-        COALESCE(v.real_user_key, p.user_key) AS user_key_classificacao,
-        COUNT(DISTINCT p.game_id)::int AS palpites_segunda_rodada,
-        COALESCE(MAX(sp.pontos_segunda_rodada),0)::int AS pontos_segunda_rodada,
-        CASE WHEN COUNT(DISTINCT p.game_id) >= 24 THEN TRUE ELSE FALSE END AS rodada_2_completa,
-        MIN(p.created_at) AS primeiro_palpite_2r,
-        MAX(p.updated_at) AS ultimo_palpite_2r,
-        ARRAY_AGG(DISTINCT p.user_key) AS chaves_origem_2r
-      FROM solar_segunda_rodada_palpites p
-      LEFT JOIN solar_2r_user_key_vinculos v
-        ON v.old_user_key = p.user_key
-      LEFT JOIN solar_segunda_rodada_pontos sp
-        ON sp.user_key = COALESCE(v.real_user_key, p.user_key)
-      WHERE p.game_id IS NOT NULL
-      GROUP BY COALESCE(v.real_user_key, p.user_key)
-    `);
-
-    function digits(value) {
-      return String(value || "").replace(/\D/g, "");
+    if (!fs.existsSync(rankingFile)) {
+      return res.status(404).json({
+        ok: false,
+        success: false,
+        error: "ranking.json não encontrado"
+      });
     }
 
-    function norm(value) {
-      return String(value || "").trim().toLowerCase();
-    }
-
-    const segundaMap = new Map();
-
-    segundaRodada.rows.forEach(function (row) {
-      const data = {
-        userKey: row.user_key_classificacao,
-        palpitesSegundaRodada: Number(row.palpites_segunda_rodada || 0),
-        pointsSecondRound: Number(row.pontos_segunda_rodada || 0),
-        rodada2Completa: Boolean(row.rodada_2_completa),
-        ultimoPalpite2R: row.ultimo_palpite_2r || null,
-        chavesOrigem2R: row.chaves_origem_2r || []
-      };
-
-      const keys = [
-        row.user_key_classificacao,
-        digits(row.user_key_classificacao)
-      ];
-
-      if (Array.isArray(row.chaves_origem_2r)) {
-        row.chaves_origem_2r.forEach(function (k) {
-          keys.push(k);
-          keys.push(digits(k));
-        });
-      }
-
-      keys.forEach(function (key) {
-        const clean = norm(key);
-        if (clean) segundaMap.set(clean, data);
-      });
-    });
-
-    const used2R = new Set();
-
-    const ranking = primeiraRodada.rows.map(function (user) {
-      const possibleKeys = [
-        user.phone,
-        digits(user.phone),
-        user.username,
-        user.id,
-        user.name
-      ].map(norm).filter(Boolean);
-
-      let found2R = null;
-
-      for (const key of possibleKeys) {
-        if (segundaMap.has(key)) {
-          found2R = segundaMap.get(key);
-          break;
-        }
-      }
-
-      if (found2R) {
-        used2R.add(norm(found2R.userKey));
-
-        if (Array.isArray(found2R.chavesOrigem2R)) {
-          found2R.chavesOrigem2R.forEach(function (k) {
-            used2R.add(norm(k));
-          });
-        }
-      }
-
-      const pointsFirstRound = Number(user.pontos_primeira_rodada || 0);
-      let pointsSecondRound = found2R ? Number(found2R.pointsSecondRound || 0) : 0;
-
-      let bonusFinalRanking = 0;
-
-      if (String(user.phone || "").trim() === "61991704729") {
-        pointsSecondRound = 59;
-        bonusFinalRanking = 7;
-      }
-
-      const total = pointsFirstRound + pointsSecondRound + bonusFinalRanking;
-
-      return {
-        id: user.id,
-        userId: user.id,
-        username: user.username,
-        firstName: user.first_name,
-        lastName: user.last_name,
-        phone: user.phone,
-        activationCode: user.activation_code || "",
-        activationOrigin: user.activation_origin || "Público Instagram",
-        name: user.name,
-        displayName: user.name,
-        predictionsCount: Number(user.predictions_count || 0),
-        pointsFirstRound,
-        pointsSecondRound: pointsSecondRound,
-        palpitesSegundaRodada: found2R ? Number(found2R.palpitesSegundaRodada || 0) : 0,
-        jaPalpitouSegundaRodada: found2R ? Number(found2R.palpitesSegundaRodada || 0) > 0 : false,
-        rodada2Completa: found2R ? Boolean(found2R.rodada2Completa) : false,
-        ultimoPalpite2R: found2R ? found2R.ultimoPalpite2R : null,
-        userKeySegundaRodada: found2R ? found2R.userKey : null,
-        chavesOrigem2R: found2R ? found2R.chavesOrigem2R : [],
-        points: total,
-        totalPoints: total,
-        pontos: total,
-        total_pontos: total,
-        pontos_primeira_rodada: pointsFirstRound,
-        pontos_segunda_rodada: pointsSecondRound,
-        total_com_segunda_rodada: total,
-        origemRanking: "usuario"
-      };
-    });
-
-    segundaRodada.rows.forEach(function (row) {
-      const key = norm(row.user_key_classificacao);
-      const origemKeys = Array.isArray(row.chaves_origem_2r) ? row.chaves_origem_2r.map(norm) : [];
-
-      const alreadyUsed =
-        used2R.has(key) ||
-        origemKeys.some(function (k) {
-          return used2R.has(k);
-        });
-
-      if (alreadyUsed) return;
-
-      const raw = String(row.user_key_classificacao || "").trim();
-
-      const name = raw.startsWith("local-")
-        ? "Jogador " + String(raw.split("-").pop() || raw).slice(0, 6).toUpperCase()
-        : raw || "Participante 2ª rodada";
-
-      const pointsSecondRound = Number(row.pontos_segunda_rodada || 0);
-
-      ranking.push({
-        id: "2r-" + raw,
-        userId: null,
-        username: name,
-        firstName: "",
-        lastName: "",
-        phone: "",
-        activationCode: "",
-        activationOrigin: "2ª rodada",
-        name,
-        displayName: name,
-        predictionsCount: 0,
-        pointsFirstRound: 0,
-        pointsSecondRound: pointsSecondRound,
-        palpitesSegundaRodada: Number(row.palpites_segunda_rodada || 0),
-        jaPalpitouSegundaRodada: Number(row.palpites_segunda_rodada || 0) > 0,
-        rodada2Completa: Boolean(row.rodada_2_completa),
-        ultimoPalpite2R: row.ultimo_palpite_2r || null,
-        userKeySegundaRodada: raw,
-        chavesOrigem2R: row.chaves_origem_2r || [],
-        points: pointsSecondRound,
-        totalPoints: pointsSecondRound,
-        pontos: pointsSecondRound,
-        total_pontos: pointsSecondRound,
-        pontos_primeira_rodada: 0,
-        pontos_segunda_rodada: pointsSecondRound,
-        total_com_segunda_rodada: pointsSecondRound,
-        origemRanking: "somente_2r"
-      });
-    });
-
-    ranking.sort(function (a, b) {
-      if (Number(b.points) !== Number(a.points)) return Number(b.points) - Number(a.points);
-      if (Number(b.pointsSecondRound) !== Number(a.pointsSecondRound)) return Number(b.pointsSecondRound) - Number(a.pointsSecondRound);
-      if (Number(b.palpitesSegundaRodada) !== Number(a.palpitesSegundaRodada)) return Number(b.palpitesSegundaRodada) - Number(a.palpitesSegundaRodada);
-      return String(a.name || "").localeCompare(String(b.name || ""), "pt-BR");
-    });
-
-    ranking.forEach(function (row, index) {
-      row.position = index + 1;
-      row.posicao = index + 1;
-    });
-
-    const resumo = {
-      totalUsuarios: ranking.length,
-      totalUsuariosQueJaPalpitaram2R: ranking.filter(function (user) {
-        return Number(user.palpitesSegundaRodada || 0) > 0;
-      }).length,
-      totalUsuariosSomente2R: ranking.filter(function (user) {
-        return user.origemRanking === "somente_2r";
-      }).length,
-      totalPontosPrimeiraRodada: ranking.reduce(function (sum, user) {
-        return sum + Number(user.pointsFirstRound || 0);
-      }, 0),
-      totalPontosSegundaRodada: ranking.reduce(function (sum, user) {
-        return sum + Number(user.pointsSecondRound || 0);
-      }, 0),
-      totalPontosGeral: ranking.reduce(function (sum, user) {
-        return sum + Number(user.points || 0);
-      }, 0)
-    };
-
-    return res.json({
-      ok: true,
-      success: true,
-      source: "neon",
-      rankingMode: "ranking_unico_soma_real_1r_2r",
-      roundCode: "geral",
-      resumo,
-      totalUsuarios: ranking.length,
-      totalUsuariosQueJaPalpitaram2R: resumo.totalUsuariosQueJaPalpitaram2R,
-      ranking,
-      leaderboard: ranking
-    });
+    return res.json(
+      JSON.parse(fs.readFileSync(rankingFile, "utf8"))
+    );
   } catch (error) {
-    console.error("Erro ranking único soma real 1R + 2R:", error);
-
     return res.status(500).json({
       ok: false,
       success: false,
-      error: "Erro ao carregar ranking geral somado.",
-      details: String(error.message || error)
+      error: error.message || "Erro ao carregar ranking oficial"
     });
   }
 });
-
 app.get("/api/ranking/segunda-rodada", async function (req, res) {
   return res.redirect(307, "/api/segunda-rodada-neon/ranking");
 });
@@ -5246,7 +4933,7 @@ app.get("/api/ranking/segunda-rodada", async function (req, res) {
 app.get("/api/segunda-rodada-neon/status", async function (req, res) {
     try {
       await ensureTables();
-      await refreshAllPoints();
+      await recalcularPontos2R();
 
       const palpites = await getPool().query(
         "SELECT COUNT(*)::int AS total FROM solar_segunda_rodada_palpites WHERE game_id = ANY($1::text[])",
@@ -5312,7 +4999,16 @@ app.get("/api/segunda-rodada-neon/status", async function (req, res) {
         [userKey, GAME_IDS]
       );
 
-      const pontos = await refreshPointsForUser(userKey);
+      await recalcularPontos2R();
+
+const pontos = await getPool().query(
+  `SELECT *
+     FROM solar_segunda_rodada_pontos
+    WHERE user_key = $1`,
+  [userKey]
+);
+
+const pontosRow = pontos.rows[0] || null;
 
       return res.json({
         ok: true,
@@ -5320,7 +5016,7 @@ app.get("/api/segunda-rodada-neon/status", async function (req, res) {
         neon: true,
         userKey,
         palpites: result.rows,
-        pontos
+        pontos: pontosRow
       });
     } catch (error) {
       console.error("Erro carregar palpites Neon 2R:", error);
@@ -5536,7 +5232,16 @@ app.post("/api/segunda-rodada-neon/palpites", async function (req, res) {
         ]
       );
 
-      const pontos = await refreshPointsForUser(userKey);
+      await recalcularPontos2R();
+
+const pontos = await getPool().query(
+  `SELECT *
+     FROM solar_segunda_rodada_pontos
+    WHERE user_key = $1`,
+  [userKey]
+);
+
+const pontosRow = pontos.rows[0] || null;
 
       return res.json({
         ok: true,
@@ -5544,7 +5249,7 @@ app.post("/api/segunda-rodada-neon/palpites", async function (req, res) {
         neon: true,
         message: "Palpite salvo.",
         palpite: result.rows[0],
-        pontos
+        pontos: pontosRow
       });
     } catch (error) {
       console.error("Erro salvar palpite Neon 2R:", error);
@@ -5597,7 +5302,16 @@ app.post("/api/segunda-rodada-neon/palpites", async function (req, res) {
         [userKey, gameId]
       );
 
-      const pontos = await refreshPointsForUser(userKey);
+      await recalcularPontos2R();
+
+const pontos = await getPool().query(
+  `SELECT *
+     FROM solar_segunda_rodada_pontos
+    WHERE user_key = $1`,
+  [userKey]
+);
+
+const pontosRow = pontos.rows[0] || null;
 
       return res.json({
         ok: true,
@@ -5605,7 +5319,7 @@ app.post("/api/segunda-rodada-neon/palpites", async function (req, res) {
         neon: true,
         message: "Palpite removido.",
         gameId,
-        pontos
+        pontos: pontosRow
       });
     } catch (error) {
       console.error("Erro resetar palpite Neon 2R:", error);
@@ -5700,7 +5414,7 @@ app.post("/api/segunda-rodada-neon/palpites", async function (req, res) {
         migrated: true,
         oldUserKey,
         newUserKey,
-        pontos
+        pontos: pontosRow
       });
     } catch (error) {
       console.error("Erro sincronizar usuário 2R:", error);
@@ -5716,7 +5430,7 @@ app.post("/api/segunda-rodada-neon/palpites", async function (req, res) {
   app.get("/api/admin/segunda-rodada-neon/pontos", async function (req, res) {
     try {
       await ensureTables();
-      await refreshAllPoints();
+      await recalcularPontos2R();
 
       const total = await getPool().query(
         `
@@ -6099,7 +5813,10 @@ app.post("/api/segunda-rodada-neon/palpites", async function (req, res) {
     for (const p of palpites.rows) {
 
       const userKey = String(p.user_key);
-      const resultId = GAME_MAP[p.game_id];
+
+      const resultId =
+        GAME_MAP[p.game_id] ||
+        p.game_id;
 
       let pontosJogo = 1;
 
@@ -7192,6 +6909,14 @@ app.post("/api/admin/segunda-rodada-neon/recalcular-pontos", async function (req
 app.listen(PORT, () => {
   console.log(`Servidor rodando em http://localhost:${PORT}`);
 });
+
+
+
+
+
+
+
+
 
 
 
