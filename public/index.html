@@ -5519,7 +5519,8 @@
 
 <!-- SOLAR_SEGUNDA_RODADA_STYLE_START -->
 <style>
-  #btnSegundaRodadaNativa.solar-segunda-rodada-btn {
+  #btnSegundaRodadaNativa.solar-segunda-rodada-btn,
+  #btnTerceiraRodadaNativa.solar-segunda-rodada-btn {
     width: min(1060px, calc(100% - 60px)) !important;
     min-height: 46px !important;
     display: flex !important;
@@ -5543,18 +5544,21 @@
     appearance: none !important;
   }
 
-  #btnSegundaRodadaNativa.solar-segunda-rodada-btn:hover {
+  #btnSegundaRodadaNativa.solar-segunda-rodada-btn:hover,
+  #btnTerceiraRodadaNativa.solar-segunda-rodada-btn:hover {
     filter: brightness(1.02);
     transform: translateY(-1px);
   }
 
-  #btnSegundaRodadaNativa.solar-segunda-rodada-btn:active {
+  #btnSegundaRodadaNativa.solar-segunda-rodada-btn:active,
+  #btnTerceiraRodadaNativa.solar-segunda-rodada-btn:active {
     transform: translate(3px, 3px);
     box-shadow: 5px 4px 0 #000000 !important;
   }
 
   @media (max-width: 640px) {
-    #btnSegundaRodadaNativa.solar-segunda-rodada-btn {
+    #btnSegundaRodadaNativa.solar-segunda-rodada-btn,
+  #btnTerceiraRodadaNativa.solar-segunda-rodada-btn {
       width: calc(100% - 24px) !important;
       margin-left: 12px !important;
       margin-right: 12px !important;
@@ -5768,6 +5772,10 @@
 
         <button id="btnSegundaRodadaNativa" type="button" class="btn solar-segunda-rodada-btn">VER JOGOS DA 2ª RODADA</button>
 
+<button id="btnTerceiraRodadaNativa" type="button" class="btn solar-segunda-rodada-btn">
+  VER JOGOS DA 3ª RODADA
+</button>
+
 <!-- === RANKING VISUAL SEGUNDA RODADA START === -->
 <section id="ranking-segunda-rodada" class="segunda-ranking-shell" aria-labelledby="rankingSegundaRodadaTitulo">
   <div class="segunda-ranking-head">
@@ -5794,6 +5802,10 @@
 
 
         
+
+<section id="secaoTerceiraRodadaNativa" class="solar-2r-final-section" hidden>
+  <div id="solarTerceiraRodadaNativaConteudo"></div>
+</section>
 <section id="secaoSegundaRodadaNativa" class="solar-2r-final-section" hidden>
   <div id="solarSegundaRodadaNativaConteudo"></div>
 </section>
@@ -12486,20 +12498,13 @@ function renderLoggedContent() {
 <script id="official-register-codes-capture-final">
   (() => {
     const officialCodes = {
-  OUTLET2026: "Outlet 2026",
-  CD2026: "Centro de Distribuição",
-  ADM2026: "Centro Administrativo",
-  TRANS2026: "Solar Transporte",
-  S12026: "Posto S1",
-  S22026: "Posto S2",
-  S32026: "Posto S3",
-  S42026: "Posto S4",
-  S52026: "Posto S5",
-  PREMIUM2026: "Posto Premium",
-  TRINDADE2026: "Solar Trindade",
-  ROMEIROS2026: "Solar Rodovia dos Romeiros",
-  FUTURA2026: "Futura Atacadista"
-};
+      OUTLET2026: "Outlet 2026",
+      TRANSPORTE2026: "Transporte 2026",
+    
+      ADM2026: "Administrativo 2026",
+      TRINDADE2026: "Solar Trindade",
+      TRINDADE2026: "Solar Trindade",
+    };
 
     function normalizeCode(value) {
       return String(value || "").trim().toUpperCase();
@@ -15619,6 +15624,223 @@ function openSecondRound(event) {
 </script>
 <!-- SOLAR_2R_FORMATO_CORRETO_SEM_TRAVAR_END -->
 
+
+<!-- SOLAR_3R_FORMATO_CORRETO_SEM_TRAVAR_START -->
+<script>
+(function () {
+  "use strict";
+
+  function $(id){
+    return document.getElementById(id);
+  }
+
+  var STORAGE_KEY = "solar_3r_palpites";
+
+  function getStore() {
+    try {
+      return JSON.parse(localStorage.getItem(STORAGE_KEY) || "{}");
+    } catch(e){
+      return {};
+    }
+  }
+
+  function setStore(data){
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+  }
+
+  var jogos3R = [
+    ["24-06-2026-b-suica-x-canada","24/06/2026","16:00","Grupo B","Suíça","Canadá"],
+    ["24-06-2026-b-bosnia-x-catar","24/06/2026","16:00","Grupo B","Bósnia e Herzegovina","Catar"],
+    ["24-06-2026-c-marrocos-x-haiti","24/06/2026","19:00","Grupo C","Marrocos","Haiti"],
+    ["24-06-2026-c-escocia-x-brasil","24/06/2026","19:00","Grupo C","Escócia","Brasil"],
+    ["24-06-2026-a-africa-do-sul-x-coreia","24/06/2026","22:00","Grupo A","África do Sul","Coreia do Sul"],
+    ["24-06-2026-a-tchequia-x-mexico","24/06/2026","22:00","Grupo A","Tchéquia","México"]
+  ];
+
+  function render3R() {
+
+    var root = $("solarTerceiraRodadaNativaConteudo");
+    if (!root) return;
+
+    var store = getStore();
+
+    var html = "";
+
+    html += "<div class='solar-2r-final-shell'>";
+    html += "<div class='solar-2r-final-header'>";
+    html += "<strong>Jogos da 3ª rodada</strong>";
+    html += "<span>Palpites salvos localmente</span>";
+    html += "</div>";
+
+    html += "<div class='solar-2r-final-grid'>";
+
+    jogos3R.forEach(function(g){
+
+      var saved = store[g[0]] || {};
+
+      html += "<article class='solar-2r-final-card'>";
+
+      html += "<div class='solar-2r-final-meta'>";
+      html += "<span class='solar-2r-final-pill'>" + g[1] + "</span>";
+      html += "<span class='solar-2r-final-pill'>" + g[2] + "</span>";
+      html += "<span class='solar-2r-final-pill'>" + g[3] + "</span>";
+      html += "</div>";
+
+      html += "<div class='solar-2r-final-match'>";
+
+      html += "<div class='solar-2r-final-team'>";
+      html += "<div class='solar-2r-final-team-name'>" + g[4] + "</div>";
+      html += "<input class='r3-home' data-id='" + g[0] + "' type='number' min='0' max='99' value='" + (saved.home || "") + "'>";
+      html += "</div>";
+
+      html += "<div class='solar-2r-final-vs'>VS</div>";
+
+      html += "<div class='solar-2r-final-team'>";
+      html += "<div class='solar-2r-final-team-name'>" + g[5] + "</div>";
+      html += "<input class='r3-away' data-id='" + g[0] + "' type='number' min='0' max='99' value='" + (saved.away || "") + "'>";
+      html += "</div>";
+
+      html += "</div>";
+
+      html += "<div class='solar-2r-final-actions'>";
+      html += "<button type='button' class='r3-reset' data-id='" + g[0] + "'>Resetar placar</button>";
+      html += "<button type='button' class='r3-save' data-id='" + g[0] + "'>Salvar palpite</button>";
+      html += "</div>";
+
+      html += "</article>";
+    });
+
+    html += "</div>";
+
+    html += "<div style='margin-top:20px;text-align:center'>";
+    html += "<button id='btnSalvar3R' type='button'>Salvar palpites</button>";
+    html += "</div>";
+
+    html += "</div>";
+
+    root.innerHTML = html;
+  }
+
+  document.addEventListener("click", function(e){
+
+    if (e.target.closest("#btnTerceiraRodadaNativa")) {
+
+      render3R();
+
+      var sec = $("secaoTerceiraRodadaNativa");
+
+      if (sec) {
+        sec.hidden = false;
+        sec.removeAttribute("hidden");
+        sec.style.display = "";
+      }
+
+      return false;
+    }
+
+    if (e.target.closest("#btnSalvar3R")) {
+
+      var data = {};
+
+      document.querySelectorAll(".r3-home").forEach(function(el){
+        var id = el.dataset.id;
+        if (!data[id]) data[id] = {};
+        data[id].home = el.value;
+      });
+
+      document.querySelectorAll(".r3-away").forEach(function(el){
+        var id = el.dataset.id;
+        if (!data[id]) data[id] = {};
+        data[id].away = el.value;
+      });
+
+      setStore(data);
+
+      alert("Palpites da 3ª rodada salvos.");
+      return false;
+    }
+
+    if (e.target.closest(".r3-reset")) {
+
+      var id = e.target.dataset.id;
+
+      var store = getStore();
+
+      delete store[id];
+
+      setStore(store);
+
+      render3R();
+
+      return false;
+    }
+
+    if (e.target.closest("#btnFecharTerceiraRodadaFinal")) {
+
+      var sec = $("secaoTerceiraRodadaNativa");
+
+      if (sec) {
+        sec.hidden = true;
+        sec.style.display = "none";
+      }
+
+      return false;
+    }
+
+  });
+
+})();
+</script>
+
+<style id="solar-3r-actions-style">
+
+.r3-actions{
+  display:flex;
+  gap:10px;
+  margin-top:14px;
+}
+
+.r3-save,
+.r3-reset{
+  flex:1;
+  border:3px solid #000;
+  border-radius:14px;
+  font-weight:900;
+  cursor:pointer;
+  padding:10px 12px;
+  text-transform:uppercase;
+  font-size:12px;
+  line-height:1;
+}
+
+.r3-save{
+  background:#ccff00;
+  color:#000;
+  box-shadow:4px 4px 0 #000;
+}
+
+.r3-reset{
+  background:#ffffff;
+  color:#000;
+  box-shadow:4px 4px 0 #000;
+}
+
+.r3-save:hover,
+.r3-reset:hover{
+  transform:translateY(-1px);
+}
+
+.r3-save:active,
+.r3-reset:active{
+  transform:translate(2px,2px);
+  box-shadow:2px 2px 0 #000;
+}
+
+</style>
+
+<!-- SOLAR_3R_FORMATO_CORRETO_SEM_TRAVAR_END -->
+
+
 <!-- SOLAR_2R_BANDEIRAS_REAIS_SEM_NEON_START -->
 <style>
   .solar-2r-neon-message {
@@ -17902,8 +18124,59 @@ console.log("[2R] GLOBAL =", localStorage.getItem("solar_copa_2r_user_key_global
 </script>
 <!-- SOLAR_BANNER_ABERTURA_CARD_EXATO_END -->
 
+
+/* SOLAR_3R_AUTOSAVE_START */
+document.addEventListener("input", function(e){
+
+  if (!e.target.classList.contains("r3-home") -and !e.target.classList.contains("r3-away")) {
+    return;
+  }
+
+  var data = {};
+
+  document.querySelectorAll(".r3-home").forEach(function(el){
+    var id = el.dataset.id;
+    if (!data[id]) data[id] = {};
+    data[id].home = el.value;
+  });
+
+  document.querySelectorAll(".r3-away").forEach(function(el){
+    var id = el.dataset.id;
+    if (!data[id]) data[id] = {};
+    data[id].away = el.value;
+  });
+
+  try {
+    localStorage.setItem("solar_3r_palpites", JSON.stringify(data));
+  } catch(e) {}
+});
+/* SOLAR_3R_AUTOSAVE_END */
+
+<script>
+document.addEventListener("input", function(e){
+  if (e.target.classList.contains("r3-home") || e.target.classList.contains("r3-away")) {
+
+    const store = JSON.parse(localStorage.getItem("solar_3r_palpites") || "{}");
+
+    const id = e.target.dataset.id;
+    if (!store[id]) store[id] = {};
+
+    if (e.target.classList.contains("r3-home")) {
+      store[id].home = e.target.value;
+    }
+
+    if (e.target.classList.contains("r3-away")) {
+      store[id].away = e.target.value;
+    }
+
+    localStorage.setItem("solar_3r_palpites", JSON.stringify(store));
+  }
+});
+</script>
 </body>
 </html>
+
+
 
 
 
