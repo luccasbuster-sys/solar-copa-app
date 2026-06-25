@@ -1,3 +1,28 @@
+﻿const fs = require("fs");
+
+function getRankingClean(data) {
+    if (typeof data === "string") {
+        data = data.replace(/^\uFEFF/, "");
+        return JSON.parse(data);
+    }
+    return data;
+}
+
+
+function writeJSONSafe(path, data) {
+    const json = JSON.stringify(data, null, 2);
+    fs.writeFileSync(path, json, { encoding: "utf8" });
+}
+
+
+function safeReadJSON(path) {
+    let data = getRankingClean(getRankingClean(fs.readFileSync('ranking.json','utf8')));
+    if (data.charCodeAt(0) === 0xFEFF) {
+        data = data.slice(1);
+    }
+    return JSON.parse(data);
+}
+
 require("dotenv").config();
 const express = require("express");
 const bcrypt = require("bcrypt");
@@ -4554,10 +4579,10 @@ app.get("/api/second-round-matches", async (req, res) => {
       { id:"22-06-2026-i-franca-x-iraque", groupName:"I", homeTeam:"França", awayTeam:"Iraque", matchDate:"2026-06-22", kickoffTimeBR:"18:00" },
       { id:"22-06-2026-i-noruega-x-senegal", groupName:"I", homeTeam:"Noruega", awayTeam:"Senegal", matchDate:"2026-06-22", kickoffTimeBR:"21:00" },
       { id:"23-06-2026-j-jordania-x-argelia", groupName:"J", homeTeam:"Jordânia", awayTeam:"Argélia", matchDate:"2026-06-23", kickoffTimeBR:"00:00" },
-      { id:"23-06-2026-k-portugal-x-uzbequistao", groupName:"K", homeTeam:"Portugal", awayTeam:"Uzbequistão", matchDate:"2026-06-23", kickoffTimeBR:"14:00" },
-      { id:"23-06-2026-l-inglaterra-x-gana", groupName:"L", homeTeam:"Inglaterra", awayTeam:"Gana", matchDate:"2026-06-23", kickoffTimeBR:"17:00" },
-      { id:"23-06-2026-l-panama-x-croacia", groupName:"L", homeTeam:"Panamá", awayTeam:"Croácia", matchDate:"2026-06-23", kickoffTimeBR:"20:00" },
-      { id:"23-06-2026-k-colombia-x-rd-congo", groupName:"K", homeTeam:"Colômbia", awayTeam:"RD Congo", matchDate:"2026-06-23", kickoffTimeBR:"23:00" }
+      { id:"23-06-2026-k-portugal-x-uzbequistao", groupName:"K", homeTeam:"Portugal 5 - 0 Uzbequistão-23", kickoffTimeBR:"14:00" },
+      { id:"23-06-2026-l-inglaterra-x-gana", groupName:"L", homeTeam:"Inglaterra 0 - 0 Gana-23", kickoffTimeBR:"17:00" },
+      { id:"23-06-2026-l-panama-x-croacia", groupName:"L", homeTeam:"Panamá 0 - 1 Croácia-23", kickoffTimeBR:"20:00" },
+      { id:"23-06-2026-k-colombia-x-rd-congo", groupName:"K", homeTeam:"Colômbia 1 - 0 Congo-23", kickoffTimeBR:"23:00" }
     ];
 
     return res.json({
@@ -4597,7 +4622,6 @@ app.get("/api/second-round-matches", async (req, res) => {
 
 // SOLAR_2R_PONTUACAO_GLOBAL_BACKEND_START
 (function instalarPontuacaoGlobalSegundaRodada() {
-  const fs = require("fs");
   const path = require("path");
   const { Pool } = require("pg");
 
@@ -4614,7 +4638,7 @@ app.get("/api/second-round-matches", async (req, res) => {
 
     if (!fs.existsSync(envPath)) return;
 
-    fs.readFileSync(envPath, "utf8").split(/\r?\n/).forEach((line) => {
+    getRankingClean(getRankingClean(fs.readFileSync('ranking.json','utf8'))).split(/\r?\n/).forEach((line) => {
       const clean = line.trim();
       if (!clean || clean.startsWith("#")) return;
 
@@ -4675,10 +4699,10 @@ app.get("/api/second-round-matches", async (req, res) => {
     "22-06-2026-i-noruega-x-senegal": ["22/06/2026", "I", "Noruega", "Senegal", "2026-06-22T21:00:00-03:00"],
     "23-06-2026-j-jordania-x-argelia": ["23/06/2026", "J", "Jordânia", "Argélia", "2026-06-23T00:00:00-03:00"],
 
-    "23-06-2026-k-portugal-x-uzbequistao": ["23/06/2026", "K", "Portugal", "Uzbequistão", "2026-06-23T14:00:00-03:00"],
-    "23-06-2026-l-inglaterra-x-gana": ["23/06/2026", "L", "Inglaterra", "Gana", "2026-06-23T17:00:00-03:00"],
-    "23-06-2026-l-panama-x-croacia": ["23/06/2026", "L", "Panamá", "Croácia", "2026-06-23T20:00:00-03:00"],
-    "23-06-2026-k-colombia-x-rd-congo": ["23/06/2026", "K", "Colômbia", "RD Congo", "2026-06-23T23:00:00-03:00"]
+    "23-06-2026-k-portugal-x-uzbequistao": ["23/06/2026", "K", "Portugal 5 - 0 Uzbequistão-23T14:00:00-03:00"],
+    "23-06-2026-l-inglaterra-x-gana": ["23/06/2026", "L", "Inglaterra 0 - 0 Gana-23T17:00:00-03:00"],
+    "23-06-2026-l-panama-x-croacia": ["23/06/2026", "L", "Panamá 0 - 1 Croácia-23T20:00:00-03:00"],
+    "23-06-2026-k-colombia-x-rd-congo": ["23/06/2026", "K", "Colômbia 1 - 0 Congo-23T23:00:00-03:00"]
   };
 
   const GAME_IDS = Object.keys(GAMES);
@@ -4901,7 +4925,6 @@ app.get("/api/second-round-matches", async (req, res) => {
 // === RANKING GERAL ACUMULADO COM SEGUNDA RODADA START ===
 app.get("/api/segunda-rodada-neon/ranking", async function (req, res) {
   try {
-    const fs = require("fs");
     const path = require("path");
 
     const rankingFile = path.join(__dirname, "ranking.json");
@@ -4915,7 +4938,7 @@ app.get("/api/segunda-rodada-neon/ranking", async function (req, res) {
     }
 
     return res.json(
-      JSON.parse(fs.readFileSync(rankingFile, "utf8"))
+      safeReadJSON('ranking.json')
     );
   } catch (error) {
     return res.status(500).json({
@@ -5497,7 +5520,6 @@ const pontosRow = pontos.rows[0] || null;
 
 // SOLAR_2R_AUTO_VINCULO_GERAL_START
 (function instalarAutoVinculoGeral2R() {
-  const fs = require("fs");
   const path = require("path");
   const { Pool } = require("pg");
 
@@ -5513,7 +5535,7 @@ const pontosRow = pontos.rows[0] || null;
     const envPath = path.join(__dirname, ".env");
     if (!fs.existsSync(envPath)) return;
 
-    fs.readFileSync(envPath, "utf8").split(/\r?\n/).forEach(function (line) {
+    getRankingClean(getRankingClean(fs.readFileSync('ranking.json','utf8'))).split(/\r?\n/).forEach(function (line) {
       const clean = line.trim();
       if (!clean || clean.startsWith("#")) return;
 
@@ -6909,6 +6931,13 @@ app.post("/api/admin/segunda-rodada-neon/recalcular-pontos", async function (req
 app.listen(PORT, () => {
   console.log(`Servidor rodando em http://localhost:${PORT}`);
 });
+
+
+
+
+
+
+
 
 
 
