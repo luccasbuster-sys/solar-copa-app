@@ -7255,6 +7255,134 @@ color:#555;
 
 <!-- SOLAR_UI_PATCH_16AVOS_END -->
 
+
+<!-- SOLAR_OITAVAS_LAYOUT_V2 -->
+<style>
+
+#oitavasGrid{
+
+display:grid;
+
+grid-template-columns:repeat(auto-fit,minmax(320px,1fr));
+
+gap:22px;
+
+margin-top:24px;
+
+}
+
+#oitavasGrid .solar-2r-final-card{
+
+padding:18px;
+
+border-radius:18px;
+
+display:flex;
+
+flex-direction:column;
+
+gap:14px;
+
+min-height:auto;
+
+}
+
+#oitavasGrid h3{
+
+margin:0;
+
+text-align:center;
+
+font-size:20px;
+
+font-weight:800;
+
+}
+
+#oitavasGrid .solar-2r-final-match{
+
+display:flex;
+
+justify-content:center;
+
+align-items:center;
+
+gap:16px;
+
+}
+
+#oitavasGrid .solar-2r-final-team{
+
+flex:none;
+
+}
+
+#oitavasGrid .solar-2r-final-score{
+
+width:72px;
+
+height:56px;
+
+font-size:28px;
+
+font-weight:700;
+
+text-align:center;
+
+border-radius:12px;
+
+}
+
+#oitavasGrid .solar-2r-final-vs{
+
+font-size:28px;
+
+font-weight:900;
+
+}
+
+#oitavasGrid .solar-2r-final-actions{
+
+display:flex;
+
+gap:12px;
+
+margin-top:4px;
+
+}
+
+#oitavasGrid .solar-2r-final-actions button{
+
+flex:1;
+
+height:48px;
+
+font-size:15px;
+
+font-weight:700;
+
+}
+
+#oitavasGrid .solar-2r-final-status{
+
+text-align:center;
+
+font-size:13px;
+
+margin-top:6px;
+
+}
+
+#oitavasGrid .solar-2r-neon-message{
+
+text-align:center;
+
+font-size:12px;
+
+}
+
+</style>
+
 </head>
 
 <body class="intro-active">
@@ -7450,6 +7578,202 @@ color:#555;
   <div id="segundaRankingGrid" class="segunda-ranking-grid" hidden></div>
 </section>
 
+
+<!-- ================= OITAVAS DE FINAL START ================= -->
+
+
+<button id="btnOitavasFinal"
+        type="button"
+        class="btn solar-segunda-rodada-btn">
+    VER JOGOS DAS OITAVAS DE FINAL
+</button>
+<section id="oitavasFinalSection" class="section reveal" hidden>
+
+  <div class="section-head">
+
+    <div>
+
+      <span class="section-kicker">OITAVAS DE FINAL</span>
+
+      <h2>JOGOS DAS OITAVAS DE FINAL</h2>
+
+      <p>
+        Faça seus palpites para as Oitavas de Final da Copa do Mundo.
+      </p>
+
+    </div>
+
+  </div>
+
+  <div id="oitavasGrid" class="matches-grid">
+
+<article class="solar-2r-final-card" data-game-card="OI-01">
+
+<div class="solar-2r-final-meta">
+<span class="solar-2r-final-pill">04/07/2026</span>
+<span class="solar-2r-final-pill">14:00</span>
+<span class="solar-2r-final-pill">OITAVAS</span>
+</div>
+
+<div class="oitavas-time-row">
+<strong>🇨🇦 Canadá</strong>
+<input class="solar-2r-final-score" type="number" min="0" max="99" placeholder="0">
+</div>
+
+<div class="oitavas-vs">VS</div>
+
+<div class="oitavas-time-row">
+<strong>🇲🇦 Marrocos</strong>
+<input class="solar-2r-final-score" type="number" min="0" max="99" placeholder="0">
+</div>
+
+<div class="oitavas-actions">
+<button class="solar-2r-final-reset">Resetar</button>
+<button class="solar-2r-final-save">Salvar Palpite</button>
+</div>
+
+</article>
+
+<article class="solar-2r-final-card" data-game-card="OI-02">
+
+<div class="solar-2r-final-meta">
+<span class="solar-2r-final-pill">04/07/2026</span>
+<span class="solar-2r-final-pill">18:00</span>
+<span class="solar-2r-final-pill">OITAVAS</span>
+</div>
+
+<div class="oitavas-time-row">
+<strong>🇵🇾 Paraguai</strong>
+<input class="solar-2r-final-score" type="number" min="0" max="99" placeholder="0">
+</div>
+
+<div class="oitavas-vs">VS</div>
+
+<div class="oitavas-time-row">
+<strong>🇫🇷 França</strong>
+<input class="solar-2r-final-score" type="number" min="0" max="99" placeholder="0">
+</div>
+
+<div class="oitavas-actions">
+<button class="solar-2r-final-reset">Resetar</button>
+<button class="solar-2r-final-save">Salvar Palpite</button>
+</div>
+
+</article>
+
+<article class="solar-2r-final-card" data-game-card="OI-03">
+
+<div class="solar-2r-final-meta">
+<span class="solar-2r-final-pill">05/07/2026</span>
+<span class="solar-2r-final-pill">17:00</span>
+<span class="solar-2r-final-pill">OITAVAS</span>
+</div>
+
+<div class="oitavas-time-row">
+<strong>🇧🇷 Brasil</strong>
+<input class="solar-2r-final-score" type="number" min="0" max="99" placeholder="0">
+</div>
+
+<div class="oitavas-vs">VS</div>
+
+<div class="oitavas-time-row">
+<strong>🇳🇴 Noruega</strong>
+<input class="solar-2r-final-score" type="number" min="0" max="99" placeholder="0">
+</div>
+
+<div class="oitavas-actions">
+<button class="solar-2r-final-reset">Resetar</button>
+<button class="solar-2r-final-save">Salvar Palpite</button>
+</div>
+
+</article>
+
+<article class="solar-2r-final-card" data-game-card="OI-04">
+
+<div class="solar-2r-final-meta">
+<span class="solar-2r-final-pill">05/07/2026</span>
+<span class="solar-2r-final-pill">21:00</span>
+<span class="solar-2r-final-pill">OITAVAS</span>
+</div>
+
+<div class="oitavas-time-row">
+<strong>🇲🇽 México</strong>
+<input class="solar-2r-final-score" type="number" min="0" max="99" placeholder="0">
+</div>
+
+<div class="oitavas-vs">VS</div>
+
+<div class="oitavas-time-row">
+<strong>🏴 Inglaterra</strong>
+<input class="solar-2r-final-score" type="number" min="0" max="99" placeholder="0">
+</div>
+
+<div class="oitavas-actions">
+<button class="solar-2r-final-reset">Resetar</button>
+<button class="solar-2r-final-save">Salvar Palpite</button>
+</div>
+
+</article>
+
+</div>
+</section>
+
+
+<style>
+
+/* OITAVAS_LAYOUT_V1 */
+
+#oitavasGrid{
+display:grid;
+grid-template-columns:repeat(auto-fit,minmax(320px,1fr));
+gap:24px;
+margin-top:24px;
+}
+
+.oitavas-time-row{
+display:flex;
+justify-content:space-between;
+align-items:center;
+gap:16px;
+margin:14px 0;
+}
+
+.oitavas-time-row strong{
+font-size:18px;
+font-weight:700;
+}
+
+.oitavas-time-row input{
+width:72px;
+height:46px;
+text-align:center;
+font-size:20px;
+font-weight:700;
+border-radius:12px;
+}
+
+.oitavas-vs{
+text-align:center;
+font-size:22px;
+font-weight:700;
+margin:8px 0;
+}
+
+.oitavas-actions{
+display:flex;
+gap:12px;
+margin-top:18px;
+}
+
+.oitavas-actions button{
+flex:1;
+}
+
+</style>
+
+<!-- ================= OITAVAS DE FINAL END ================= -->
+
+
 <!-- SOLAR_MATA_MATA_PLACEHOLDER_START -->
 
 <style>
@@ -7558,176 +7882,7 @@ background:#ffffff;
 <!-- MATA_PALPITE_STYLE_END -->
 
 
-<section id="mataMata2026">
 
-<h2>🏆 MATA-MATA DA COPA DO MUNDO 2026</h2>
-
-<p>16 avos de final</p>
-
-<div class="mata-grid">
-<div class="mata-card">
-<div class="mata-jogo">Jogo 73</div>
-
-<div class="mata-time">🇿🇦 África do Sul</div>
-
-<div class="mata-vs">×</div>
-
-<div class="mata-time">🇨🇦 Canadá</div>
-</div>
-
-<div class="mata-card">
-<div class="mata-jogo">Jogo 74</div>
-
-<div class="mata-time">🇧🇷 Brasil</div>
-
-<div class="mata-vs">×</div>
-
-<div class="mata-time">🇯🇵 Japão</div>
-</div>
-
-<div class="mata-card">
-<div class="mata-jogo">Jogo 75</div>
-
-<div class="mata-time">🇩🇪 Alemanha</div>
-
-<div class="mata-vs">×</div>
-
-<div class="mata-time">🇵🇾 Paraguai</div>
-</div>
-
-<div class="mata-card">
-<div class="mata-jogo">Jogo 76</div>
-
-<div class="mata-time">🇳🇱 Holanda</div>
-
-<div class="mata-vs">×</div>
-
-<div class="mata-time">🇲🇦 Marrocos</div>
-</div>
-
-<div class="mata-card">
-<div class="mata-jogo">Jogo 77</div>
-
-<div class="mata-time">🇨🇮 Costa do Marfim</div>
-
-<div class="mata-vs">×</div>
-
-<div class="mata-time">🇳🇴 Noruega</div>
-</div>
-
-<div class="mata-card">
-<div class="mata-jogo">Jogo 78</div>
-
-<div class="mata-time">🇫🇷 França</div>
-
-<div class="mata-vs">×</div>
-
-<div class="mata-time">🇸🇪 Suécia</div>
-</div>
-
-<div class="mata-card">
-<div class="mata-jogo">Jogo 79</div>
-
-<div class="mata-time">🇲🇽 México</div>
-
-<div class="mata-vs">×</div>
-
-<div class="mata-time">🇪🇨 Equador</div>
-</div>
-
-<div class="mata-card">
-<div class="mata-jogo">Jogo 80</div>
-
-<div class="mata-time">🏴 Inglaterra</div>
-
-<div class="mata-vs">×</div>
-
-<div class="mata-time">🇨🇩 RD Congo</div>
-</div>
-
-<div class="mata-card">
-<div class="mata-jogo">Jogo 81</div>
-
-<div class="mata-time">🇧🇪 Bélgica</div>
-
-<div class="mata-vs">×</div>
-
-<div class="mata-time">🇸🇳 Senegal</div>
-</div>
-
-<div class="mata-card">
-<div class="mata-jogo">Jogo 82</div>
-
-<div class="mata-time">🇺🇸 Estados Unidos</div>
-
-<div class="mata-vs">×</div>
-
-<div class="mata-time">🇧🇦 Bósnia e Herzegovina</div>
-</div>
-
-<div class="mata-card">
-<div class="mata-jogo">Jogo 83</div>
-
-<div class="mata-time">🇪🇸 Espanha</div>
-
-<div class="mata-vs">×</div>
-
-<div class="mata-time">🇦🇹 Áustria</div>
-</div>
-
-<div class="mata-card">
-<div class="mata-jogo">Jogo 84</div>
-
-<div class="mata-time">🇵🇹 Portugal</div>
-
-<div class="mata-vs">×</div>
-
-<div class="mata-time">🇭🇷 Croácia</div>
-</div>
-
-<div class="mata-card">
-<div class="mata-jogo">Jogo 85</div>
-
-<div class="mata-time">🇨🇭 Suíça</div>
-
-<div class="mata-vs">×</div>
-
-<div class="mata-time">🇩🇿 Argélia</div>
-</div>
-
-<div class="mata-card">
-<div class="mata-jogo">Jogo 86</div>
-
-<div class="mata-time">🇦🇺 Austrália</div>
-
-<div class="mata-vs">×</div>
-
-<div class="mata-time">🇪🇬 Egito</div>
-</div>
-
-<div class="mata-card">
-<div class="mata-jogo">Jogo 87</div>
-
-<div class="mata-time">🇦🇷 Argentina</div>
-
-<div class="mata-vs">×</div>
-
-<div class="mata-time">🇨🇻 Cabo Verde</div>
-</div>
-
-<div class="mata-card">
-<div class="mata-jogo">Jogo 88</div>
-
-<div class="mata-time">🇨🇴 Colômbia</div>
-
-<div class="mata-vs">×</div>
-
-<div class="mata-time">🇬🇭 Gana</div>
-</div>
-
-</div>
-
-</section>
 
 
 <!-- SOLAR_MATAMATA_UI_PATCH -->
@@ -7836,9 +7991,9 @@ area.innerHTML=`
 
 <div class="mata-actions">
 
-<button class="mata-save">💾 Salvar</button>
+<button class="solar-2r-final-save">💾 Salvar</button>
 
-<button class="mata-reset">↺ Resetar</button>
+<button class="solar-2r-final-reset">↺ Resetar</button>
 
 </div>
 
@@ -7903,13 +8058,13 @@ localStorage.removeItem(key);
 
         
 
-<section id="secaoTerceiraRodadaNativa" class="solar-2r-final-section" hidden>
+<section id="secaoTerceiraRodadaNativa" hidden hidden class="solar-2r-final-section" hidden>
   <div id="solarTerceiraRodadaNativaConteudo"></div>
 </section>
-<section id="secaoSegundaRodadaNativa" class="solar-2r-final-section" hidden>
+<section id="secaoSegundaRodadaNativa" hidden hidden class="solar-2r-final-section" hidden>
   <div id="solarSegundaRodadaNativaConteudo"></div>
 </section>
-<section id="secaoPrimeiraRodadaNativa">
+<section id="secaoPrimeiraRodadaNativa" hidden>
           <div class="segunda-rodada-nativa-head">
             <strong>Jogos da 1ª rodada</strong>
             <span id="contadorPrimeiraRodadaNativa">Carregando...</span>
@@ -19195,6 +19350,11 @@ var fixedNeonUserKey = null;
     ["23-06-2026-l-inglaterra-x-gana", "23/06/2026", "17:00", "16:00 local", "Grupo L", "Boston", "Inglaterra", "Gana", "🏴", "🇬🇭", "2026-06-23T17:00:00-03:00"],
     ["23-06-2026-l-panama-x-croacia", "23/06/2026", "20:00", "16:00 local", "Grupo L", "Toronto", "Panamá", "Croácia", "🇵🇦", "🇭🇷", "2026-06-23T20:00:00-03:00"],
     ["23-06-2026-k-colombia-x-rd-congo", "23/06/2026", "23:00", "20:00 local", "Grupo K", "Guadalajara", "Colômbia", "RD Congo", "🇨🇴", "🇨🇩", "2026-06-23T23:00:00-03:00"]
+    ["OI-01","04/07/2026","14:00","14:00 local","Oitavas de Final","Houston","Canadá","Marrocos","🇨🇦","🇲🇦","2026-07-04T14:00:00-03:00"],
+    ["OI-02","04/07/2026","18:00","18:00 local","Oitavas de Final","Filadélfia","Paraguai","França","🇵🇾","🇫🇷","2026-07-04T18:00:00-03:00"],
+    ["OI-03","05/07/2026","17:00","17:00 local","Oitavas de Final","Nova York/New Jersey","Brasil","Noruega","🇧🇷","🇳🇴","2026-07-05T17:00:00-03:00"],
+    ["OI-04","05/07/2026","21:00","21:00 local","Oitavas de Final","Cidade do México","México","Inglaterra","🇲🇽","🏴","2026-07-05T21:00:00-03:00"],
+
   ];
 
   function $(id) {
@@ -19720,6 +19880,14 @@ function openSecondRound(event) {
   } else {
     init();
   }
+
+
+  // ===== SOLAR EXPORT 2R START =====
+  window.save2R = save;
+  window.reset2R = reset;
+  window.loadFromNeon2R = loadFromNeon;
+  // ===== SOLAR EXPORT 2R END =====
+
 })();
 </script>
 <!-- SOLAR_2R_FORMATO_CORRETO_SEM_TRAVAR_END -->
@@ -22584,8 +22752,353 @@ document.addEventListener("DOMContentLoaded",()=>{
 
 */
 
+
+<!-- SOLAR_OITAVAS_RENDER_START -->
+<script>
+
+function renderOitavas(){
+
+const grid=document.getElementById("oitavasGrid");
+if(!grid) return;
+
+grid.innerHTML=`
+
+<article class="solar-2r-final-card" data-game-card="OI-01">
+
+<div class="solar-2r-final-meta">
+<span class="solar-2r-final-pill">04/07/2026</span>
+<span class="solar-2r-final-pill">14:00</span>
+<span class="solar-2r-final-pill">OITAVAS</span>
+</div>
+
+<div class="oitavas-time-row">
+<div>🇨🇦 Canadá</div>
+<input class="solar-2r-final-score" type="number" min="0" max="99">
+</div>
+
+<div class="oitavas-vs">
+VS
+</div>
+
+<div class="oitavas-time-row">
+<div>🇲🇦 Marrocos</div>
+<input class="solar-2r-final-score" type="number" min="0" max="99">
+</div>
+
+<div class="oitavas-actions">
+<button class="solar-2r-final-reset">Resetar</button>
+<button class="solar-2r-final-save">Salvar</button>
+</div>
+
+<div class="solar-2r-final-status"></div>
+
+<div class="solar-2r-neon-message"></div>
+
+</article>
+
+<article class="solar-2r-final-card" data-game-card="OI-02">
+
+<div class="solar-2r-final-meta">
+<span class="solar-2r-final-pill">04/07/2026</span>
+<span class="solar-2r-final-pill">18:00</span>
+<span class="solar-2r-final-pill">OITAVAS</span>
+</div>
+
+<div class="oitavas-time-row">
+<strong>🇵🇾 Paraguai</strong>
+<input class="solar-2r-final-score" type="number" min="0" max="99">
+</div>
+
+<div class="oitavas-vs">VS</div>
+
+<div class="oitavas-time-row">
+<strong>🇫🇷 França</strong>
+<input class="solar-2r-final-score" type="number" min="0" max="99">
+</div>
+
+<div class="oitavas-actions">
+<button class="solar-2r-final-reset">Resetar</button>
+<button class="solar-2r-final-save">Salvar Palpite</button>
+</div>
+
+<div class="solar-2r-final-status"></div>
+<div class="solar-2r-neon-message"></div>
+
+</article>
+<article class="solar-2r-final-card" data-game-card="OI-03">
+
+<div class="solar-2r-final-meta">
+<span class="solar-2r-final-pill">05/07/2026</span>
+<span class="solar-2r-final-pill">17:00</span>
+<span class="solar-2r-final-pill">OITAVAS</span>
+</div>
+
+<div class="oitavas-time-row">
+<strong>🇧🇷 Brasil</strong>
+<input class="solar-2r-final-score" type="number" min="0" max="99">
+</div>
+
+<div class="oitavas-vs">VS</div>
+
+<div class="oitavas-time-row">
+<strong>🇳🇴 Noruega</strong>
+<input class="solar-2r-final-score" type="number" min="0" max="99">
+</div>
+
+<div class="oitavas-actions">
+<button class="solar-2r-final-reset">Resetar</button>
+<button class="solar-2r-final-save">Salvar Palpite</button>
+</div>
+
+<div class="solar-2r-final-status"></div>
+<div class="solar-2r-neon-message"></div>
+
+</article>
+<article class="solar-2r-final-card" data-game-card="OI-04">
+
+<div class="solar-2r-final-meta">
+<span class="solar-2r-final-pill">05/07/2026</span>
+<span class="solar-2r-final-pill">21:00</span>
+<span class="solar-2r-final-pill">OITAVAS</span>
+</div>
+
+<div class="oitavas-time-row">
+<strong>🇲🇽 México</strong>
+<input class="solar-2r-final-score" type="number" min="0" max="99">
+</div>
+
+<div class="oitavas-vs">VS</div>
+
+<div class="oitavas-time-row">
+<strong>🏴 Inglaterra</strong>
+<input class="solar-2r-final-score" type="number" min="0" max="99">
+</div>
+
+<div class="oitavas-actions">
+<button class="solar-2r-final-reset">Resetar</button>
+<button class="solar-2r-final-save">Salvar Palpite</button>
+</div>
+
+<div class="solar-2r-final-status"></div>
+<div class="solar-2r-neon-message"></div>
+
+</article>
+
+;
+
+}
+
+</script>
+
+<!-- SOLAR_OITAVAS_RENDER_END -->
+
+<!-- SOLAR_OITAVAS_TOGGLE_START -->
+<script>
+
+document.addEventListener("DOMContentLoaded", function () {
+
+    const btn = document.getElementById("btnOitavasFinal");
+    const section = document.getElementById("oitavasFinalSection");
+
+    if (!btn || !section) return;
+
+    section.hidden = true;
+
+    btn.addEventListener("click", function () {
+
+        section.hidden = !section.hidden;
+
+if(!section.hidden){
+// renderOitavas();
+}
+
+        btn.textContent = section.hidden
+            ? "VER JOGOS DAS OITAVAS DE FINAL"
+            : "FECHAR OITAVAS DE FINAL";
+
+        if (!section.hidden) {
+            section.scrollIntoView({
+                behavior: "smooth",
+                block: "start"
+            });
+        }
+
+    });
+
+});
+
+</script>
+<!-- SOLAR_OITAVAS_TOGGLE_END -->
+
+
+
+
+
+
+
+<!-- SOLAR_OITAVAS_BIND_V3 -->
+<script>
+
+document.addEventListener("click",function(e){
+
+const card=e.target.closest("#oitavasGrid .solar-2r-final-card");
+
+if(!card) return;
+
+if(e.target.closest(".solar-2r-final-save")){
+
+    if(window.save2R){
+
+        window.save2R(card);
+
+    }
+
+}
+
+if(e.target.closest(".solar-2r-final-reset")){
+
+    if(window.reset2R){
+
+        window.reset2R(card);
+
+    }
+
+}
+
+});
+
+document.addEventListener("DOMContentLoaded",function(){
+
+if(window.loadFromNeon2R){
+
+setTimeout(window.loadFromNeon2R,500);
+
+}
+
+});
+
+</script>
+<!-- SOLAR_OITAVAS_BIND_V3_END -->
+
+
+<!-- SOLAR_OITAVAS_LOCAL_STORAGE_V1 -->
+<script>
+
+(function(){
+
+const KEY="solar_oitavas_local";
+
+function load(){
+
+    try{
+
+        return JSON.parse(localStorage.getItem(KEY)||"{}");
+
+    }catch(e){
+
+        return {};
+
+    }
+
+}
+
+function save(data){
+
+    localStorage.setItem(KEY,JSON.stringify(data));
+
+}
+
+document.addEventListener("click",function(e){
+
+    const btn=e.target.closest(".solar-2r-final-save");
+
+    if(!btn) return;
+
+    const card=btn.closest(".solar-2r-final-card");
+
+    if(!card) return;
+
+    const id=card.dataset.gameCard;
+
+    const inputs=card.querySelectorAll(".solar-2r-final-score");
+
+    save({
+        ...load(),
+        [id]:{
+            home:inputs[0].value,
+            away:inputs[1].value
+        }
+    });
+
+    alert("Palpite salvo localmente.");
+
+});
+
+document.addEventListener("DOMContentLoaded",function(){
+
+    const dados=load();
+
+    document.querySelectorAll("#oitavasGrid .solar-2r-final-card").forEach(function(card){
+
+        const id=card.dataset.gameCard;
+
+        if(!dados[id]) return;
+
+        const inputs=card.querySelectorAll(".solar-2r-final-score");
+
+        inputs[0].value=dados[id].home||"";
+        inputs[1].value=dados[id].away||"";
+
+    });
+
+});
+
+})();
+
+</script>
+<!-- SOLAR_OITAVAS_LOCAL_STORAGE_V1_END -->
+
 </body>
 </html>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
