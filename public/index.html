@@ -7922,7 +7922,342 @@ localStorage.removeItem(key);
         <div class="matches-grid" id="dailyMatchesGrid"></div>
       </section>
 
-      <section class="section reveal" id="jogos">
+      <!-- SOLAR_SEMIFINAL_HOJE_START -->
+<section class="section reveal is-visible" id="secaoSemifinalHoje">
+
+  <div class="section-head">
+    <div>
+      <span class="section-kicker">🏆 SEMIFINAL</span>
+      <h2>FRANÇA 🇫🇷 × ESPANHA 🇪🇸</h2>
+      <p>
+        Palpite especial para a semifinal da Copa do Mundo 2026.
+      </p>
+    </div>
+  </div>
+
+  <div class="matches-grid">
+
+    <article class="match-card reveal is-visible">
+
+      <div class="match-meta">
+        <span class="tag">SEMIFINAL</span>
+        <span class="tag">14/07/2026 • 16:00</span>
+      </div>
+
+      <div class="versus">
+
+        <div class="side">
+          <h3>🇫🇷 França</h3>
+        </div>
+
+        <div class="score-box">
+          <input type="number" min="0" max="30" placeholder="0">
+          <span>x</span>
+          <input type="number" min="0" max="30" placeholder="0">
+        </div>
+
+        <div class="side">
+          <h3>🇪🇸 Espanha</h3>
+        </div>
+
+      </div>
+
+      <p>MetLife Stadium</p>
+
+      <div class="match-actions">
+        <button class="mini-btn" type="button">
+          Salvar palpite
+        </button>
+
+        <button class="mini-btn" type="button">
+          Resetar palpite
+        </button>
+      </div>
+
+    </article>
+
+  </div>
+
+</section>
+<!-- SOLAR_SEMIFINAL_HOJE_END -->
+
+<!-- SOLAR_SEMIFINAL_LOCALSTORAGE_START -->
+<script>
+
+(function(){
+
+const KEY="solar-semifinal-2026-franca-espanha";
+
+const sec=document.getElementById("secaoSemifinalHoje");
+
+if(!sec)return;
+
+const inputs=sec.querySelectorAll("input[type=number]");
+
+if(inputs.length<2)return;
+
+const btn=[...sec.querySelectorAll("button")].find(b=>b.textContent.toLowerCase().includes("salvar"));
+
+if(!btn)return;
+
+btn.addEventListener("click",function(){
+
+const home=inputs[0].value.trim();
+const away=inputs[1].value.trim();
+
+localStorage.setItem(KEY,JSON.stringify({
+
+home,
+away,
+savedAt:new Date().toISOString()
+
+}));
+
+alert("✅ Palpite salvo localmente.");
+
+});
+
+})();
+
+</script>
+<!-- SOLAR_SEMIFINAL_LOCALSTORAGE_END -->
+
+<!-- SOLAR_SEMIFINAL_AUTOLOAD_START -->
+<script>
+
+(function(){
+
+const KEY="solar-semifinal-2026-franca-espanha";
+
+const sec=document.getElementById("secaoSemifinalHoje");
+
+if(!sec)return;
+
+const inputs=sec.querySelectorAll("input[type=number]");
+
+if(inputs.length<2)return;
+
+try{
+
+const salvo=localStorage.getItem(KEY);
+
+if(!salvo)return;
+
+const dados=JSON.parse(salvo);
+
+inputs[0].value=dados.home ?? "";
+inputs[1].value=dados.away ?? "";
+
+}catch(e){
+
+console.warn(e);
+
+}
+
+})();
+
+</script>
+<!-- SOLAR_SEMIFINAL_AUTOLOAD_END -->
+
+<!-- SOLAR_SEMIFINAL_RESET_START -->
+<script>
+
+(function(){
+
+const KEY="solar-semifinal-2026-franca-espanha";
+
+const sec=document.getElementById("secaoSemifinalHoje");
+
+if(!sec)return;
+
+const inputs=sec.querySelectorAll("input[type=number]");
+
+if(inputs.length<2)return;
+
+const btn=[...sec.querySelectorAll("button")].find(
+    b=>b.textContent.toLowerCase().includes("reset")
+);
+
+if(!btn)return;
+
+btn.addEventListener("click",function(){
+
+    if(!confirm("Deseja remover o palpite salvo?")){
+        return;
+    }
+
+    localStorage.removeItem(KEY);
+
+    inputs[0].value="";
+    inputs[1].value="";
+
+    alert("🗑️ Palpite removido.");
+
+});
+
+})();
+
+</script>
+<!-- SOLAR_SEMIFINAL_RESET_END -->
+
+<!-- SOLAR_SEMIFINAL_UI_STATE_START -->
+<script>
+
+(function(){
+
+const KEY="solar-semifinal-2026-franca-espanha";
+
+const sec=document.getElementById("secaoSemifinalHoje");
+
+if(!sec)return;
+
+const inputs=[...sec.querySelectorAll("input[type=number]")];
+
+const buttons=[...sec.querySelectorAll("button")];
+
+const btnSalvar=buttons.find(b=>b.textContent.toLowerCase().includes("salvar"));
+const btnReset=buttons.find(b=>b.textContent.toLowerCase().includes("reset"));
+
+if(!btnSalvar || !btnReset)return;
+
+let status=sec.querySelector(".solar-semifinal-status");
+
+if(!status){
+
+    status=document.createElement("div");
+
+    status.className="solar-semifinal-status";
+
+    status.style.marginTop="14px";
+    status.style.fontWeight="700";
+    status.style.color="#9ef5a5";
+
+    btnReset.parentNode.prepend(status);
+
+}
+
+function atualizar(){
+
+    const salvo=localStorage.getItem(KEY);
+
+    if(salvo){
+
+        status.textContent="✅ Palpite salvo localmente";
+
+        inputs.forEach(i=>i.disabled=true);
+
+        btnSalvar.disabled=true;
+        btnReset.disabled=false;
+
+    }else{
+
+        status.textContent="Ainda não salvo";
+
+        inputs.forEach(i=>i.disabled=false);
+
+        btnSalvar.disabled=false;
+        btnReset.disabled=true;
+
+    }
+
+}
+
+window.addEventListener("storage",atualizar);
+
+document.addEventListener("visibilitychange",atualizar);
+
+atualizar();
+
+})();
+</script>
+<!-- SOLAR_SEMIFINAL_UI_STATE_END -->
+
+<!-- SOLAR_SEMIFINAL_CONTROLLER_START -->
+<script>
+
+window.SolarSemifinal = {
+
+    KEY: "solar-semifinal-2026-franca-espanha",
+
+    getData() {
+        try {
+            return JSON.parse(localStorage.getItem(this.KEY) || "null");
+        } catch {
+            return null;
+        }
+    },
+
+    save(home, away) {
+        localStorage.setItem(this.KEY, JSON.stringify({
+            home,
+            away,
+            savedAt: new Date().toISOString()
+        }));
+    },
+
+    clear() {
+        localStorage.removeItem(this.KEY);
+    }
+
+};
+
+</script>
+<!-- SOLAR_SEMIFINAL_CONTROLLER_END -->
+
+<!-- SOLAR_SEMIFINAL_LOCK_START -->
+<script>
+
+(function(){
+
+const sec=document.getElementById("secaoSemifinalHoje");
+
+if(!sec)return;
+
+const inputs=[...sec.querySelectorAll("input[type=number]")];
+
+const botoes=[...sec.querySelectorAll("button")];
+
+const btnSalvar=botoes.find(b=>/salvar/i.test(b.textContent));
+
+if(!btnSalvar)return;
+
+// Data/hora de bloqueio
+const bloqueio=new Date(2026,6,14,16,0,0); // 14/07/2026 16:00 (mês é base 0)
+
+function aplicarBloqueio(){
+
+    const agora=new Date();
+
+    if(agora>=bloqueio){
+
+        inputs.forEach(i=>i.disabled=true);
+
+        btnSalvar.disabled=true;
+
+        btnSalvar.textContent="Prazo encerrado";
+
+        sec.classList.add("is-match-locked");
+
+    }
+
+}
+
+aplicarBloqueio();
+
+setInterval(aplicarBloqueio,30000);
+
+})();
+
+</script>
+<!-- SOLAR_SEMIFINAL_LOCK_END -->
+
+
+
+
+
+
+
+<section class="section reveal" id="jogos">
         <div class="section-head">
           <div>
             <span class="section-kicker">SEGUNDA RODADA</span>
@@ -9406,7 +9741,16 @@ function setButtonMotion(button, state) {
 
 function renderDailyMatches() {
   const grid = $("#dailyMatchesGrid");
-  const filtered = state.dailyMatches || [];
+  const semifinalHoje = {
+  id: "sf-franca-espanha-20260714",
+  group_name: "SEMIFINAL",
+  home_team: "França",
+  away_team: "Espanha",
+  venue: "MetLife Stadium",
+  kickoff_at: "2026-07-14T16:00:00-03:00"
+};
+
+const filtered = [semifinalHoje, ...(state.dailyMatches || [])];
 
   if (!grid) return;
 
@@ -22085,6 +22429,14 @@ document.addEventListener("DOMContentLoaded",()=>{
 
 </body>
 </html>
+
+
+
+
+
+
+
+
 
 
 
