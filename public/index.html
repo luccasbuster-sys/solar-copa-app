@@ -7928,9 +7928,9 @@ localStorage.removeItem(key);
   <div class="section-head">
     <div>
       <span class="section-kicker">🏆 SEMIFINAL</span>
-      <h2>FRANÇA 🇫🇷 × ESPANHA 🇪🇸</h2>
+      <h2>INGLATERRA 🏴 × ARGENTINA 🇦🇷</h2>
       <p>
-        Palpite especial para a semifinal da Copa do Mundo 2026.
+        Faça seu palpite para o grande confronto que vale vaga na Final da Copa do Mundo 2026.
       </p>
     </div>
   </div>
@@ -7941,13 +7941,13 @@ localStorage.removeItem(key);
 
       <div class="match-meta">
         <span class="tag">SEMIFINAL</span>
-        <span class="tag">14/07/2026 • 16:00</span>
+        <span class="tag">🔴 HOJE • 16:00</span>
       </div>
 
       <div class="versus">
 
         <div class="side">
-          <h3>🇫🇷 França</h3>
+          <h3>🏴 Inglaterra</h3>
         </div>
 
         <div class="score-box">
@@ -7957,20 +7957,20 @@ localStorage.removeItem(key);
         </div>
 
         <div class="side">
-          <h3>🇪🇸 Espanha</h3>
+          <h3>🇦🇷 Argentina</h3>
         </div>
 
       </div>
 
-      <p>MetLife Stadium</p>
+      <p>🏟 MetLife Stadium • East Rutherford</p>
 
       <div class="match-actions">
-        <button class="mini-btn" type="button">
-          Salvar palpite
+        <button id="btnSalvarSemifinal" class="mini-btn" type="button">
+          💾 SALVAR PALPITE
         </button>
 
-        <button class="mini-btn" type="button">
-          Resetar palpite
+        <button id="btnResetSemifinal" class="mini-btn" type="button">
+          🗑 LIMPAR PALPITE
         </button>
       </div>
 
@@ -7986,7 +7986,7 @@ localStorage.removeItem(key);
 
 (function(){
 
-const KEY="solar-semifinal-2026-franca-espanha";
+const KEY="solar-semifinal-2026-inglaterra-argentina";
 
 const sec=document.getElementById("secaoSemifinalHoje");
 
@@ -7996,7 +7996,7 @@ const inputs=sec.querySelectorAll("input[type=number]");
 
 if(inputs.length<2)return;
 
-const btn=[...sec.querySelectorAll("button")].find(b=>b.textContent.toLowerCase().includes("salvar"));
+const btn=document.getElementById("btnSalvarSemifinal");
 
 if(!btn)return;
 
@@ -8004,6 +8004,50 @@ btn.addEventListener("click",function(){
 
 const home=inputs[0].value.trim();
 const away=inputs[1].value.trim();
+
+const h=Number(home);
+const a=Number(away);
+
+if(
+    home==="" ||
+    away==="" ||
+    !Number.isInteger(h) ||
+    !Number.isInteger(a) ||
+    h<0 || h>30 ||
+    a<0 || a>30
+){
+
+    const status=sec.querySelector(".solar-semifinal-status");
+
+    if(status){
+
+        status.style.color="#ffd54f";
+
+        status.textContent="⚠ Informe um placar válido entre 0 e 30.";
+
+    }
+
+    return;
+
+}
+
+const status=sec.querySelector(".solar-semifinal-status");
+
+if(home==="" || away===""){
+
+    if(status){
+        status.style.color="#ffd54f";
+        status.textContent="⚠ Informe os dois placares antes de salvar.";
+    }
+
+    if(home===""){
+        inputs[0].focus();
+    }else{
+        inputs[1].focus();
+    }
+
+    return;
+}
 
 localStorage.setItem(KEY,JSON.stringify({
 
@@ -8013,7 +8057,12 @@ savedAt:new Date().toISOString()
 
 }));
 
-alert("✅ Palpite salvo localmente.");
+if(status){
+    status.style.color="#8cff98";
+    status.textContent="💾 Palpite salvo com sucesso.";
+}
+
+window.dispatchEvent(new Event("storage"));
 
 });
 
@@ -8027,7 +8076,7 @@ alert("✅ Palpite salvo localmente.");
 
 (function(){
 
-const KEY="solar-semifinal-2026-franca-espanha";
+const KEY="solar-semifinal-2026-inglaterra-argentina";
 
 const sec=document.getElementById("secaoSemifinalHoje");
 
@@ -8064,7 +8113,7 @@ console.warn(e);
 
 (function(){
 
-const KEY="solar-semifinal-2026-franca-espanha";
+const KEY="solar-semifinal-2026-inglaterra-argentina";
 
 const sec=document.getElementById("secaoSemifinalHoje");
 
@@ -8074,24 +8123,18 @@ const inputs=sec.querySelectorAll("input[type=number]");
 
 if(inputs.length<2)return;
 
-const btn=[...sec.querySelectorAll("button")].find(
-    b=>b.textContent.toLowerCase().includes("reset")
-);
+const btn=document.getElementById("btnResetSemifinal");
 
 if(!btn)return;
 
 btn.addEventListener("click",function(){
 
-    if(!confirm("Deseja remover o palpite salvo?")){
-        return;
-    }
-
     localStorage.removeItem(KEY);
 
-    inputs[0].value="";
-    inputs[1].value="";
+inputs[0].value="";
+inputs[1].value="";
 
-    alert("🗑️ Palpite removido.");
+window.dispatchEvent(new Event("storage"));
 
 });
 
@@ -8105,7 +8148,7 @@ btn.addEventListener("click",function(){
 
 (function(){
 
-const KEY="solar-semifinal-2026-franca-espanha";
+const KEY="solar-semifinal-2026-inglaterra-argentina";
 
 const sec=document.getElementById("secaoSemifinalHoje");
 
@@ -8113,10 +8156,8 @@ if(!sec)return;
 
 const inputs=[...sec.querySelectorAll("input[type=number]")];
 
-const buttons=[...sec.querySelectorAll("button")];
-
-const btnSalvar=buttons.find(b=>b.textContent.toLowerCase().includes("salvar"));
-const btnReset=buttons.find(b=>b.textContent.toLowerCase().includes("reset"));
+const btnSalvar=document.getElementById("btnSalvarSemifinal");
+const btnReset=document.getElementById("btnResetSemifinal");
 
 if(!btnSalvar || !btnReset)return;
 
@@ -8142,7 +8183,7 @@ function atualizar(){
 
     if(salvo){
 
-        status.textContent="✅ Palpite salvo localmente";
+        status.textContent="💾 Palpite salvo com sucesso";
 
         inputs.forEach(i=>i.disabled=true);
 
@@ -8151,7 +8192,7 @@ function atualizar(){
 
     }else{
 
-        status.textContent="Ainda não salvo";
+        status.textContent="📝 Faça seu palpite";
 
         inputs.forEach(i=>i.disabled=false);
 
@@ -8177,7 +8218,7 @@ atualizar();
 
 window.SolarSemifinal = {
 
-    KEY: "solar-semifinal-2026-franca-espanha",
+    KEY: "solar-semifinal-2026-inglaterra-argentina",
 
     getData() {
         try {
@@ -8234,7 +8275,7 @@ function aplicarBloqueio(){
 
         btnSalvar.disabled=true;
 
-        btnSalvar.textContent="Prazo encerrado";
+        btnSalvar.textContent="💾 SALVAR PALPITE";
 
         sec.classList.add("is-match-locked");
 
@@ -8526,7 +8567,11 @@ setInterval(aplicarBloqueio,30000);
       
 
 
-    </main>
+    
+<!-- ====================================================== -->
+
+
+</main>
 
     <footer class="footer">
       <p>
@@ -9481,7 +9526,7 @@ function renderMatches() {
         <div class="match-actions">
           <span class="save-status">${locked ? "Palpite encerrado: jogo iniciado" : saved.savedAt ? "Palpite salvo no banco" : "Ainda não salvo"}</span>
           <button class="mini-btn" type="button" data-save="${match.id}" ${locked ? "disabled" : ""}>
-            ${locked ? "Prazo encerrado" : "Salvar placar"}
+            ${locked ? "💾 SALVAR PALPITE" : "Salvar placar"}
           </button>
         </div>
       </article>
@@ -9860,7 +9905,7 @@ const filtered = [semifinalHoje, ...(state.dailyMatches || [])];
             data-save-daily="${match.id}"
             ${locked ? "disabled" : ""}
           >
-            ${locked ? "Prazo encerrado" : hasSavedPrediction ? "Resetar palpite" : "Salvar placar"}
+            ${locked ? "💾 SALVAR PALPITE" : hasSavedPrediction ? "🗑 LIMPAR PALPITE" : "Salvar placar"}
           </button>
         </div>
       </article>
@@ -12984,7 +13029,7 @@ background:#ffffff;
               data-opening-action="${hasSavedPrediction ? "reset" : "save"}"
               ${locked ? "disabled" : ""}
             >
-              ${locked ? "Prazo encerrado" : hasSavedPrediction ? "Resetar palpite" : "Salvar placar"}
+              ${locked ? "💾 SALVAR PALPITE" : hasSavedPrediction ? "🗑 LIMPAR PALPITE" : "Salvar placar"}
             </button>
           </div>
         </article>
@@ -14897,7 +14942,7 @@ background:#ffffff;
         }
 
         if (button) {
-          button.textContent = "Resetar palpite";
+          button.textContent = "🗑 LIMPAR PALPITE";
           button.dataset.openingAction = "reset";
           button.classList.add("is-reset");
           button.disabled = false;
@@ -17817,7 +17862,7 @@ background:#ffffff;
               class="${palpitesPrimeiraRodada[jogo.id] ? "salvo" : ""}"
               ${palpitesPrimeiraRodada[jogo.id] ? "disabled" : ""}
             >
-              ${palpitesPrimeiraRodada[jogo.id] ? "Palpite salvo" : "Salvar palpite"}
+              ${palpitesPrimeiraRodada[jogo.id] ? "Palpite salvo" : "💾 SALVAR PALPITE"}
             </button>
             <button class="segunda-rodada-reset-btn" data-primeira-reset="${jogo.id}">Resetar</button>
           </div>
@@ -17900,7 +17945,7 @@ background:#ffffff;
         const saveBtn = document.querySelector(`[data-primeira-save="${matchId}"]`);
         if (saveBtn) {
           saveBtn.classList.remove("salvo");
-          saveBtn.textContent = "Salvar palpite";
+          saveBtn.textContent = "💾 SALVAR PALPITE";
           saveBtn.disabled = false;
         }
 
@@ -17911,11 +17956,11 @@ background:#ffffff;
         }
       } catch (error) {
         alert(error.message || "Erro ao resetar palpite.");
-        botao.textContent = "Resetar palpite";
+        botao.textContent = "🗑 LIMPAR PALPITE";
       } finally {
         botao.disabled = false;
         setTimeout(() => {
-          botao.textContent = "Resetar palpite";
+          botao.textContent = "🗑 LIMPAR PALPITE";
         }, 1200);
       }
     }
@@ -17957,7 +18002,7 @@ background:#ffffff;
         botao.textContent = "Palpite salvo";
       } catch (error) {
         alert(error.message || "Erro ao salvar palpite.");
-        botao.textContent = "Salvar palpite";
+        botao.textContent = "💾 SALVAR PALPITE";
       } finally {
         botao.disabled = false;
       }
@@ -19595,7 +19640,7 @@ var fixedNeonUserKey = null;
       var disabled = isLocked ? " disabled" : "";
       var lockClass = isLocked ? " solar-2r-card-bloqueado" : "";
       var lockText = isLocked
-        ? "Aposta bloqueada<br><small>Prazo encerrado em " + escapeHtml(formatBR(cutoff(g))) + ", 15 minutos antes do jogo.</small>"
+        ? "Aposta bloqueada<br><small>💾 SALVAR PALPITE em " + escapeHtml(formatBR(cutoff(g))) + ", 15 minutos antes do jogo.</small>"
         : "Aposta liberada<br><small>Você pode apostar, alterar ou resetar até " + escapeHtml(formatBR(cutoff(g))) + ".</small>";
 
       html += "<article class='solar-2r-final-card" + lockClass + "' data-game-card='" + escapeHtml(g[0]) + "'>";
@@ -19625,7 +19670,7 @@ var fixedNeonUserKey = null;
       html += "";
 
       html += "<div class='solar-2r-final-actions'>";
-      html += "<button type='button' class='solar-2r-final-save'" + disabled + ">Salvar palpite</button>";
+      html += "<button type='button' class='solar-2r-final-save'" + disabled + ">💾 SALVAR PALPITE</button>";
       html += "<button type='button' class='solar-2r-final-reset'" + disabled + ">Resetar placar</button>";
       html += "</div>";
 
@@ -19777,7 +19822,7 @@ console.log(
     if (!g) return;
 
     if (locked(g)) {
-      setStatus(card, "Aposta bloqueada: prazo encerrado.");
+      setStatus(card, "Aposta bloqueada: 💾 SALVAR PALPITE.");
       return;
     }
 
@@ -19840,7 +19885,7 @@ console.log(
     if (!g) return;
 
     if (locked(g)) {
-      setStatus(card, "Reset bloqueado: prazo encerrado.");
+      setStatus(card, "Reset bloqueado: 💾 SALVAR PALPITE.");
       return;
     }
 
@@ -20117,7 +20162,7 @@ function openSecondRound(event) {
 
       html += "<div class='solar-2r-final-actions'>";
       html += "<button type='button' class='r3-reset' data-id='" + g[0] + "'>Resetar placar</button>";
-      html += "<button type='button' class='r3-save' data-id='" + g[0] + "'>Salvar palpite</button>";
+      html += "<button type='button' class='r3-save' data-id='" + g[0] + "'>💾 SALVAR PALPITE</button>";
       html += "</div>";
 
       html += "</article>";
@@ -20126,7 +20171,7 @@ function openSecondRound(event) {
     html += "</div>";
 
     html += "<div style='margin-top:20px;text-align:center'>";
-    html += "<button id='btnSalvar3R' type='button'>Salvar palpites</button>";
+    html += "<button id='btnSalvar3R' type='button'>💾 SALVAR PALPITEs</button>";
     html += "</div>";
 
     html += "</div>";
@@ -22427,8 +22472,27 @@ document.addEventListener("DOMContentLoaded",()=>{
 <!-- ========================================================= -->
 
 
+
+
+
+
+
+
 </body>
 </html>
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
