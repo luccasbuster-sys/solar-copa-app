@@ -7922,7 +7922,79 @@ localStorage.removeItem(key);
         <div class="matches-grid" id="dailyMatchesGrid"></div>
       </section>
 
-      <!-- SOLAR_SEMIFINAL_HOJE_START -->
+      
+<!-- SOLAR_SEMIFINAL_FIX_CSS_START -->
+<style>
+
+#secaoSemifinalHoje .versus{
+
+display:flex;
+align-items:center;
+justify-content:space-between;
+gap:28px;
+margin:26px 0;
+
+}
+
+#secaoSemifinalHoje .side{
+
+flex:1;
+text-align:center;
+
+}
+
+#secaoSemifinalHoje .side h3{
+
+margin:0;
+font-size:30px;
+font-weight:900;
+line-height:1.2;
+
+}
+
+#secaoSemifinalHoje .score-box{
+
+display:flex;
+align-items:center;
+justify-content:center;
+gap:12px;
+
+padding:8px;
+
+background:#fff;
+
+border:5px solid #111;
+
+border-radius:20px;
+
+}
+
+#secaoSemifinalHoje .score-box input{
+
+width:68px;
+height:68px;
+
+font-size:34px;
+font-weight:900;
+text-align:center;
+
+pointer-events:auto !important;
+
+opacity:1 !important;
+
+}
+
+#secaoSemifinalHoje .score-box span{
+
+font-size:34px;
+font-weight:900;
+
+}
+
+</style>
+<!-- SOLAR_SEMIFINAL_FIX_CSS_END -->
+
+<!-- SOLAR_SEMIFINAL_HOJE_START -->
 <section class="section reveal is-visible" id="secaoSemifinalHoje">
 
   <div class="section-head">
@@ -8185,9 +8257,10 @@ function atualizar(){
 
         status.textContent="💾 Palpite salvo com sucesso";
 
-        inputs.forEach(i=>i.disabled=true);
+        // Permite editar o palpite já salvo
+        inputs.forEach(i=>i.disabled=false);
 
-        btnSalvar.disabled=true;
+        btnSalvar.disabled=false;
         btnReset.disabled=false;
 
     }else{
@@ -8271,9 +8344,9 @@ function aplicarBloqueio(){
 
     if(agora>=bloqueio){
 
-        inputs.forEach(i=>i.disabled=true);
+        inputs.forEach(i=>i.disabled=false);
 
-        btnSalvar.disabled=true;
+        btnSalvar.disabled=false;
 
         btnSalvar.textContent="💾 SALVAR PALPITE";
 
@@ -22480,6 +22553,9 @@ document.addEventListener("DOMContentLoaded",()=>{
 
 </body>
 </html>
+
+
+
 
 
 
